@@ -32,3 +32,35 @@
     display: none;
   }
 }
+
+.telegram-link-modal {
+  p {
+    margin: 0 0 12px;
+    color: #3f3f46;
+  }
+}
+
+.telegram-link-status {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.telegram-link-actions {
+  margin-bottom: 16px;
+}
+
+.telegram-link-code {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f5f3ff;
+  border: 1px solid #d8d4fe;
+  color: #5b21b6;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
