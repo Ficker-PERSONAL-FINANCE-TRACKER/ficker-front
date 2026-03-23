@@ -50,6 +50,11 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
 
   return (
     <Col xs={20} lg={24}>
+      <EditTransactionModal
+        isModalOpen={editModal}
+        setIsModalOpen={setEditModal}
+        transaction={{ ...selectedTransaction, type_id: typeId }}
+      />
       <table className={styles.table}>
         <thead className={styles.thead}>
           <tr>
@@ -63,11 +68,6 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
         </thead>
         <tbody>
           <>
-            <EditTransactionModal
-              isModalOpen={editModal}
-              setIsModalOpen={setEditModal}
-              transaction={{ ...selectedTransaction, type_id: typeId }}
-            />
             {data?.map((transaction) => (
               <tr key={transaction.id}>
                 <td className={styles.tdEdit}>
