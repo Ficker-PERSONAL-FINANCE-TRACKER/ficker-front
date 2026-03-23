@@ -35,36 +35,26 @@ const EnterTransaction = () => {
   }, [isModalOpen, isEditModalOpen]);
 
   return (
-    <div>
-      <div style={{ background: "#fff", padding: 10, alignItems: "center" }}>
-        <Link href={"/"} style={{ background: "#fff", padding: 10, alignItems: "center" }}>
-          <Image src="/logo.png" alt="Logo" width={130} height={27} />
-        </Link>
-      </div>
-      <div style={{ display: "flex", flexDirection: "row", minHeight: "90vh", backgroundColor: "#f8f9fa" }}>
-        <CustomMenu />
-        <EnterTransactionModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-        <div style={{ flex: 1, padding: "30px 40px", overflowX: "hidden" }}>
-          <div className={styles.titleArea}>
-            <div>
-              <h3>Entradas</h3>
-            </div>
-            <div className={styles.buttonsArea}>
-              <SearchField />
-              <button className={styles.button} onClick={showModal}>
-                Nova Transação
-              </button>
-            </div>
-          </div>
-          <TransactionTab
-            data={transactions}
-            typeId={1}
-            editModal={isEditModalOpen}
-            setEditModal={setIsEditModalOpen}
-          />
+    <>
+      <EnterTransactionModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+      <div className={styles.titleArea}>
+        <div>
+          <h3>Entradas</h3>
+        </div>
+        <div className={styles.buttonsArea}>
+          <SearchField />
+          <button className={styles.button} onClick={showModal}>
+            Nova Transação
+          </button>
         </div>
       </div>
-    </div>
+      <TransactionTab
+        data={transactions}
+        typeId={1}
+        editModal={isEditModalOpen}
+        setEditModal={setIsEditModalOpen}
+      />
+    </>
   );
 };
 

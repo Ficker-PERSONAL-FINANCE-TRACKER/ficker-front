@@ -56,10 +56,12 @@ const MyCategoriesList = () => {
     getCategories();
   }, [isModalOpen]);
 
+  const totalCategoriesSpending = categories.reduce((acc, curr) => acc + curr.category_spending, 0);
+
   return (
     <div className="card">
       <div className="title-area">
-        <h4>Minhas Categorias</h4>
+        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#11142D' }}>Minhas Categorias</h4>
         <a className="title-area__button" onClick={showModal}>
           <img src="/icons/icon-more.svg" alt="new_category" />
         </a>
@@ -77,17 +79,27 @@ const MyCategoriesList = () => {
         ) : (
           categories?.map((category, index) =>
             category.category_spending === 0 ? null : (
-              <div className="category-area" key={index}>
-                <div className="category-area__infos">
+              <div className="category-area" key={index} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                <div className="category-area__infos" style={{ minWidth: '100px', flexShrink: 0 }}>
                   <span
                     style={{
                       background: colorPalette[index % colorPalette.length],
                     }}
                     className="circle"
                   ></span>
-                  <div className="category-area__description">{category.category_description}</div>
+                  <div className="category-area__description" style={{ fontWeight: 500, fontSize: '14px', color: '#11142D', whiteSpace: 'nowrap' }}>{category.category_description}</div>
                 </div>
-                <div className="category-area__value">{formatCurrency(category.category_spending)}</div>
+                
+                <div style={{ flex: 1, height: '6px', background: '#f0f0f5', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ 
+                      width: `${(category.category_spending / totalCategoriesSpending) * 100}%`, 
+                      height: '100%', 
+                      background: colorPalette[index % colorPalette.length],
+                      borderRadius: '3px'
+                    }} />
+                </div>
+
+                <div className="category-area__value" style={{ fontWeight: 600, fontSize: '14px', color: '#11142D', minWidth: '80px', textAlign: 'right' }}>{formatCurrency(category.category_spending)}</div>
               </div>
             )
           )

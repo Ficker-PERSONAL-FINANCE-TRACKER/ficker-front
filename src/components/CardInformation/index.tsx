@@ -65,10 +65,8 @@ export const CardInformation = ({ card, totalValue }: CardProps) => {
             <Row justify={"end"}>
               <Col>
                 <Text type="secondary">
-                  {card.expiration}/
-                  {showDate(card.expiration) < 10
-                    ? "0" + showDate(card.expiration)
-                    : showDate(card.expiration)}
+                  {String(card.expiration).padStart(2, '0')}/
+                  {String(showDate(card.expiration)).padStart(2, '0')}
                 </Text>
               </Col>
             </Row>

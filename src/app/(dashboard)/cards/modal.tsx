@@ -120,7 +120,7 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
               {/* Renderize as opções com os dias do mês */}
               {Array.from({ length: 31 }, (_, index) => (
                 <Select.Option key={index + 1} value={index + 1}>
-                  {index + 1}
+                  {String(index + 1).padStart(2, "0")}
                 </Select.Option>
               ))}
             </Select>
@@ -136,7 +136,7 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
               {/* Renderize as opções com os dias do mês */}
               {Array.from({ length: 31 }, (_, index) => (
                 <Select.Option key={index + 1} value={index + 1}>
-                  {index + 1}
+                  {String(index + 1).padStart(2, "0")}
                 </Select.Option>
               ))}
             </Select>

@@ -36,3 +36,5 @@ next-env.d.ts
 .vscode
 
 .sentryclirc
+
+FRONTEND_API_CONTRACT.md

@@ -1,0 +1,43 @@
+.sidebarAlert {
+  margin: 16px;
+  padding: 16px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: visible;
+  margin-top: 40px;
+
+  .illustrationWrapper {
+    margin-top: -50px;
+    margin-bottom: 8px;
+    
+    .illustration {
+      filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.1));
+    }
+  }
+
+  .content {
+    width: 100%;
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .message {
+      font-size: 13px;
+      color: #11142D;
+      line-height: 1.4;
+      margin-bottom: 0;
+      padding: 0 8px;
+    }
+  }
+}

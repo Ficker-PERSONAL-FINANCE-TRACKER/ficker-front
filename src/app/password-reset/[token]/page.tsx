@@ -1,17 +1,32 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import styles from "./recoveryaccount.module.scss";
 import Link from "next/link";
-import { request } from "@/service/api";
 import { Alert } from "antd";
+import { request } from "@/service/api";
+import styles from "../../recoveryaccount/recoveryaccount.module.scss";
 
-const RecoveryAccount = () => {
-  const [email, setEmail] = useState<string>("");
+type PageProps = {
+  params: {
+    token: string;
+  };
+};
+
+const PasswordResetPage = ({ params }: PageProps) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const token = params.token;
+  const email = searchParams.get("email") || "";
+
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [globalError, setGlobalError] = useState<string>("");
-  const [successMessage, setSuccessMessage] = useState<string>("");
+  const [globalError, setGlobalError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     setErrors({});
@@ -19,16 +34,24 @@ const RecoveryAccount = () => {
     setSuccessMessage("");
 
     try {
+      setLoading(true);
+
       const response = await request({
         method: "POST",
-        endpoint: "forgot-password",
+        endpoint: "reset-password",
         data: {
+          token,
           email,
+          password,
+          password_confirmation: passwordConfirmation,
         },
       });
 
-      if (response && response.status === 200) {
-        setSuccessMessage("Se o e-mail estiver cadastrado, o link de recuperação foi enviado.");
+      if (response?.status === 200) {
+        setSuccessMessage("Senha redefinida com sucesso.");
+        setTimeout(() => {
+          router.push("/login");
+        }, 1500);
       }
     } catch (error: any) {
       if (error?.response?.data?.errors) {
@@ -36,8 +59,10 @@ const RecoveryAccount = () => {
       } else if (error?.response?.data?.message) {
         setGlobalError(error.response.data.message);
       } else {
-        setGlobalError("Não foi possível solicitar a recuperação de senha.");
+        setGlobalError("Não foi possível redefinir a senha.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,7 +81,7 @@ const RecoveryAccount = () => {
         <div style={{ display: "flex", justifyContent: "center", marginTop: 20, width: "100%" }}>
           <div style={{ width: "100%", maxWidth: 450, padding: "0 20px" }}>
             <Alert
-              message="Solicitação enviada"
+              message="Sucesso"
               description={successMessage}
               type="success"
               showIcon
@@ -107,41 +132,54 @@ const RecoveryAccount = () => {
             handleSubmit();
           }}
         >
-          <h2 style={{ textAlign: "center", marginBottom: 50, fontSize: 22 }}>
-            Esqueceu sua senha?
+          <h2 style={{ textAlign: "center", marginBottom: 30, fontSize: 22 }}>
+            Redefinir senha
           </h2>
 
-          <label className={styles.label} style={{ marginBottom: 5 }} htmlFor="email">
+          <label className={styles.label} style={{ marginBottom: 5 }}>
             E-mail
           </label>
+          <input className={styles.input} type="email" value={email} disabled />
 
+          <label className={styles.label} style={{ marginTop: 15, marginBottom: 5 }} htmlFor="password">
+            Nova senha
+          </label>
           <input
             className={styles.input}
-            id="email"
-            type="email"
+            id="password"
+            type="password"
             required
-            value={email}
+            value={password}
             onChange={(event) => {
-              setEmail(event.target.value);
-              setErrors((prev) => ({ ...prev, email: [] }));
+              setPassword(event.target.value);
+              setErrors((prev) => ({ ...prev, password: [] }));
               setGlobalError("");
-              setSuccessMessage("");
             }}
           />
 
-          {errors.email && errors.email.length > 0 && (
-            <div style={{ color: "#ee4848", fontSize: "12px", marginTop: "8px", marginBottom: "15px" }}>
-              {errors.email.map((err, idx) => (
-                <span key={idx} style={{ display: "block" }}>
-                  {err}
-                </span>
-              ))}
-            </div>
-          )}
+          <label
+            className={styles.label}
+            style={{ marginTop: 15, marginBottom: 5 }}
+            htmlFor="password_confirmation"
+          >
+            Confirmar nova senha
+          </label>
+          <input
+            className={styles.input}
+            id="password_confirmation"
+            type="password"
+            required
+            value={passwordConfirmation}
+            onChange={(event) => {
+              setPasswordConfirmation(event.target.value);
+              setErrors((prev) => ({ ...prev, password_confirmation: [] }));
+              setGlobalError("");
+            }}
+          />
 
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <button className={styles.button} type="submit">
-              Enviar
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
+            <button className={styles.button} type="submit" disabled={loading}>
+              {loading ? "Redefinindo..." : "Redefinir senha"}
             </button>
           </div>
         </form>
@@ -150,4 +188,4 @@ const RecoveryAccount = () => {
   );
 };
 
-export default RecoveryAccount;
+export default PasswordResetPage;

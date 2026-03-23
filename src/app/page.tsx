@@ -3,9 +3,11 @@ import MainContext from "@/context";
 import { useContext, useEffect, useState } from "react";
 import { HomeScreen } from "./pages/Home/Home";
 import { Spin } from "antd";
-import Resume from "./resume/page";
+import { useRouter } from "next/navigation";
+import Resume from "./(dashboard)/resume/page";
 
 export default function Home() {
+  const router = useRouter();
   const { auth, setAuth } = useContext(MainContext);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -13,9 +15,10 @@ export default function Home() {
     const token = localStorage.getItem("token");
     if (token) {
       setAuth(true);
+      router.push("/resume");
     }
     setLoading(false);
-  }, []);
+  }, [router, setAuth]);
 
   if (loading)
     return (

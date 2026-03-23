@@ -6,7 +6,7 @@ import { Col, Row } from "antd";
 import { useEffect, useState } from "react";
 import styles from "../../EnterTransaction/entertransaction.module.scss";
 import { CardTransactionModal } from "./mcardtransaction";
-import { OutputModal } from "@/app/Outputs/modal";
+import { OutputModal } from "@/app/(dashboard)/Outputs/modal";
 import dayjs from "dayjs";
 import { ITransaction } from "@/interfaces";
 
