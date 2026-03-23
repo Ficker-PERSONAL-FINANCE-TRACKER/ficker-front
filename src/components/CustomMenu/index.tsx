@@ -6,7 +6,8 @@ import "./styles.scss";
 import { usePathname, useRouter } from "next/navigation";
 import { Cookies } from "react-cookie";
 import { 
-  BarsOutlined, 
+  BarsOutlined,
+  SendOutlined,
 } from "@ant-design/icons";
 import useMediaQuery from "use-media-antd-query";
 import SidebarAlert from "../SidebarAlert";
@@ -68,6 +69,7 @@ const items: MenuItem[] = [
     "5",
     <Image src="/icons/icon-analysis.svg" alt="Análises" width={22} height={22} />
   ),
+  getItem("Link do Telegram", "6", <SendOutlined style={{ fontSize: 22 }} />),
   getItem(
     "Sair",
     "7",
@@ -304,9 +306,18 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
               defaultSelectedKeys={menu ? [menu.toString()] : ["1"]}
               mode="inline"
               items={items}
-              onClick={({ key }) => {
+              onClick={async ({ key }) => {
+                if (key === "6") {
+                  handleOpenTelegramModal();
+                  return;
+                }
                 cookie.set("menu", key);
                 if (key === "7") {
+                  try {
+                    await request({ method: "POST", endpoint: "logout" });
+                  } catch (error) {
+                    console.error("Logout falhou:", error);
+                  }
                   cookie.remove("menu");
                   localStorage.clear();
                   window.location.replace("/login");
