@@ -5,17 +5,12 @@ import Image from "next/image";
 import "./styles.scss";
 import { usePathname, useRouter } from "next/navigation";
 import { Cookies } from "react-cookie";
-<<<<<<< HEAD
 import { 
   BarsOutlined, 
 } from "@ant-design/icons";
 import useMediaQuery from "use-media-antd-query";
 import SidebarAlert from "../SidebarAlert";
 import Link from "next/link";
-=======
-import { BarsOutlined, SendOutlined } from "@ant-design/icons";
-import useMediaQuery from "use-media-antd-query";
->>>>>>> 5c47752b79a28573ee99fb762c3cdec3fdf3ebce
 import { request } from "@/service/api";
 
 type MenuItem = Required<MenuProps>["items"][number];
@@ -48,7 +43,6 @@ function getItem(
 }
 
 const items: MenuItem[] = [
-<<<<<<< HEAD
   getItem(
     <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>Início</Link>,
     "1",
@@ -84,15 +78,6 @@ const items: MenuItem[] = [
       height={22}
     />
   ),
-=======
-  getItem("Inicio", "1", <Image src="/despesas.svg" alt="Inicio" width={25} height={25} />),
-  getItem("Entradas", "2", <Image src="/bolsa-de-dinheiro.svg" alt="Entradas" width={25} height={25} />),
-  getItem("Saidas", "3", <Image src="/wallet.svg" alt="Saidas" width={25} height={25} />),
-  getItem("Meus cartoes", "4", <Image src="/cartoes-de-credito.svg" alt="Cartoes" width={25} height={25} />),
-  getItem("Analises", "5", <Image src="/analise.svg" alt="Analises" width={25} height={25} />),
-  getItem("Link do Telegram", "6", <SendOutlined style={{ fontSize: 22 }} />),
-  getItem("Sair", "7", <Image src="/exit1.svg" alt="Sair" width={25} height={25} />),
->>>>>>> 5c47752b79a28573ee99fb762c3cdec3fdf3ebce
 ];
 
 const paths: Record<string, string> = {
@@ -103,9 +88,7 @@ const paths: Record<string, string> = {
   "5": "/analysis",
 };
 
-<<<<<<< HEAD
-const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true }) => {
-=======
+
 const formatTelegramExpiry = (expiresAt?: string) => {
   if (!expiresAt) {
     return "nao informada";
@@ -140,18 +123,13 @@ type TelegramLinkStatus = {
   } | null;
 };
 
-const CustomMenu: React.FC = () => {
->>>>>>> 5c47752b79a28573ee99fb762c3cdec3fdf3ebce
+const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true }) => {
   const router = useRouter();
   const pathname = usePathname();
   const cookie = new Cookies();
   const menu = cookie.get("menu");
   const colSize = useMediaQuery();
   const [showMenu, setShowMenu] = useState<boolean>(colSize === "xs" ? false : true);
-<<<<<<< HEAD
-  const [userData, setUserData] = useState<{ name: string } | null>(user || null);
-  const [balanceData, setBalanceData] = useState<any>(balance || null);
-=======
   const [telegramModalOpen, setTelegramModalOpen] = useState(false);
   const [telegramLoading, setTelegramLoading] = useState(false);
   const [telegramCodeLoading, setTelegramCodeLoading] = useState(false);
@@ -263,8 +241,8 @@ const CustomMenu: React.FC = () => {
       setTelegramUnlinkLoading(false);
     }
   };
->>>>>>> 5c47752b79a28573ee99fb762c3cdec3fdf3ebce
-
+  const [userData, setUserData] = useState<{ name: string } | null>(user || null);
+  const [balanceData, setBalanceData] = useState<any>(balance || null);
   const toggleMenu = () => {
     setShowMenu(!showMenu);
   };
@@ -314,7 +292,6 @@ const CustomMenu: React.FC = () => {
         <BarsOutlined onClick={toggleMenu} className="burger-icon" />
       </div>
       {showMenu && (
-<<<<<<< HEAD
         <div className={`menu-sidebar ${showMenu ? "show" : ""}`}>
           <div>
             <div className="logo-sidebar">
@@ -356,30 +333,6 @@ const CustomMenu: React.FC = () => {
             </div>
           </div>
         </div>
-=======
-        <Menu
-          style={{ width: 250, height: "90vh" }}
-          selectedKeys={[selectedKey]}
-          mode="inline"
-          items={items}
-          onClick={({ key }) => {
-            if (key === "6") {
-              handleOpenTelegramModal();
-              return;
-            }
-
-            cookie.set("menu", key);
-
-            if (key === "7") {
-              cookie.remove("menu");
-              localStorage.clear();
-              window.location.href = "/login";
-            } else if (paths[key as string] && paths[key as string] !== pathname) {
-              router.push(paths[key as string]);
-            }
-          }}
-        />
->>>>>>> 5c47752b79a28573ee99fb762c3cdec3fdf3ebce
       )}
       <Modal
         open={telegramModalOpen}
