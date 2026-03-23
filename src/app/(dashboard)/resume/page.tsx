@@ -534,26 +534,20 @@ const Resume = () => {
             </div>
 
             {/* Quick Actions area */}
-            <div className={styles.quickActions} style={{ marginTop: 24, padding: '20px 24px', display: 'block' }}>
-              <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 20, color: '#808191' }}>Menu de ações rápidas</p>
+            <div className={styles.quickActions} style={{ marginTop: 20, padding: '16px 24px', display: 'block' }}>
+              <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 16, color: '#808191' }}>Menu de ações rápidas</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <div className={styles.actionButton} style={{ flex: 1, border: 'none', padding: 0 }} onClick={() => router.push('/EnterTransaction')}>
-                  <div className={styles.actionIcon} style={{ background: '#E6F7EF', color: '#00875A', borderRadius: 12, width: 48, height: 48 }}>
-                    <PlusCircleOutlined style={{ fontSize: 24 }} />
-                  </div>
-                  <span style={{ fontSize: 12, marginTop: 8 }}>Entrada</span>
+                <div className={styles.actionButton} style={{ background: '#E6F7EF', color: '#00875A' }} onClick={() => router.push('/EnterTransaction')}>
+                  <PlusCircleOutlined style={{ fontSize: 24, color: '#00875A' }} />
+                  <span style={{ color: '#00875A' }}>Entrada</span>
                 </div>
-                <div className={styles.actionButton} style={{ flex: 1, border: 'none', padding: 0 }} onClick={() => router.push('/Outputs')}>
-                  <div className={styles.actionIcon} style={{ background: '#FFEBE6', color: '#DE350B', borderRadius: 12, width: 48, height: 48 }}>
-                    <MinusCircleOutlined style={{ fontSize: 24 }} />
-                  </div>
-                  <span style={{ fontSize: 12, marginTop: 8 }}>Saída</span>
+                <div className={styles.actionButton} style={{ background: '#FFEBE6', color: '#DE350B' }} onClick={() => router.push('/Outputs')}>
+                  <MinusCircleOutlined style={{ fontSize: 24, color: '#DE350B' }} />
+                  <span style={{ color: '#DE350B' }}>Saída</span>
                 </div>
-                <div className={styles.actionButton} style={{ flex: 1, border: 'none', padding: 0 }} onClick={() => router.push('/cards')}>
-                  <div className={styles.actionIcon} style={{ background: '#E2E2FB', color: '#6C5DD3', borderRadius: 12, width: 48, height: 48 }}>
-                    <CreditCardOutlined style={{ fontSize: 24 }} />
-                  </div>
-                  <span style={{ fontSize: 12, marginTop: 8 }}>Cartões</span>
+                <div className={styles.actionButton} style={{ background: '#E2E2FB', color: '#6C5DD3' }} onClick={() => router.push('/cards')}>
+                  <CreditCardOutlined style={{ fontSize: 24, color: '#6C5DD3' }} />
+                  <span style={{ color: '#6C5DD3' }}>Cartões</span>
                 </div>
               </div>
             </div>
