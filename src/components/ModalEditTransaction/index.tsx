@@ -5,7 +5,7 @@ import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import Image from "next/image";
-import styles from "@/app/(dashboard)/EnterTransaction/entertransaction.module.scss";
+import styles from "@/app/EnterTransaction/entertransaction.module.scss";
 import { ITransaction } from "@/interfaces";
 
 interface EditTransactionModalProps {
@@ -53,7 +53,7 @@ export const EditTransactionModal = ({
         method: "GET",
         endpoint: `categories/type/${typeId}`,
       });
-      setCategories(response.data);
+      setCategories(response.data.data.categories);
     } catch (error) {
       console.log(error);
     }

@@ -3,7 +3,6 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import { ConfigProvider } from "antd";
-import ptBR from "antd/locale/pt_BR";
 import StyledComponentsRegistry from "./lib/AntdRegistry";
 import theme from "./theme/themeConfig";
 import { MainProvider } from "@/context";
@@ -16,9 +15,9 @@ export const metadata: Metadata = {
 };
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
-  <html lang="en">
+  <html lang="pt-BR">
     <MainProvider>
-      <ConfigProvider theme={theme} locale={ptBR}>
+      <ConfigProvider theme={theme}>
         <body>
           <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
         </body>

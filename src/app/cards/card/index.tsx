@@ -6,7 +6,7 @@ import { Col, Row } from "antd";
 import { useEffect, useState } from "react";
 import styles from "../../EnterTransaction/entertransaction.module.scss";
 import { CardTransactionModal } from "./mcardtransaction";
-import { OutputModal } from "@/app/(dashboard)/Outputs/modal";
+import { OutputModal } from "@/app/Outputs/modal";
 import dayjs from "dayjs";
 import { ITransaction } from "@/interfaces";
 
@@ -39,7 +39,7 @@ function CardPage({ card }: CardProps) {
         endpoint: `cards/${card.id}/invoice`,
       });
       setTotalValue(response.data.data.invoice);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const getCardData = async () => {
@@ -51,7 +51,7 @@ function CardPage({ card }: CardProps) {
       if (response.data.data.transactions.length > 0) {
         setCardTransactions(response.data.data.transactions);
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const openModal = () => {

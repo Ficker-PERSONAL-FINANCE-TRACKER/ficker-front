@@ -2,7 +2,7 @@
 import { request } from "@/service/api";
 import { Modal, Col, Row, Select, Form, Button, Input, message } from "antd";
 import { useEffect } from "react";
-import styles from "@/app/(dashboard)/EnterTransaction/entertransaction.module.scss";
+import styles from "@/app/EnterTransaction/entertransaction.module.scss";
 
 interface ModalNewCategoryProps {
   isModalOpen: boolean;

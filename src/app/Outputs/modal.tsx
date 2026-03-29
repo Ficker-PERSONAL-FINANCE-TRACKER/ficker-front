@@ -49,7 +49,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
         method: "GET",
         endpoint: "categories/type/2",
       });
-      setCategories(response.data);
+      setCategories(response.data.data.categories);
     } catch (error) {
       console.log(error);
     }

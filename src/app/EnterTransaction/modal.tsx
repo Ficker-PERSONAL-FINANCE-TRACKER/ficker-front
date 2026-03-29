@@ -58,7 +58,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
         method: "GET",
         endpoint: "categories/type/1",
       });
-      setCategories(response.data);
+      setCategories(response.data.data.categories);
     } catch (error) {
       console.log(error);
     }

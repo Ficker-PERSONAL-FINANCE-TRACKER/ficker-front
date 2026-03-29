@@ -6,6 +6,7 @@ import { request } from "@/service/api";
 import { TransactionTab } from "@/components/TransactionTab";
 import SearchField from "@/components/SearchField";
 import { ITransaction } from "@/interfaces";
+import CustomMenu from "@/components/CustomMenu";
 
 const Outputs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,26 +34,29 @@ const Outputs = () => {
   }, [isModalOpen, isEditModalOpen]);
 
   return (
-    <>
+     <div style={{ display: "flex", flexDirection: "row" }}>
+      <CustomMenu />
       <OutputModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-      <div className={styles.titleArea}>
-        <div>
-          <h3>Saídas</h3>
+        <div style={{ width: "90vw" }}>
+          <div className={styles.titleArea}>
+            <div>
+              <h3>Saídas</h3>
+            </div>
+            <div className={styles.buttonsArea}>
+              <SearchField />
+              <button className={styles.button} onClick={showModal}>
+                Nova Transação
+              </button>
+            </div>
+          </div>
+          <TransactionTab
+            data={transactions}
+            typeId={2}
+            editModal={isEditModalOpen}
+            setEditModal={setIsEditModalOpen}
+          />
         </div>
-        <div className={styles.buttonsArea}>
-          <SearchField />
-          <button className={styles.button} onClick={showModal}>
-            Nova Transação
-          </button>
-        </div>
-      </div>
-      <TransactionTab
-        data={transactions}
-        typeId={2}
-        editModal={isEditModalOpen}
-        setEditModal={setIsEditModalOpen}
-      />
-    </>
+    </div>
   );
 };
 

@@ -35,26 +35,29 @@ const EnterTransaction = () => {
   }, [isModalOpen, isEditModalOpen]);
 
   return (
-    <>
-      <EnterTransactionModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-      <div className={styles.titleArea}>
-        <div>
-          <h3>Entradas</h3>
-        </div>
-        <div className={styles.buttonsArea}>
-          <SearchField />
-          <button className={styles.button} onClick={showModal}>
-            Nova Transação
-          </button>
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <CustomMenu />
+        <EnterTransactionModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+        <div style={{ width: "90vw" }}>
+          <div className={styles.titleArea}>
+            <div>
+              <h3>Entradas</h3>
+            </div>
+            <div className={styles.buttonsArea}>
+              <SearchField />
+              <button className={styles.button} onClick={showModal}>
+                Nova Transação
+              </button>
+            </div>
+          </div>
+          <TransactionTab
+            data={transactions}
+            typeId={1}
+            editModal={isEditModalOpen}
+            setEditModal={setIsEditModalOpen}
+          />
         </div>
       </div>
-      <TransactionTab
-        data={transactions}
-        typeId={1}
-        editModal={isEditModalOpen}
-        setEditModal={setIsEditModalOpen}
-      />
-    </>
   );
 };
 
