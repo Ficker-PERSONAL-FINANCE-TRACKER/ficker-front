@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import type { MenuProps } from "antd";
 import { Button, Menu, Modal, Space, message } from "antd";
@@ -45,27 +46,27 @@ function getItem(
 
 const items: MenuItem[] = [
   getItem(
-    <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>Início</Link>,
+    "Início",
     "1",
     <Image src="/icons/icon-home.svg" alt="Início" width={22} height={22} />
   ),
   getItem(
-    <Link href="/EnterTransaction" style={{ textDecoration: 'none', color: 'inherit' }}>Entradas</Link>,
+    "Entradas",
     "2",
     <Image src="/icons/icon-income.svg" alt="Entradas" width={22} height={22} />
   ),
   getItem(
-    <Link href="/Outputs" style={{ textDecoration: 'none', color: 'inherit' }}>Saídas</Link>,
+    "Saídas",
     "3",
     <Image src="/icons/icon-expense.svg" alt="Saídas" width={22} height={22} />
   ),
   getItem(
-    <Link href="/cards" style={{ textDecoration: 'none', color: 'inherit' }}>Meus cartões</Link>,
+    "Meus cartões",
     "4",
     <Image src="/icons/icon-card.svg" alt="Meus cartões" width={22} height={22} />
   ),
   getItem(
-    <Link href="/analysis" style={{ textDecoration: 'none', color: 'inherit' }}>Análises</Link>,
+    "Análises",
     "5",
     <Image src="/icons/icon-analysis.svg" alt="Análises" width={22} height={22} />
   ),
@@ -303,7 +304,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
             </div>
             <Menu
               style={{ width: 250, border: 'none' }}
-              defaultSelectedKeys={menu ? [menu.toString()] : ["1"]}
+              selectedKeys={[selectedKey]}
               mode="inline"
               items={items}
               onClick={async ({ key }) => {
@@ -320,9 +321,13 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
                   }
                   cookie.remove("menu");
                   localStorage.clear();
-                  window.location.replace("/login");
+                  router.replace("/login");;
+                } else {
+                  const targetPath = paths[key];
+                  if (targetPath) {
+                    router.push(targetPath);
+                  }
                 }
-                // Transitions handled by Link labels for performance
               }}
             />
           </div>
