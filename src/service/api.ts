@@ -9,7 +9,10 @@ interface RequestParams {
   loaderStateSetter?: (state: boolean) => void;
 }
 
-const toggleLoader = (loaderStateSetter: ((state: boolean) => void) | undefined, state: boolean) => {
+const toggleLoader = (
+  loaderStateSetter: ((state: boolean) => void) | undefined,
+  state: boolean
+) => {
   if (loaderStateSetter) {
     loaderStateSetter(state);
   }
@@ -23,32 +26,36 @@ export const request = async ({
   params,
   loaderStateSetter,
 }: RequestParams) => {
-  const baseUrl = process.env.BASE_URL;
-  const token = localStorage.getItem("token");
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
   const config: AxiosRequestConfig = {
     method,
-    baseURL: `https://${baseUrl}/${endpoint}`,
+    baseURL: baseUrl,
+    url: endpoint,
     data,
     params,
     timeout: 7000,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
   };
 
-  let result;
   toggleLoader(loaderStateSetter, true);
+
   try {
-    result = await axios(config);
+    const result = await axios(config);
+    return result;
   } catch (error: any) {
-    if (error.response.status === 401) {
+    if (error.response?.status === 401 && typeof window !== "undefined") {
       localStorage.removeItem("token");
       window.location.href = "/login";
     }
     throw error;
+  } finally {
+    toggleLoader(loaderStateSetter, false);
   }
-  toggleLoader(loaderStateSetter, false);
-  return result;
 };
