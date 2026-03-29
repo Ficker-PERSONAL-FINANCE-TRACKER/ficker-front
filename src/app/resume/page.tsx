@@ -371,7 +371,7 @@ const Resume = () => {
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
         <CustomMenu />
-        <div style={{ width: "90vw" }}>
+        <div style={{ width: "90vw", flex: "1 1 0%", padding: "30px 40px", overflowX: "hidden" }}>
           <div className={styles.header}>
             <div>
                 <span style={{ color: "#808191", fontSize: "14px", fontWeight: 500 }}>{dateRange}</span>
