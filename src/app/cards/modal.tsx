@@ -83,10 +83,10 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
         onFinishFailed={(errorInfo) => console.log(errorInfo)}
       >
         <Col style={{ marginTop: 20 }}>
-          <label>Bandeira:</label>
+          <label>Bandeira</label>
           <Form.Item
             name="flag_id"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Select
               data-testid="flag_id"
@@ -105,16 +105,16 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
           <label>Descrição</label>
           <Form.Item
             name="card_description"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Input className={styles.input} style={{ width: "95%" }} data-testid="description" />
           </Form.Item>
         </Col>
         <Col style={{ marginTop: 20 }}>
-          <label>Dia de vencimento da fatura:</label>
+          <label>Dia de Vencimento da Fatura</label>
           <Form.Item
             name="expiration"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Select data-testid="expiration" className={styles.input} style={{ width: 250, height: 40 }}>
               {/* Renderize as opções com os dias do mês */}
@@ -127,10 +127,10 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
           </Form.Item>
         </Col>
         <Col style={{ marginTop: 20 }}>
-          <label>Dia de fechamento da fatura:</label>
+          <label>Dia de Fechamento da Fatura</label>
           <Form.Item
             name="closure"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Select data-testid="invoicecloseday" className={styles.input} style={{ width: 250, height: 40 }}>
               {/* Renderize as opções com os dias do mês */}

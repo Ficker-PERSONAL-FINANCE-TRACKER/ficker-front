@@ -114,13 +114,13 @@ const Cards = () => {
                           </Text>
                         </Row>
                         <Col>
-                          <Text type="secondary">Próxima fatura:</Text>
+                          <Text type="secondary">Próxima fatura</Text>
                           <Title level={4}>R$ {card.invoice}</Title>
                         </Col>
                         <Row justify={"end"}>
                           <Col>
                             <Col>
-                              <Text type="secondary">Vencimento:</Text>
+                              <Text type="secondary">Vencimento</Text>
                             </Col>
                             <Row justify={"end"}>
                               <Col>

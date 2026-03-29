@@ -87,12 +87,7 @@ const Analysis = () => {
   return (
      <div style={{ display: "flex", flexDirection: "row" }}>
         <CustomMenu />
-        <div style={{ width: "90vw" }}>
-          <div style={{ background: "#fff", padding: 10, alignItems: "center" }}>
-            <Link href={"/"} style={{ background: "#fff", padding: 10, alignItems: "center" }}>
-              <Image src="/logo.png" alt="Logo" width={130} height={27} />
-            </Link>
-          </div>
+        <div style={{ width: "90vw", flex: "1 1 0%", padding: "30px 40px", overflowX: "hidden" }}>
           
           <Row align={"middle"} justify={"space-between"} style={{ marginBottom: 30 }}>
             <div>

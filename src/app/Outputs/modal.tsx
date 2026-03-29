@@ -137,14 +137,14 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
           <label>Descrição</label>
           <Form.Item
             name="transaction_description"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Input className={styles.input} style={{ width: "95%" }} data-testid="description" />
           </Form.Item>
         </Col>
         <Col>
-          <label>Data:</label>
-          <Form.Item name="date" rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}>
+          <label>Data</label>
+          <Form.Item name="date" rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}>
             <DatePicker
               data-testid="date"
               className={styles.input}
@@ -158,10 +158,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
         </Col>
         <Row>
           <Col>
-            <label>Forma de Pagamento:</label>
+            <label>Forma de Pagamento</label>
             <Form.Item
               name="payment_method_id"
-              rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+              rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
             >
               <Select
                 data-testid="payment_method_id"
@@ -177,10 +177,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
           {showCards ? (
             <>
               <Col>
-                <label>Cartões:</label>
+                <label>Cartões</label>
                 <Form.Item
                   name="card_id"
-                  rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+                  rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
                 >
                   <Select
                     data-testid="card_id"
@@ -194,10 +194,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
                 </Form.Item>
               </Col>
               <Col>
-                <label>Parcelas:</label>
+                <label>Parcelas</label>
                 <Form.Item
                   name="installments"
-                  rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+                  rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
                 >
                   <Select
                     data-testid="installments"
@@ -217,10 +217,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
         </Row>
         <Row>
           <Col>
-            <label>Categoria:</label>
+            <label>Categoria</label>
             <Form.Item
               name="category_id"
-              rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+              rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
             >
               <Select
                 data-testid="category_id"
@@ -238,10 +238,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
           </Col>
           {showDescriptionCategory ? (
             <Col>
-              <label>Descrição da Categoria:</label>
+              <label>Descrição da Categoria</label>
               <Form.Item
                 name="category_description"
-                rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+                rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
               >
                 <Input className={styles.input} data-testid="category_description" />
               </Form.Item>
@@ -249,10 +249,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
           ) : null}
         </Row>
         <Col xl={15}>
-          <label>Valor:</label>
+          <label>Valor</label>
           <Form.Item
             name="transaction_value"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Input className={styles.input} placeholder="R$" data-testid="value" />
           </Form.Item>

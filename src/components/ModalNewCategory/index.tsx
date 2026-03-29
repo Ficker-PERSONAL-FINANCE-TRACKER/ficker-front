@@ -65,16 +65,16 @@ export const ModalNewCategory = ({ isModalOpen, setIsModalOpen }: ModalNewCatego
           <label>Descrição</label>
           <Form.Item
             name="category_description"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Input className={styles.input} style={{ width: "95%" }} data-testid="description" />
           </Form.Item>
         </Col>
         <Col>
-          <label>Tipo:</label>
+          <label>Tipo</label>
           <Form.Item
             name="type_id"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Select
               data-testid="type_id"

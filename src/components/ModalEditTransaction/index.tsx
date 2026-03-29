@@ -40,7 +40,7 @@ export const EditTransactionModal = ({
         method: "DELETE",
         endpoint: `transaction/${transaction.id}`,
       });
-      message.success("Transação deletada com sucesso!");
+      message.success("Transação excluída com sucesso!");
       handleCancel();
     } catch (error) {
       console.log(error);
@@ -125,14 +125,14 @@ export const EditTransactionModal = ({
           <label>Descrição</label>
           <Form.Item
             name="transaction_description"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Input className={styles.input} style={{ width: "95%" }} data-testid="description" />
           </Form.Item>
         </Col>
         <Col style={{ marginTop: 20 }}>
-          <label>Data:</label>
-          <Form.Item name="date" rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}>
+          <label>Data</label>
+          <Form.Item name="date" rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}>
             <DatePicker
               data-testid="date"
               onChange={onChange}
@@ -148,13 +148,13 @@ export const EditTransactionModal = ({
         </Col>
         <Row style={{ marginTop: 20 }}>
           <Col>
-            <label>Categoria:</label>
+            <label>Categoria</label>
             <Form.Item
               name="category_id"
               rules={[
                 {
                   required: true,
-                  message: "Esse campo precisa ser preenchido!",
+                  message: "Este campo precisa ser preenchido!",
                 },
               ]}
             >
@@ -174,13 +174,13 @@ export const EditTransactionModal = ({
           </Col>
           {showDescriptionCategory ? (
             <Col>
-              <label>Descrição da Categoria:</label>
+              <label>Descrição da Categoria</label>
               <Form.Item
                 name="category_description"
                 rules={[
                   {
                     required: true,
-                    message: "Esse campo precisa ser preenchido!",
+                    message: "Este campo precisa ser preenchido!",
                   },
                 ]}
               >
@@ -191,10 +191,10 @@ export const EditTransactionModal = ({
         </Row>
         {transaction.installments ? (
           <Col>
-            <label>Parcelas:</label>
+            <label>Parcelas</label>
             <Form.Item
               name="installments"
-              rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+              rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
             >
               <Select data-testid="installments" className={styles.input} style={{ width: 150, height: 35 }}>
                 {Array.from({ length: 12 }, (_, index) => (
@@ -207,10 +207,10 @@ export const EditTransactionModal = ({
           </Col>
         ) : null}
         <Col style={{ marginBottom: 20 }} xl={15}>
-          <label>Valor:</label>
+          <label>Valor</label>
           <Form.Item
             name="transaction_value"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Input className={styles.input} placeholder="R$" data-testid="value" />
           </Form.Item>

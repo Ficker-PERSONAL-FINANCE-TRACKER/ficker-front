@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ShoppingOutlined, WarningOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,19 @@ interface SidebarAlertProps {
 }
 
 const SidebarAlert: React.FC<SidebarAlertProps> = ({ balance, visible }) => {
+  const [hasAnimated, setHasAnimated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !!sessionStorage.getItem('sidebar_alert_animated');
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (!hasAnimated) {
+      sessionStorage.setItem('sidebar_alert_animated', 'true');
+    }
+  }, [hasAnimated]);
+
   const spentPercentage = (balance.real_spending / balance.planned_spending) * 100 || 0;
   
   let status: 'success' | 'attention' | 'dangerous' = 'success';
@@ -39,7 +52,7 @@ const SidebarAlert: React.FC<SidebarAlertProps> = ({ balance, visible }) => {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={hasAnimated ? false : { opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           className={styles.sidebarAlert}

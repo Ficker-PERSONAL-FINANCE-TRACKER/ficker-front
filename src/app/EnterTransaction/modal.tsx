@@ -107,14 +107,14 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
           <label>Descrição</label>
           <Form.Item
             name="transaction_description"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Input className={styles.input} style={{ width: "95%" }} />
           </Form.Item>
         </Col>
         <Col style={{ marginTop: 20 }}>
-          <label>Data:</label>
-          <Form.Item name="date" rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}>
+          <label>Data</label>
+          <Form.Item name="date" rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}>
             <DatePicker
               onChange={onChange}
               className={styles.input}
@@ -128,10 +128,10 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
         </Col>
         <Row style={{ marginTop: 20 }}>
           <Col>
-            <label>Categoria:</label>
+            <label>Categoria</label>
             <Form.Item
               name="category_id"
-              rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+              rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
             >
               <Select
                 className={styles.input}
@@ -148,10 +148,10 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
           </Col>
           {showDescriptionCategory ? (
             <Col>
-              <label>Descrição da Categoria:</label>
+              <label>Descrição da Categoria</label>
               <Form.Item
                 name="category_description"
-                rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+                rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
               >
                 <Input className={styles.input} />
               </Form.Item>
@@ -159,19 +159,19 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
           ) : null}
         </Row>
         <Col style={{ marginBottom: 20 }} xl={15}>
-          <label>Valor:</label>
+          <label>Valor</label>
           <Form.Item
             name="transaction_value"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Input className={styles.input} placeholder="R$" />
           </Form.Item>
         </Col>
         {/* <Col style={{ marginBottom: 20 }} xl={15}>
-          <label>Metodo de pagamento</label>
+          <label>Método de pagamento</label>
           <Form.Item
             name="payment_method_id"
-            rules={[{ required: true, message: "Esse campo precisa ser preenchido!" }]}
+            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
             <Select
               className={styles.input}

@@ -94,7 +94,7 @@ const paths: Record<string, string> = {
 
 const formatTelegramExpiry = (expiresAt?: string) => {
   if (!expiresAt) {
-    return "nao informada";
+    return "não informada";
   }
 
   const utcDate = new Date(expiresAt.replace(" ", "T") + "Z");
@@ -165,7 +165,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
       const apiMessage =
         error?.response?.data?.message ??
         error?.response?.data?.data?.message ??
-        "Nao foi possivel consultar o status do Telegram.";
+        "Não foi possível consultar o status do Telegram.";
 
       message.error(apiMessage);
     } finally {
@@ -186,7 +186,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
       const expiresAt = response?.data?.data?.expires_at;
 
       if (!code) {
-        message.error("Nao foi possivel obter o codigo do Telegram.");
+        message.error("Não foi possível obter o código do Telegram.");
         return;
       }
 
@@ -196,16 +196,16 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
       if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
         try {
           await navigator.clipboard.writeText(code);
-          message.success("Codigo copiado para a area de transferencia.");
+          message.success("Código copiado para a área de transferência.");
         } catch {
-          message.info("Codigo gerado. Copie manualmente se necessario.");
+          message.info("Código gerado. Copie manualmente se necessário.");
         }
       }
     } catch (error: any) {
       const apiMessage =
         error?.response?.data?.message ??
         error?.response?.data?.data?.message ??
-        "Nao foi possivel gerar o codigo do Telegram.";
+        "Não foi possível gerar o código do Telegram.";
 
       message.error(apiMessage);
     } finally {
@@ -225,9 +225,9 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
       const revoked = response?.data?.data?.revoked;
 
       if (revoked) {
-        message.success("Vinculo com o Telegram removido.");
+        message.success("Vínculo com o Telegram removido.");
       } else {
-        message.info("Nenhum vinculo ativo foi encontrado.");
+        message.info("Nenhum vínculo ativo foi encontrado.");
       }
 
       setTelegramCode(null);
@@ -237,7 +237,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
       const apiMessage =
         error?.response?.data?.message ??
         error?.response?.data?.data?.message ??
-        "Nao foi possivel desvincular a conta do Telegram.";
+        "Não foi possível desvincular a conta do Telegram.";
 
       message.error(apiMessage);
     } finally {
@@ -367,17 +367,17 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
             <>
               <p>
                 {telegramLinkStatus?.linked
-                  ? "Sua conta esta vinculada ao Telegram."
-                  : "Sua conta ainda nao esta vinculada ao Telegram."}
+                  ? "Sua conta está vinculada ao Telegram."
+                  : "Sua conta ainda não está vinculada ao Telegram."}
               </p>
 
               {telegramLinkStatus?.account && (
                 <div className="telegram-link-status">
                   <p>
-                    <strong>Status:</strong> {telegramLinkStatus.account.status}
+                    <strong>Status</strong> {telegramLinkStatus.account.status}
                   </p>
                   <p>
-                    <strong>Usuario:</strong>{" "}
+                    <strong>Usuário</strong>{" "}
                     {telegramLinkStatus.account.telegram_username
                       ? `@${telegramLinkStatus.account.telegram_username}`
                       : telegramLinkStatus.account.telegram_user_id}
@@ -387,7 +387,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
 
               <Space className="telegram-link-actions" wrap>
                 <Button type="primary" loading={telegramCodeLoading} onClick={handleTelegramLinkCode}>
-                  {telegramLinkStatus?.linked ? "Gerar novo codigo" : "Vincular"}
+                  {telegramLinkStatus?.linked ? "Gerar novo código" : "Vincular"}
                 </Button>
                 <Button
                   danger
@@ -401,7 +401,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
 
               {telegramCode && (
                 <>
-                  <p>Use este codigo no bot do Telegram @FickerTelegramBot para vincular sua conta:</p>
+                  <p>Use este código no bot do Telegram @FickerTelegramBot para vincular sua conta:</p>
                   <div className="telegram-link-code">{telegramCode}</div>
                   <p>Validade: {formatTelegramExpiry(telegramCodeExpiresAt ?? undefined)}</p>
                 </>
