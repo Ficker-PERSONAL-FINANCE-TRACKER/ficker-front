@@ -38,3 +38,4 @@ next-env.d.ts
 .sentryclirc
 
 FRONTEND_API_CONTRACT.md
+.env
