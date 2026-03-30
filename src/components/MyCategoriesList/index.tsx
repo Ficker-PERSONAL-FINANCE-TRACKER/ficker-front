@@ -61,7 +61,7 @@ const MyCategoriesList = () => {
   return (
     <div className="card">
       <div className="title-area">
-        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#11142D' }}>Minhas Categorias</h4>
+        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#11142D' }}>Gastos por Categoria</h4>
         <a className="title-area__button" onClick={showModal}>
           <img src="/icons/icon-more.svg" alt="new_category" />
         </a>
@@ -71,7 +71,7 @@ const MyCategoriesList = () => {
         {categories?.length === 0 || !categories?.some((c) => c.category_spending > 0) ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="Nenhuma categoria adicionada ou com gastos."
+            description="Nenhuma categoria adicionada."
             style={{ margin: "20px 0" }}
           >
             <Button type="primary" onClick={showModal}>Adicionar Categoria</Button>
