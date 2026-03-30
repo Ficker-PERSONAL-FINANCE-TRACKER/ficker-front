@@ -5,7 +5,8 @@ import type { TourProps } from "antd";
 import { 
   BellOutlined, PlusOutlined, SwapOutlined, 
   CreditCardOutlined, PlusCircleOutlined, 
-  MinusCircleOutlined, ShopOutlined, EyeOutlined, EyeInvisibleOutlined, MoreOutlined
+  MinusCircleOutlined, ShopOutlined, EyeOutlined, EyeInvisibleOutlined, MoreOutlined,
+  WalletOutlined, TagOutlined, LineChartOutlined
 } from "@ant-design/icons";
 import styles from "./resume.module.scss";
 import MyCategoriesList from "@/components/MyCategoriesList";
@@ -53,15 +54,15 @@ const Resume = () => {
 
   const getFlagColor = (flagId: number) => {
     const colors: { [key: number]: string } = {
-      3: 'linear-gradient(135deg, #7B61FF 0%, #5E5CE6 50%, #4D3CFF 100%)', // Mastercard
-      4: 'linear-gradient(135deg, #1A1A1A 0%, #333333 100%)', // Visa
-      5: 'linear-gradient(135deg, #e3001b 0%, #ff4b4b 100%)', // Hipercard
-      6: 'linear-gradient(135deg, #2D3E50 0%, #4C5C6E 100%)', // Elo
-      7: 'linear-gradient(135deg, #00875A 0%, #22A06B 100%)', // Alelo
-      8: 'linear-gradient(135deg, #007bc1 0%, #00B0FF 100%)', // Amex
-      9: 'linear-gradient(135deg, #004a97 0%, #0074E4 100%)', // Diners
+      3: 'linear-gradient(135deg, #1e1e1e 0%, #3a3a3a 100%)', // Mastercard (Dark)
+      4: 'linear-gradient(135deg, #1a1f71 0%, #0056b3 100%)', // Visa (Blue)
+      5: 'linear-gradient(135deg, #d32f2f 0%, #ff5252 100%)', // Hipercard (Red)
+      6: 'linear-gradient(135deg, #2d3e50 0%, #4c5c6e 100%)', // Elo (Grey/Dark Blue)
+      7: 'linear-gradient(135deg, #00875a 0%, #22a06b 100%)', // Alelo (Green)
+      8: 'linear-gradient(135deg, #007bc1 0%, #00b0ff 100%)', // Amex (Light Blue)
+      9: 'linear-gradient(135deg, #004a97 0%, #0074e4 100%)', // Diners (Blue/Navy)
     };
-    return colors[flagId] || 'linear-gradient(135deg, #11142D 0%, #444E72 100%)';
+    return colors[flagId] || 'linear-gradient(135deg, #6C5DD3 0%, #8E82EF 100%)';
   };
 
   const getFlagImage = (flagId: number) => {
@@ -205,8 +206,14 @@ const Resume = () => {
       const response = await request({
         endpoint: "user",
       });
-      setUser(response.data);
-    } catch (error) { }
+      const userData = response.data;
+        setUser({
+          ...userData,
+          name: userData.name
+        });
+    } catch (error) {
+      console.error("Erro ao buscar usuário no Resume:", error);
+    }
   };
 
   const getCardsData = async () => {
@@ -401,7 +408,7 @@ const Resume = () => {
 
             <Row align={"middle"} justify={"space-between"} style={{ marginBottom: 32 }}>
               <div>
-                <h2 className={styles.greeting}>Olá, {user?.name || "User"}!</h2>
+                <h2 className={styles.greeting}>Olá, {user?.name ? user.name.split(" ").slice(0, 2).join(" ") : "User"}!</h2>
               </div>
             </Row>
 
@@ -412,7 +419,10 @@ const Resume = () => {
                 <div ref={refSaldo} className={styles.balance} style={{ flex: 1, padding: '24px 32px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
                     <div>
-                      <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4 }}>Saldo</p>
+                      <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
+                        <WalletOutlined style={{ marginRight: 6, fontSize: 12 }} />
+                        Saldo
+                      </p>
                       <p className={styles.balance_title} style={{ fontSize: 28, fontWeight: 700 }}>
                         {showSaldo ? <AnimatedNumber value={balance.balance} duration={1500} format={formatCurrency} /> : "R$ •••••••"}
                       </p>
@@ -503,7 +513,10 @@ const Resume = () => {
                 <div ref={refPlanejado} className={styles.balance} style={{ flex: 1, padding: '20px 24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4 }}>Meta do Mês</p>
+                      <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
+                        <TagOutlined style={{ marginRight: 6, fontSize: 12 }} />
+                        Meta do Mês
+                      </p>
                       <p className={styles.balance_title} style={{ fontSize: 28, marginBottom: 16 }}>
                         <AnimatedNumber value={balance.planned_spending} duration={1500} format={formatCurrency} />
                       </p>
@@ -514,7 +527,10 @@ const Resume = () => {
                   </div>
 
                   <div style={{ marginTop: 8 }}>
-                    <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4 }}>Gasto Real</p>
+                    <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
+                      <LineChartOutlined style={{ marginRight: 6, fontSize: 12 }} />
+                      Gasto Real
+                    </p>
                     <p className={styles.balance_title} style={{ fontSize: 28, marginBottom: 16 }}>
                       <AnimatedNumber value={balance.real_spending} duration={1500} format={formatCurrency} />
                     </p>
@@ -538,7 +554,7 @@ const Resume = () => {
 
                 {/* Quick Actions area */}
                 <div className={styles.quickActions} style={{ marginTop: 20, padding: '16px 24px', display: 'block' }}>
-                  <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 16, color: '#808191' }}>Menu de ações rápidas</p>
+                  <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 16, color: '#808191' }}>Ações rápidas</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                     <div className={styles.actionButton} style={{ background: '#E6F7EF', color: '#00875A' }} onClick={() => router.push('/EnterTransaction')}>
                       <PlusCircleOutlined style={{ fontSize: 24, color: '#00875A' }} />
@@ -557,20 +573,23 @@ const Resume = () => {
               </Col>
 
               <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
-                <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '16px 24px', position: 'relative' }}>
+                <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '16px 24px', position: 'relative', overflow: 'visible' }}>
                   <p className={styles.balance_description} style={{ marginBottom: 12 }}>Meus Cartões (total de gastos)</p>
                   <p className={styles.balance_title} style={{ marginBottom: 24 }}><AnimatedNumber value={totalCardsInvoice} duration={1500} format={formatCurrency} /></p>
                   
                   {/* Card Slider / Stack Simulation */}
-                  <div style={{ position: 'relative', height: 180, marginBottom: 24, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', overflow: 'hidden' }}>
+                  <div style={{ position: 'relative', height: 180, marginBottom: 24, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                     {cards.length > 0 ? (
                       cards.map((card, idx) => {
                         const n = cards.length;
                         let distance = idx - currentCardIndex;
+                        
+                        // Lógica para carrossel infinito/circular se necessário
                         if (n > 2) {
                           if (distance > n / 2) distance -= n;
                           else if (distance < -n / 2) distance += n;
                         }
+                        
                         const isActive = idx === currentCardIndex;
                         const isVisible = Math.abs(distance) <= 1;
 
@@ -578,42 +597,51 @@ const Resume = () => {
                           <motion.div 
                             key={card.id || idx}
                             onClick={() => setCurrentCardIndex(idx)}
-                            whileHover={{ scale: isActive ? 1.02 : 1, translateY: isActive ? -5 : 0 }}
+                            animate={{ 
+                              x: distance * 20, 
+                              scale: isActive ? 1 : 1,
+                              zIndex: isActive ? 10 : 5,
+                              filter: isActive ? 'brightness(1) blur(0px)' : 'brightness(0.7) blur(1px)',
+                              opacity: isVisible ? 1 : 0,
+                            }}
+                            whileHover={{ 
+                              scale: isActive ? 1.02 : 1,
+                              filter: 'brightness(1)',
+                            }}
+                            transition={{ 
+                              duration: 0.5, 
+                              ease: [0.34, 1.56, 0.64, 1] 
+                            }}
                             style={{ 
                               position: 'absolute',
                               width: '80%',
-                              height: '120px',
+                              height: '130px',
                               background: getFlagColor(card.flag_id),
-                              borderRadius: 20,
-                              padding: '14px 20px',
+                              borderRadius: 12,
+                              padding: '18px 24px',
                               color: '#fff',
-                              boxShadow: isActive ? '0px 10px 30px rgba(0, 0, 0, 0.2)' : 'none',
-                              zIndex: 10 - Math.abs(distance),
-                              opacity: isVisible ? (isActive ? 1 : 0.4) : 0,
-                              filter: isActive ? 'none' : 'blur(2px)',
-                              transform: `translateX(${distance * 85}px) scale(${1 - Math.abs(distance) * 0.15}) translateY(${Math.abs(distance) * 5}px)`,
-                              transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                              cursor: isActive ? 'default' : 'pointer',
-                              pointerEvents: isVisible ? 'auto' : 'none',
+                              boxShadow: isActive ? '0px 15px 35px rgba(0, 0, 0, 0.2)' : '0px 5px 15px rgba(0, 0, 0, 0.1)',
+                              cursor: 'pointer',
                               display: 'flex',
                               flexDirection: 'column',
                               justifyContent: 'space-between',
-                              overflow: 'hidden'
+                              overflow: 'hidden',
+                              pointerEvents: isVisible ? 'auto' : 'none'
                             }}
                           >
-                            {/* Wave decoration (simulated with CSS circles) */}
-                            <div style={{ position: 'absolute', top: '-20%', right: '-20%', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.05)', zIndex: 0 }} />
-                            <div style={{ position: 'absolute', bottom: '-25%', left: '-25%', width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.03)', zIndex: 0 }} />
+                            {/* Wave decoration */}
+                            <div style={{ position: 'absolute', top: '-20%', right: '-20%', width: '130px', height: '130px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.08)', zIndex: 0 }} />
+                            <div style={{ position: 'absolute', bottom: '-25%', left: '-25%', width: '110px', height: '110px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.05)', zIndex: 0 }} />
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
                               <div>
-                                <div style={{ fontSize: 10, color: 'rgba(255, 255, 255, 0.7)', marginBottom: 2 }}>Fatura</div>
-                                <div style={{ fontSize: 20, fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>
+                                <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.7)', marginBottom: 2, fontWeight: 500 }}>Fatura</div>
+                                <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>
                                   <AnimatedNumber value={card.invoice} duration={1500} format={formatCurrency} />
                                 </div>
                               </div>
                               <div style={{ textAlign: 'right' }}>
-                                <Image src={getFlagImage(card.flag_id)} alt="Flag" width={32} height={18} style={{ objectFit: 'contain' }} />
+                                <Image src={getFlagImage(card.flag_id)} alt="Flag" width={36} height={22} style={{ objectFit: 'contain' }} />
                                 {card.flag_id === 3 && (
                                     <div style={{ fontSize: 7, color: '#fff', marginTop: 1, opacity: 0.9, fontWeight: 500, textTransform: 'lowercase' }}>mastercard</div>
                                 )}
@@ -621,10 +649,10 @@ const Resume = () => {
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', position: 'relative', zIndex: 1 }}>
-                              <div style={{ fontSize: 12, letterSpacing: 2, color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500 }}>
+                              <div style={{ fontSize: 13, letterSpacing: 2, color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500 }}>
                                 **** **** **** ****
                               </div>
-                              <div style={{ fontSize: 11, color: '#fff', fontWeight: 500 }}>
+                              <div style={{ fontSize: 12, color: '#fff', fontWeight: 600 }}>
                                 {String(card.expiration).padStart(2, '0')}/
                                 {String(showDate(card.expiration)).padStart(2, '0')}
                               </div>
