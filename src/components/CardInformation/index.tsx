@@ -65,18 +65,14 @@ export const CardInformation = ({ card, totalValue }: CardProps) => {
   };
 
   return (
-    <Col
-      lg={24}
-      xs={24}
-      style={{ padding: '0 20px' }}
+    <div
+      style={{ padding: '0' }}
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          height: '180px',
-          width: '100%',
-          maxWidth: '320px',
+          aspectRatio: '8/3.5',
           background: getFlagColor(card.flag_id),
           borderRadius: 12,
           padding: '24px',
@@ -87,7 +83,6 @@ export const CardInformation = ({ card, totalValue }: CardProps) => {
           justifyContent: 'space-between',
           position: 'relative',
           overflow: 'hidden',
-          margin: '0 auto'
         }}
       >
         {/* Wave decoration */}
@@ -123,6 +118,6 @@ export const CardInformation = ({ card, totalValue }: CardProps) => {
           </div>
         </div>
       </motion.div>
-    </Col>
+    </div>
   );
 };

@@ -1,8 +1,10 @@
 @media (min-width: 768px) {
   .table {
-    width: 90%;
-    // margin: auto;
-    border-spacing:12px;
+    width: 100%;
+    border-spacing: 12px;
+    border-collapse: separate;
+    padding: 0 18px;
+    margin: 0;
 
     th {
       text-align: start;
@@ -22,7 +24,7 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
       max-height: 30px;
       
-      :first-child {
+      &:first-child {
         cursor: pointer;
 
         &:hover {

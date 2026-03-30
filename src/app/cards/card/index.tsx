@@ -81,8 +81,8 @@ function CardPage({ card }: CardProps) {
           category_description: "Pagamento Cartão de Crédito",
         }}
       />
-      <Row>
-        <Col xl={14} lg={20} md={20} xs={20}>
+      <Row gutter={[24, 24]} style={{ padding: '0 18px', paddingLeft: 0 }}>
+        <Col xl={14} lg={14} md={24} xs={24} style={{ paddingLeft: 0 }}>
           <TransactionTab
             data={cardTranscations}
             typeId={3}
@@ -90,24 +90,30 @@ function CardPage({ card }: CardProps) {
             setEditModal={setIsEditModalOpen}
           />
         </Col>
-        <Col xl={6} lg={12} md={20} xs={21}>
-          <Col>
+        <Col xl={10} lg={10} md={24} xs={24}>
+          <div style={{ padding: 0, width: '100%' }}>
             <CardInformation card={card} totalValue={totalValue} />
-          </Col>
-          <Col xl={20} lg={22} md={20} xs={21}>
-            <Row justify={"end"}>
-              <Col xl={12} lg={22} md={20} xs={21}>
-                <button className={styles.button} onClick={openModal}>
+            <Row gutter={[12, 12]} style={{ marginTop: 20 }}>
+              <Col span={12}>
+                <button 
+                  className={styles.button} 
+                  onClick={openModal}
+                  style={{ width: '100%', marginTop: 0, padding: '10px 0' }}
+                >
                   Nova transação
                 </button>
               </Col>
-              <Col xl={3} lg={22} md={20} xs={21} style={{ marginLeft: "80px" }}>
-                <button className={styles.button} onClick={openOutputModal}>
+              <Col span={12}>
+                <button 
+                  className={styles.button} 
+                  onClick={openOutputModal}
+                  style={{ width: '100%', marginTop: 0, padding: '10px 0' }}
+                >
                   Pagar Fatura
                 </button>
               </Col>
             </Row>
-          </Col>
+          </div>
         </Col>
       </Row>
     </Col>

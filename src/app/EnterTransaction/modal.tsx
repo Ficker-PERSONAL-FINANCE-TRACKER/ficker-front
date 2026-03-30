@@ -1,10 +1,25 @@
 "use client";
 import { request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
-import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber } from "antd";
+import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space } from "antd";
 import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
+import { 
+  PlusOutlined, 
+  WalletOutlined, 
+  HomeOutlined, 
+  CarOutlined, 
+  MedicineBoxOutlined, 
+  SkinOutlined, 
+  RocketOutlined, 
+  ShoppingOutlined,
+  BookOutlined,
+  DollarOutlined,
+  ToolOutlined,
+  CoffeeOutlined,
+  StarOutlined
+} from "@ant-design/icons";
 
 interface EnterTransactionModalProps {
   isModalOpen: boolean;
@@ -22,6 +37,13 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
 
+  const defaultCategories = [
+    { id: 'income_salary', label: 'Salário', icon: <DollarOutlined />, color: '#00875A' },
+    { id: 'income_freelance', label: 'Freelance', icon: <RocketOutlined />, color: '#6C5DD3' },
+    { id: 'income_invest', label: 'Investimentos', icon: <WalletOutlined />, color: '#FFA940' },
+    { id: 'income_extra', label: 'Renda Extra', icon: <StarOutlined />, color: '#00B0FF' },
+  ];
+
   const [form] = Form.useForm();
 
   const handleCancel = () => {
@@ -32,12 +54,24 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
   const handleFinish = async () => {
     try {
       const values = await form.validateFields();
-      console.log(dayjs(values.date).format("YYYY-MM-DD"));
+      
+      let categoryId = values.category_id;
+      let categoryDescription = values.category_description;
+
+      // Se for uma categoria padrão, tratamos como uma "nova" com o nome pré-definido
+      const selectedDefault = defaultCategories.find(c => c.id === values.category_id);
+      if (selectedDefault) {
+        categoryId = 0;
+        categoryDescription = selectedDefault.label;
+      }
+
       await request({
         method: "POST",
         endpoint: "transaction/store",
         data: {
           ...values,
+          category_id: categoryId,
+          category_description: categoryDescription,
           date: dayjs(values.date).format("YYYY-MM-DD"),
           type_id: 1,
         },
@@ -136,14 +170,36 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
               <Select
                 className={styles.input}
                 style={{ width: 200, height: 40 }}
-                options={[
-                  { value: 0, label: "Nova" },
-                  ...categories.map((category) => ({
-                    value: category.id,
-                    label: category.category_description,
-                  })),
-                ]}
-              />
+                placeholder="Selecione ou crie"
+              >
+                <Select.Option value={0}>
+                  <Space>
+                    <PlusOutlined style={{ color: '#6C5DD3' }} />
+                    <span>Nova Categoria</span>
+                  </Space>
+                </Select.Option>
+                
+                <Select.OptGroup label="Sugestões">
+                  {defaultCategories.map(cat => (
+                    <Select.Option key={cat.id} value={cat.id}>
+                      <Space>
+                        <span style={{ color: cat.color }}>{cat.icon}</span>
+                        <span>{cat.label}</span>
+                      </Space>
+                    </Select.Option>
+                  ))}
+                </Select.OptGroup>
+
+                {categories.length > 0 && (
+                  <Select.OptGroup label="Minhas Categorias">
+                    {categories.map((category) => (
+                      <Select.Option key={category.id} value={category.id}>
+                        {category.category_description}
+                      </Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                )}
+              </Select>
             </Form.Item>
           </Col>
           {showDescriptionCategory ? (

@@ -1,10 +1,26 @@
 "use client";
 import { request } from "@/service/api";
-import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message } from "antd";
+import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
 import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import styles from "../../EnterTransaction/entertransaction.module.scss";
+import { 
+  PlusOutlined, 
+  HomeOutlined, 
+  CarOutlined, 
+  MedicineBoxOutlined, 
+  SkinOutlined, 
+  RocketOutlined, 
+  ShoppingOutlined,
+  BookOutlined,
+  ToolOutlined,
+  CoffeeOutlined,
+  StarOutlined,
+  RestOutlined,
+  ThunderboltOutlined,
+  WifiOutlined
+} from "@ant-design/icons";
 interface CardTransactionModalProps {
   isModalOpen: boolean;
   setIsModalOpen: (value: boolean) => void;
@@ -22,6 +38,17 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [form] = Form.useForm();
+
+  const defaultCategories = [
+    { id: 'exp_food', label: 'Alimentação', icon: <RestOutlined />, color: '#FFA940' },
+    { id: 'exp_home', label: 'Casa', icon: <HomeOutlined />, color: '#00B0FF' },
+    { id: 'exp_transp', label: 'Transporte', icon: <CarOutlined />, color: '#6C5DD3' },
+    { id: 'exp_health', label: 'Saúde', icon: <MedicineBoxOutlined />, color: '#00875A' },
+    { id: 'exp_leisure', label: 'Lazer', icon: <CoffeeOutlined />, color: '#FF754C' },
+    { id: 'exp_bills', label: 'Contas', icon: <ThunderboltOutlined />, color: '#FFD700' },
+    { id: 'exp_internet', label: 'Internet', icon: <WifiOutlined />, color: '#8E82EF' },
+    { id: 'exp_shop', label: 'Compras', icon: <ShoppingOutlined />, color: '#FF4D4F' },
+  ];
 
   const handleCancel = () => {
     setIsModalOpen(false);
@@ -44,12 +71,23 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
   const handleFinish = async () => {
     try {
       const values = await form.validateFields();
-      console.log(dayjs(values.date).format("YYYY-MM-DD"));
+      
+      let categoryId = values.category_id;
+      let categoryDescription = values.category_description;
+
+      const selectedDefault = defaultCategories.find(c => c.id === values.category_id);
+      if (selectedDefault) {
+        categoryId = 0;
+        categoryDescription = selectedDefault.label;
+      }
+
       await request({
         method: "POST",
         endpoint: "transaction/store",
         data: {
           ...values,
+          category_id: categoryId,
+          category_description: categoryDescription,
           date: dayjs(values.date).format("YYYY-MM-DD"),
           type_id: 2,
           payment_method_id: 4,
@@ -134,14 +172,36 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
                 data-testid="category_id"
                 className={styles.input}
                 style={{ width: 200, height: 35 }}
-                options={[
-                  { value: 0, label: "Nova" },
-                  ...categories.map((category) => ({
-                    value: category.id,
-                    label: category.category_description,
-                  })),
-                ]}
-              />
+                placeholder="Selecione ou crie"
+              >
+                <Select.Option value={0}>
+                  <Space>
+                    <PlusOutlined style={{ color: '#6C5DD3' }} />
+                    <span>Nova Categoria</span>
+                  </Space>
+                </Select.Option>
+                
+                <Select.OptGroup label="Sugestões">
+                  {defaultCategories.map(cat => (
+                    <Select.Option key={cat.id} value={cat.id}>
+                      <Space>
+                        <span style={{ color: cat.color }}>{cat.icon}</span>
+                        <span>{cat.label}</span>
+                      </Space>
+                    </Select.Option>
+                  ))}
+                </Select.OptGroup>
+
+                {categories && categories.length > 0 && (
+                  <Select.OptGroup label="Minhas Categorias">
+                    {categories.map((category) => (
+                      <Select.Option key={category.id} value={category.id}>
+                        {category.category_description}
+                      </Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                )}
+              </Select>
             </Form.Item>
           </Col>
           {showDescriptionCategory ? (
