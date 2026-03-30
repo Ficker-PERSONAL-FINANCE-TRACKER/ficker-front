@@ -132,7 +132,7 @@ const Cards = () => {
                       <motion.div
                         whileHover={{ scale: 1.02, translateY: -5 }}
                         style={{
-                          height: '160px',
+                          height: '130px',
                           background: getFlagColor(card.flag_id),
                           borderRadius: 12,
                           padding: '20px',

@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { Button, Col, Row, Typography, message, Tour, Badge, Space } from "antd";
+import { Button, Col, Row, Typography, message, Tour, Badge, Space, Modal, Form, Input } from "antd";
 import type { TourProps } from "antd";
 import { 
   BellOutlined, PlusOutlined, SwapOutlined, 
@@ -107,9 +107,25 @@ const Resume = () => {
     return dayjs().month() + 1;
   };
   const [isEditMode, setIsEditMode] = useState(false);
-  const [gastoPlanejado, setGastoPlanejado] = useState("0");
-
   const [openTour, setOpenTour] = useState(false);
+  const [gastoPlanejado, setGastoPlanejado] = useState("");
+
+  const handleFinishEditGoal = async (values: any) => {
+    try {
+      await request({
+        endpoint: "spending/store",
+        method: "POST",
+        data: {
+          planned_spending: values.planned_spending,
+        },
+      });
+      setIsEditMode(false);
+      getBalance();
+      message.success("Meta atualizada com sucesso!");
+    } catch (error) {
+      message.error("Algo deu errado ao atualizar a meta!");
+    }
+  };
   const refSaldo = useRef(null);
   const refPlanejado = useRef(null);
   const refReal = useRef(null);
@@ -178,29 +194,6 @@ const Resume = () => {
     setIsEditMode(true);
   };
 
-  const handleBlur = () => {
-    setIsEditMode(false);
-    // Faça a requisição de atualização aqui com o novo valor (gastoPlanejado)
-  };
-
-  const handleKeyDown = async (e: any) => {
-    if (e.keyCode === 13) {
-      setIsEditMode(false);
-      try {
-        await request({
-          endpoint: "spending/store",
-          method: "POST",
-          data: {
-            planned_spending: gastoPlanejado,
-          },
-        });
-        getBalance();
-      } catch (error) {
-        message.error("Algo deu errado!");
-      }
-    }
-  };
-
   const getUser = async () => {
     try {
       const response = await request({
@@ -261,40 +254,66 @@ const Resume = () => {
         return;
       }
 
-      // Group by month
-      const grouped: { [key: string]: { name: string, entrada: number, saida: number, total: number } } = {};
-      
-      // Sort transactions by date first
-      const sortedTxs = [...txs].sort((a: any, b: any) => dayjs(a.date).unix() - dayjs(b.date).unix());
+      // Determinar o mês de referência com base no seletor de período
+      const referenceDate = period === "this" ? dayjs() : dayjs().subtract(1, "month");
+      const startOfMonth = referenceDate.startOf("month");
+      const daysInMonth = referenceDate.daysInMonth();
 
-      sortedTxs.forEach((tx: any) => {
-        const date = dayjs(tx.date);
-        let monthKey = date.format("MMM"); // e.g., "mar."
-        monthKey = monthKey.charAt(0).toUpperCase() + monthKey.slice(1).replace(".", "");
-        
-        if (!grouped[monthKey]) {
-          grouped[monthKey] = { 
-            name: monthKey, 
-            entrada: 0, 
-            saida: 0, 
-            total: 0 
-          };
+      // Calcular o saldo acumulado ANTES do mês de referência
+      let runningBalance = txs.reduce((acc: number, tx: any) => {
+        const txDate = dayjs(tx.date);
+        if (txDate.isBefore(startOfMonth)) {
+          const value = parseFloat(tx.transaction_value || 0);
+          return tx.type_id === 1 ? acc + value : acc - value;
         }
+        return acc;
+      }, 0);
+
+      // Inicializar todos os dias do mês com valores zero
+      const grouped: { [key: string]: { name: string, entrada: number, saida: number, total: number } } = {};
+      for (let i = 1; i <= daysInMonth; i++) {
+        const dayStr = String(i).padStart(2, "0");
+        grouped[dayStr] = { 
+          name: dayStr, 
+          entrada: 0, 
+          saida: 0, 
+          total: 0 
+        };
+      }
+      
+      // Filtrar e somar transações apenas do mês selecionado
+      txs.forEach((tx: any) => {
+        const txDate = dayjs(tx.date);
         
-        const value = parseFloat(tx.transaction_value || 0);
-        if (tx.type_id === 1) { // 1 = Entrada
-          grouped[monthKey].entrada += value;
-        } else if (tx.type_id === 2) { // 2 = Saída
-          grouped[monthKey].saida += value;
+        // Verifica se a transação pertence ao mês e ano de referência
+        if (txDate.isSame(referenceDate, 'month')) {
+          const dayKey = txDate.format("DD");
+          const value = parseFloat(tx.transaction_value || 0);
+          
+          if (grouped[dayKey]) {
+            if (tx.type_id === 1) { // 1 = Entrada
+              grouped[dayKey].entrada += value;
+            } else if (tx.type_id === 2) { // 2 = Saída
+              grouped[dayKey].saida += value;
+            }
+          }
         }
-        grouped[monthKey].total = grouped[monthKey].entrada - grouped[monthKey].saida;
       });
 
-      // Convert to array and ensure we have at least 6 months if possible, or just what we have
-      const data = Object.values(grouped);
-      setChartData(data);
+      // Converter para array ordenado por dia e calcular saldo acumulado dia a dia
+      const data = Object.values(grouped).sort((a, b) => parseInt(a.name) - parseInt(b.name));
+      data.forEach((day: any) => {
+        runningBalance += (day.entrada - day.saida);
+        day.total = runningBalance;
+      });
+
+      // Filtrar para começar a partir da primeira movimentação ou saldo inicial
+      const firstActiveDayIndex = data.findIndex(day => day.total !== 0 || day.entrada > 0 || day.saida > 0);
+      const filteredData = firstActiveDayIndex !== -1 ? data.slice(firstActiveDayIndex) : [];
+
+      setChartData(filteredData);
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao buscar transações para o gráfico:", error);
     } finally {
       setIsLoadingChart(false);
     }
@@ -305,11 +324,28 @@ const Resume = () => {
     getUser();
     getCardsData();
     getTransactionsData();
-  }, []);
+  }, [period]);
 
   const handleCloseTour = () => {
     setOpenTour(false);
     localStorage.setItem("hasSeenOnboardingTour", "true");
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div style={{ background: '#fff', padding: '12px', border: '1px solid #f0f0f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+          <p style={{ fontWeight: 700, marginBottom: '8px', color: '#11142D' }}>Dia {label}</p>
+          <p style={{ margin: 0, color: '#00875A', fontSize: '12px' }}>Entradas: {formatCurrency(data.entrada)}</p>
+          <p style={{ margin: 0, color: '#DE350B', fontSize: '12px' }}>Saídas: {formatCurrency(data.saida)}</p>
+          <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #f0f0f0' }}>
+            <p style={{ margin: 0, color: '#6C5DD3', fontWeight: 600 }}>Saldo: {formatCurrency(data.total)}</p>
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   const steps: TourProps['steps'] = [
@@ -375,13 +411,35 @@ const Resume = () => {
     }
   ];
 
+  const RenderDot = (props: any) => {
+    const { cx, cy, payload, index } = props;
+    // Só mostra o ponto se houver entrada/saída OU se for o primeiro dia E o saldo não for zero
+    const isFirstDayWithBalance = index === 0 && payload.total !== 0;
+    const hasTransactions = payload.entrada > 0 || payload.saida > 0;
+
+    if (isFirstDayWithBalance || hasTransactions) {
+      return (
+        <circle 
+          cx={cx} 
+          cy={cy} 
+          r={4} 
+          fill="#6C5DD3" 
+          stroke="#fff" 
+          strokeWidth={2} 
+          key={`dot-${index}`}
+        />
+      );
+    }
+    return null;
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
         <CustomMenu />
         <div style={{ width: "90vw", flex: "1 1 0%", padding: "30px 40px", overflowX: "hidden" }}>
           <div className={styles.header}>
             <div>
-                <span style={{ color: "#808191", fontSize: "14px", fontWeight: 500 }}>{dateRange}</span>
+                <h2 className={styles.greeting} style={{ margin: 0 }}>Olá, {user?.name ? user.name.split(" ").slice(0, 2).join(" ") : "John Amorim"}!</h2>
               </div>
               <div className={styles.topActions}>
                 <div className={styles.periodSelector}>
@@ -405,12 +463,6 @@ const Resume = () => {
                 </div>
               </div>
             </div>
-
-            <Row align={"middle"} justify={"space-between"} style={{ marginBottom: 32 }}>
-              <div>
-                <h2 className={styles.greeting}>Olá, {user?.name ? user.name.split(" ").slice(0, 2).join(" ") : "User"}!</h2>
-              </div>
-            </Row>
 
             {/* The Alert Banner has been moved to the sidebar */}
 
@@ -440,17 +492,12 @@ const Resume = () => {
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                    <span style={{ fontSize: 20, fontWeight: 600, color: '#11142D' }}>Visão Geral</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#FF754C' }} />
-                        <span style={{ fontSize: 12, color: '#808191' }}>Saída</span>
+                    <h3 className={styles.balance_description} style={{ margin: 0 }}>Visão Geral</h3>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6C5DD3' }} />
+                        <span style={{ fontSize: 11, color: '#808191' }}>Saldo</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#A0E75A' }} />
-                        <span style={{ fontSize: 12, color: '#808191' }}>Entrada</span>
-                      </div>
-                      <MoreOutlined style={{ color: '#808191', fontSize: 20, cursor: 'pointer' }} />
                     </div>
                   </div>
 
@@ -458,45 +505,34 @@ const Resume = () => {
                     {isLoadingChart ? (
                       <div style={{ textAlign: 'center', color: '#808191' }}>Carregando dados...</div>
                     ) : chartData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height={200}>
                         <AreaChart data={chartData}>
                           <defs>
-                            <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#A0E75A" stopOpacity={0.2} />
-                              <stop offset="95%" stopColor="#A0E75A" stopOpacity={0} />
+                            <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#6C5DD3" stopOpacity={0.1}/>
+                              <stop offset="95%" stopColor="#6C5DD3" stopOpacity={0}/>
                             </linearGradient>
                           </defs>
-                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f5" />
+                          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
                           <XAxis 
                             dataKey="name" 
                             axisLine={false} 
                             tickLine={false} 
-                            tick={{ fill: '#808191', fontSize: 10 }} 
-                            dy={5}
-                          />
-                          <YAxis 
-                            axisLine={false} 
-                            tickLine={false} 
                             tick={{ fill: '#808191', fontSize: 10 }}
-                            dx={-5}
+                            interval="preserveStartEnd"
                           />
-                          <Tooltip />
-                          <Area 
-                            type="monotone" 
-                            dataKey="entrada" 
-                            stroke="#A0E75A" 
-                            strokeWidth={3} 
-                            fillOpacity={1} 
-                            fill="url(#colorSaldo)" 
-                          />
-                          <Area 
-                            type="monotone" 
-                            dataKey="saida" 
-                            stroke="#FF754C" 
-                            strokeWidth={2} 
-                            fillOpacity={0.1} 
-                            fill="#FF754C" 
-                          />
+                          <YAxis hide />
+                          <Tooltip content={<CustomTooltip />} />
+                            <Area 
+                              type="monotone" 
+                              dataKey="total" 
+                              stroke="#6C5DD3" 
+                              strokeWidth={3}
+                              fillOpacity={1} 
+                              fill="url(#colorTotal)" 
+                              dot={<RenderDot />}
+                              activeDot={{ r: 6, strokeWidth: 0, fill: '#6C5DD3' }}
+                            />
                         </AreaChart>
                       </ResponsiveContainer>
                     ) : (
@@ -539,32 +575,53 @@ const Resume = () => {
                       <div style={{
                         width: `${Math.min((balance.real_spending / balance.planned_spending) * 100 || 0, 100)}%`,
                         height: '100%',
-                        background: '#FFA940',
-                        borderRadius: 5
+                        background: (() => {
+                          const percent = (balance.real_spending / balance.planned_spending) * 100 || 0;
+                          if (percent >= 90) return '#DE350B'; // Vermelho
+                          if (percent >= 70) return '#FFA940'; // Laranja
+                          return '#00875A'; // Verde
+                        })(),
+                        borderRadius: 5,
+                        transition: 'width 0.5s ease, background-color 0.5s ease'
                       }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 11, color: '#808191' }}>{((balance.real_spending / balance.planned_spending) * 100 || 0).toFixed(0)}%</span>
+                      <span style={{ 
+                        fontSize: 11, 
+                        fontWeight: 600,
+                        color: (() => {
+                          const percent = (balance.real_spending / balance.planned_spending) * 100 || 0;
+                          if (percent >= 90) return '#DE350B';
+                          if (percent >= 70) return '#FFA940';
+                          return '#00875A';
+                        })()
+                      }}>
+                        {balance.planned_spending > 0 
+                          ? `${((balance.real_spending / balance.planned_spending) * 100 || 0).toFixed(0)}%` 
+                          : "0%"}
+                      </span>
                       <span style={{ fontSize: 11, color: '#808191' }}>
-                        Restam {formatCurrency(balance.planned_spending - balance.real_spending).replace(",00", "")}
+                        {balance.planned_spending > 0 
+                          ? `Restam ${formatCurrency(balance.planned_spending - balance.real_spending).replace(",00", "")}`
+                          : "Defina uma meta"}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Quick Actions area */}
-                <div className={styles.quickActions} style={{ marginTop: 20, padding: '16px 24px', display: 'block' }}>
+                <div className={styles.quickActions} style={{ marginTop: 20 }}>
                   <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 16, color: '#808191' }}>Ações rápidas</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                    <div className={styles.actionButton} style={{ background: '#E6F7EF', color: '#00875A' }} onClick={() => router.push('/EnterTransaction')}>
+                  <div className={styles.buttonsContainer} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                    <div className={styles.actionButton} style={{ background: '#E6F7EF' }} onClick={() => router.push('/EnterTransaction')}>
                       <PlusCircleOutlined style={{ fontSize: 24, color: '#00875A' }} />
                       <span style={{ color: '#00875A' }}>Entrada</span>
                     </div>
-                    <div className={styles.actionButton} style={{ background: '#FFEBE6', color: '#DE350B' }} onClick={() => router.push('/Outputs')}>
+                    <div className={styles.actionButton} style={{ background: '#FFEBE6' }} onClick={() => router.push('/Outputs')}>
                       <MinusCircleOutlined style={{ fontSize: 24, color: '#DE350B' }} />
                       <span style={{ color: '#DE350B' }}>Saída</span>
                     </div>
-                    <div className={styles.actionButton} style={{ background: '#E2E2FB', color: '#6C5DD3' }} onClick={() => router.push('/cards')}>
+                    <div className={styles.actionButton} style={{ background: '#E2E2FB' }} onClick={() => router.push('/cards')}>
                       <CreditCardOutlined style={{ fontSize: 24, color: '#6C5DD3' }} />
                       <span style={{ color: '#6C5DD3' }}>Cartões</span>
                     </div>
@@ -712,6 +769,41 @@ const Resume = () => {
                 </Col>
               </Row>
             <Tour open={openTour} onClose={handleCloseTour} steps={steps} />
+            <Modal
+              title="Editar Meta do Mês"
+              open={isEditMode}
+              onCancel={() => setIsEditMode(false)}
+              footer={null}
+              centered
+            >
+              <Form
+                layout="vertical"
+                onFinish={handleFinishEditGoal}
+                initialValues={{ planned_spending: balance.planned_spending }}
+              >
+                <Form.Item
+                  label="Valor da Meta"
+                  name="planned_spending"
+                  rules={[{ required: true, message: "Por favor, insira o valor da meta!" }]}
+                >
+                  <Input 
+                    type="number" 
+                    placeholder="Ex: 2000" 
+                    prefix="R$" 
+                    size="large"
+                    style={{ borderRadius: 8 }}
+                  />
+                </Form.Item>
+                <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+                  <Space>
+                    <Button onClick={() => setIsEditMode(false)}>Cancelar</Button>
+                    <Button type="primary" htmlType="submit" style={{ background: '#6C5DD3', borderColor: '#6C5DD3' }}>
+                      Salvar Meta
+                    </Button>
+                  </Space>
+                </Form.Item>
+              </Form>
+            </Modal>
         </div>
     </div>
   );

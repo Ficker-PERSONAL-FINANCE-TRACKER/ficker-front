@@ -34,16 +34,25 @@ const SidebarAlert: React.FC<SidebarAlertProps> = ({ balance, visible }) => {
   let img = '/sucess.png';
   let color = '#31B63B';
 
-  if (spentPercentage >= 90) {
-    status = 'dangerous';
-    titleText = 'Perigo';
-    messageText = `Cuidado! Você já consumiu ${spentPercentage.toFixed(0)}% do seu orçamento.`;
-    img = '/dangerous.png';
-    color = '#FF4D4F';
-  } else if (spentPercentage >= 70) {
+  if (balance.planned_spending > 0) {
+    if (spentPercentage >= 90) {
+      status = 'dangerous';
+      titleText = 'Perigo';
+      messageText = `Cuidado! Você já consumiu ${spentPercentage.toFixed(0)}% do seu orçamento.`;
+      img = '/dangerous.png';
+      color = '#FF4D4F';
+    } else if (spentPercentage >= 70) {
+      status = 'attention';
+      titleText = 'Atenção';
+      messageText = `Você gastou ${spentPercentage.toFixed(0)}% do seu orçamento planejado para este mês.`;
+      img = '/attention.png';
+      color = '#FF754C';
+    }
+  } else if (balance.real_spending > 0) {
+    // Caso tenha gastos mas não tenha meta definida
     status = 'attention';
-    titleText = 'Atenção';
-    messageText = `Você gastou ${spentPercentage.toFixed(0)}% do seu orçamento planejado para este mês.`;
+    titleText = 'Sem Meta';
+    messageText = `Você ainda não definiu uma meta de gastos para este mês.`;
     img = '/attention.png';
     color = '#FF754C';
   }
