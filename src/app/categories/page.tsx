@@ -5,8 +5,8 @@ import CustomMenu from "@/components/CustomMenu";
 import { request } from "@/service/api";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
-import { 
-  EditOutlined, 
+import {
+  EditOutlined,
   PlusOutlined,
   DollarOutlined,
   RocketOutlined,
@@ -62,14 +62,14 @@ const CategoriesPage = () => {
         method: "GET",
         endpoint: "categories",
       });
-      
+
       const allCategories = data.data.categories as Category[];
       const expenseCategories = allCategories.filter(cat => {
         const desc = cat.category_description.toLowerCase();
-        return !desc.includes("salário") && 
-               !desc.includes("freelance") && 
-               !desc.includes("investimentos") && 
-               !desc.includes("renda extra");
+        return !desc.includes("salário") &&
+          !desc.includes("freelance") &&
+          !desc.includes("investimentos") &&
+          !desc.includes("renda extra");
       });
 
       setCategories(expenseCategories);
@@ -87,9 +87,9 @@ const CategoriesPage = () => {
 
   const handleEditLimit = (category: Category) => {
     setSelectedCategory(category);
-    form.setFieldsValue({ 
+    form.setFieldsValue({
       category_limit: category.category_limit || 0,
-      keep_future: true 
+      keep_future: true
     });
     setIsModalOpen(true);
   };
@@ -97,7 +97,7 @@ const CategoriesPage = () => {
   const handleSaveLimit = async () => {
     try {
       const values = await form.validateFields();
-      
+
       message.success(`Meta para ${selectedCategory?.category_description} atualizada para ${dayjs().format("MMMM")}!`);
       setIsModalOpen(false);
       fetchData();
@@ -120,17 +120,16 @@ const CategoriesPage = () => {
     <div style={{ display: "flex", flexDirection: "row", minHeight: "100vh", background: "#F8FAFC" }}>
       <CustomMenu />
       <div style={{ flex: 1 }}>
-        <div style={{ padding: "10px 30px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 30px" }}>
           <div>
-            <h3 style={{ margin: 0 }}>Meta de Gastos</h3>
+            <h2>Meta de Gastos</h2>
+            <p style={{ color: "#808191", marginBottom: 20, fontSize: 13 }}>
+              Gerencie suas metas de gastos para <strong>{dayjs().format("MMMM [de] YYYY")}</strong>
+            </p>
           </div>
         </div>
-        
-        <div style={{ padding: "0 30px 30px 30px" }}>
-          <p style={{ color: "#808191", marginBottom: 20, fontSize: 13 }}>
-            Gerencie suas metas de gastos para <strong>{dayjs().format("MMMM [de] YYYY")}</strong>
-          </p>
 
+        <div style={{ padding: "0 30px 30px 30px" }}>
           {loading ? (
             <div style={{ display: "flex", justifyContent: "center", padding: 100 }}><Spin size="large" /></div>
           ) : categories.length === 0 ? (
@@ -145,20 +144,20 @@ const CategoriesPage = () => {
 
                 return (
                   <Col xs={24} sm={12} xl={8} key={category.id}>
-                    <Card 
+                    <Card
                       className={styles.categoryCard}
                       bordered={false}
                       bodyStyle={{ padding: 24 }}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
                         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                          <div style={{ 
-                            width: 48, 
-                            height: 48, 
-                            borderRadius: 12, 
-                            background: bg, 
-                            display: "flex", 
-                            alignItems: "center", 
+                          <div style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 12,
+                            background: bg,
+                            display: "flex",
+                            alignItems: "center",
                             justifyContent: "center",
                             fontSize: 24,
                             color: color
@@ -170,9 +169,9 @@ const CategoriesPage = () => {
                             <span style={{ fontSize: 12, color: "#808191" }}>Meta: {formatCurrency(limit)}</span>
                           </div>
                         </div>
-                        <Button 
-                          type="text" 
-                          icon={<EditOutlined />} 
+                        <Button
+                          type="text"
+                          icon={<EditOutlined />}
                           onClick={() => handleEditLimit(category)}
                           style={{ color: "#808191" }}
                         />
@@ -183,8 +182,8 @@ const CategoriesPage = () => {
                         <span style={{ fontWeight: 600 }}>{formatCurrency(spending)}</span>
                       </div>
 
-                      <Progress 
-                        percent={percent} 
+                      <Progress
+                        percent={percent}
                         strokeColor={getProgressColor(percent)}
                         trailColor="#F0F0F5"
                         showInfo={false}
@@ -218,8 +217,8 @@ const CategoriesPage = () => {
             </p>
           </div>
           <Form form={form} layout="vertical">
-            <Form.Item 
-              name="category_limit" 
+            <Form.Item
+              name="category_limit"
               label="Valor da Meta para este mês"
               rules={[{ required: true, message: "Por favor, insira um valor" }]}
             >
@@ -230,7 +229,7 @@ const CategoriesPage = () => {
                 placeholder="R$ 0,00"
               />
             </Form.Item>
-            
+
             <Form.Item name="keep_future" valuePropName="checked">
               <Checkbox>Manter esta mesma meta para os próximos meses</Checkbox>
             </Form.Item>

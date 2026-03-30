@@ -26,7 +26,7 @@
   background-color: #F8FAFC;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 
-  &:focus{
+  &:focus {
     border: 1px solid #6C5DD3;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   }
@@ -48,6 +48,7 @@
   font-size: 1rem;
   padding: 10px;
   height: 40px;
+
   &:hover {
     background-color: #6C5DD3;
     color: #cccccc;
@@ -59,7 +60,7 @@
   .table {
     width: 90%;
     margin: auto;
-    border-spacing:12px;
+    border-spacing: 12px;
 
     th {
       text-align: start;
@@ -78,7 +79,7 @@
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
       max-height: 30px;
-      
+
       :first-child {
         cursor: pointer;
 
@@ -89,7 +90,9 @@
       }
     }
 
-    .tdDescription, .tdCategory, .tdDate {
+    .tdDescription,
+    .tdCategory,
+    .tdDate {
       text-align: start;
     }
   }
@@ -111,14 +114,14 @@
 }
 
 .modalButtonWhite {
-    background: #F8FAFC;
-    border: none;
-    color: #6C5DD3;
-    border-radius: 5px;
-    height: 40px;
+  background: #F8FAFC;
+  border: none;
+  color: #6C5DD3;
+  border-radius: 5px;
+  height: 40px;
   width: 100px;
-    cursor: pointer;
-    font-family: "Manrope", sans-serif !important;
+  cursor: pointer;
+  font-family: "Manrope", sans-serif !important;
 }
 
 @media (max-width: 767.9px) {
@@ -128,7 +131,7 @@
 
   .table {
     width: 112%;
-  
+
     tr {
       width: 100%;
       text-align: start;
@@ -146,7 +149,9 @@
     padding-top: 17px;
   }
 
-  .tdDescription, .tdDate, .tdCategory {
+  .tdDescription,
+  .tdDate,
+  .tdCategory {
     display: block;
   }
 
@@ -154,7 +159,8 @@
     padding-bottom: 15px;
   }
 
-  .tdEdit, .tdValue {
+  .tdEdit,
+  .tdValue {
     padding: 20px;
   }
 }
@@ -182,12 +188,12 @@
   width: 400px;
 }
 
-.titleArea{
-  padding: 10px 30px;
+.titleArea {
+  padding: 20px 30px;
 }
 
 @media (min-width: 768px) {
-  .titleArea{
+  .titleArea {
     display: flex;
     justify-content: space-between;
   }

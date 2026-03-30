@@ -2,12 +2,12 @@
 import React, { useState } from "react";
 import { Row, Col, Card, Modal, Form, Input, InputNumber, DatePicker, Button, message, Space, Typography } from "antd";
 import CustomMenu from "@/components/CustomMenu";
-import { 
-  UserOutlined, 
-  HomeOutlined, 
-  CarOutlined, 
-  GlobalOutlined, 
-  ShoppingOutlined, 
+import {
+  UserOutlined,
+  HomeOutlined,
+  CarOutlined,
+  GlobalOutlined,
+  ShoppingOutlined,
   EllipsisOutlined,
   SafetyCertificateOutlined,
   ThunderboltOutlined,
@@ -63,20 +63,20 @@ const ObjectivesPage = () => {
     <div style={{ display: "flex", flexDirection: "row", minHeight: "100vh", background: "#F8FAFC" }}>
       <CustomMenu />
       <div style={{ flex: 1 }}>
-        <div style={{ padding: "10px 30px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 30px" }}>
           <div>
-            <h3 style={{ margin: 0 }}>Objetivos</h3>
+            <h2>Objetivos</h2>
+            <p style={{ color: "#808191", marginBottom: 20, fontSize: 13 }}>Acompanhe todos os seus objetivos de vida no Ficker</p>
           </div>
         </div>
 
         <div style={{ padding: "0 30px 30px 30px" }}>
-          <p style={{ color: "#808191", marginBottom: 20, fontSize: 13 }}>Acompanhe todos os seus objetivos de vida no Ficker</p>
 
           <Row gutter={[24, 24]}>
             {objectiveTypes.map((type) => (
               <Col xs={24} sm={12} lg={8} xl={6} key={type.id}>
-                <Card 
-                  hoverable 
+                <Card
+                  hoverable
                   className={styles.objectiveCard}
                   onClick={() => handleOpenModal(type)}
                 >
@@ -112,18 +112,18 @@ const ObjectivesPage = () => {
             {selectedType?.isRetirement ? (
               <>
                 <Form.Item name="monthly_income" label="Com que renda mensal quero viver?" rules={[{ required: true }]}>
-                  <InputNumber 
-                    style={{ width: "100%" }} 
-                    placeholder="Exemplo: 20.000,00" 
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    placeholder="Exemplo: 20.000,00"
                     className={styles.input}
                     formatter={value => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                     parser={value => value!.replace(/R\$\s?|(\.*)/g, "").replace(",", ".")}
                   />
                 </Form.Item>
                 <Form.Item name="current_saved" label="Valor que você já guardou">
-                  <InputNumber 
-                    style={{ width: "100%" }} 
-                    placeholder="Exemplo: 10.000,00" 
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    placeholder="Exemplo: 10.000,00"
                     className={styles.input}
                     formatter={value => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                     parser={value => value!.replace(/R\$\s?|(\.*)/g, "").replace(",", ".")}
@@ -139,18 +139,18 @@ const ObjectivesPage = () => {
             ) : (
               <>
                 <Form.Item name="total_value" label="Valor total do objetivo" rules={[{ required: true }]}>
-                  <InputNumber 
-                    style={{ width: "100%" }} 
-                    placeholder="Exemplo: 20.000,00" 
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    placeholder="Exemplo: 20.000,00"
                     className={styles.input}
                     formatter={value => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                     parser={value => value!.replace(/R\$\s?|(\.*)/g, "").replace(",", ".")}
                   />
                 </Form.Item>
                 <Form.Item name="current_saved" label="Valor que você já guardou">
-                  <InputNumber 
-                    style={{ width: "100%" }} 
-                    placeholder="Exemplo: 10.000,00" 
+                  <InputNumber
+                    style={{ width: "100%" }}
+                    placeholder="Exemplo: 10.000,00"
                     className={styles.input}
                     formatter={value => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                     parser={value => value!.replace(/R\$\s?|(\.*)/g, "").replace(",", ".")}

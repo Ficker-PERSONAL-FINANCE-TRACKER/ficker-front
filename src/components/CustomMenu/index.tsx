@@ -202,7 +202,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
 
           <div className="sidebar-footer">
             {balanceData && (
-              <SidebarAlert balance={balanceData} visible={showAlert} />
+              <SidebarAlert balance={balanceData} visible={showAlert && pathname === "/"} />
             )}
             
             <div className="user-profile">

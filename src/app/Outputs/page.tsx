@@ -36,11 +36,11 @@ const Outputs = () => {
   return (
      <div style={{ display: "flex", flexDirection: "row" }}>
       <CustomMenu />
-      <OutputModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-        <div style={{ width: "90vw" }}>
+        <OutputModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+        <div style={{ width: "90vw", flex: "1 1 0%", overflowX: "hidden" }}>
           <div className={styles.titleArea}>
             <div>
-              <h3>Saídas</h3>
+              <h2>Saídas</h2>
             </div>
             <div className={styles.buttonsArea}>
               <SearchField />
@@ -49,12 +49,14 @@ const Outputs = () => {
               </button>
             </div>
           </div>
-          <TransactionTab
-            data={transactions}
-            typeId={2}
-            editModal={isEditModalOpen}
-            setEditModal={setIsEditModalOpen}
-          />
+          <div style={{ padding: "0 30px" }}>
+            <TransactionTab
+              data={transactions}
+              typeId={2}
+              editModal={isEditModalOpen}
+              setEditModal={setIsEditModalOpen}
+            />
+          </div>
         </div>
     </div>
   );

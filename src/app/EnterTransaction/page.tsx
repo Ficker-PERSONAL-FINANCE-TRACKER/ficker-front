@@ -38,10 +38,10 @@ const EnterTransaction = () => {
       <div style={{ display: "flex", flexDirection: "row" }}>
         <CustomMenu />
         <EnterTransactionModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-        <div style={{ width: "90vw" }}>
+        <div style={{ width: "90vw", flex: "1 1 0%", overflowX: "hidden" }}>
           <div className={styles.titleArea}>
             <div>
-              <h3>Entradas</h3>
+              <h2>Entradas</h2>
             </div>
             <div className={styles.buttonsArea}>
               <SearchField />
@@ -50,12 +50,14 @@ const EnterTransaction = () => {
               </button>
             </div>
           </div>
-          <TransactionTab
-            data={transactions}
-            typeId={1}
-            editModal={isEditModalOpen}
-            setEditModal={setIsEditModalOpen}
-          />
+          <div style={{ padding: "0 30px" }}>
+            <TransactionTab
+              data={transactions}
+              typeId={1}
+              editModal={isEditModalOpen}
+              setEditModal={setIsEditModalOpen}
+            />
+          </div>
         </div>
       </div>
   );

@@ -164,12 +164,12 @@ const Integrations = () => {
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
       <CustomMenu />
-      <div style={{ width: "90vw", padding: "30px 40px" }}>
-        <div className={styles.titleArea} style={{ padding: 0, marginBottom: 40 }}>
-          <Title level={2}>Integrações</Title>
+      <div style={{ width: "90vw" }}>
+        <div className={styles.titleArea}>
+          <h2>Integrações</h2>
         </div>
 
-        <Row gutter={[24, 24]}>
+        <Row gutter={[24, 24]} style={{ padding: "20px 30px" }}>
           <Col xs={24} md={12} lg={8}>
             <Card 
               hoverable 

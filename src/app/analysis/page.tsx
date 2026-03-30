@@ -85,73 +85,73 @@ const Analysis = () => {
     );
   };
   return (
-     <div style={{ display: "flex", flexDirection: "row" }}>
-        <CustomMenu />
-        <div style={{ width: "90vw", flex: "1 1 0%", padding: "30px 40px", overflowX: "hidden" }}>
-          
-          <Row align={"middle"} justify={"space-between"} style={{ marginBottom: 30 }}>
-            <div>
-              <h2 style={{ margin: 0, fontWeight: 700, fontSize: "2rem" }}>Análises</h2>
-            </div>
-          </Row>
-          
-          {loading ? (
-            <Loading />
-          ) : (
-            <>
-              <Row gutter={[24, 24]} align="stretch">
-                <Col xs={24} sm={12} lg={6} style={{ display: "flex", flexDirection: "column" }}>
-                  <div className={styles.balance} style={{ flex: 1, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.03)" }}>
-                    <p className={styles.balance_description}>Transação Mais Cara</p>
-                    <p className={styles.balance_title}>{formatCurrency(transactions?.mostExpensive || 0)}</p>
-                  </div>
-                </Col>
-                <Col xs={24} sm={12} lg={6} style={{ display: "flex", flexDirection: "column" }}>
-                  <div className={styles.balance} style={{ flex: 1, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.03)" }}>
-                    <p className={styles.balance_description}>Transações de Entrada</p>
-                    <p className={styles.balance_title}>{totalEnterTransactions}</p>
-                  </div>
-                </Col>
-                <Col xs={24} sm={12} lg={6} style={{ display: "flex", flexDirection: "column" }}>
-                  <div className={styles.balance} style={{ flex: 1, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.03)" }}>
-                    <p className={styles.balance_description}>Transações de Saída</p>
-                    <p className={styles.balance_title}>{totalOutTransactions}</p>
-                  </div>
-                </Col>
-                <Col xs={24} sm={12} lg={6} style={{ display: "flex", flexDirection: "column" }}>
-                  <div className={styles.balance} style={{ flex: 1, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.03)" }}>
-                    <p className={styles.balance_description}>Transações Totais</p>
-                    <p className={styles.balance_title}>{transactions?.total}</p>
-                  </div>
-                </Col>
-              </Row>
-              <Row gutter={[24, 24]} align="stretch" style={{ marginTop: 24 }}>
-                <Col xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                    <PlannedSpendingByRealSpendingChartContainer />
-                  </div>
-                </Col>
-                <Col xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                    <AnalysesByMonthChartContainer />
-                  </div>
-                </Col>
-              </Row>
-              <Row gutter={[24, 24]} align="stretch" style={{ marginTop: 24, marginBottom: 24 }}>
-                <Col xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                    <ExpensesByCategoryChartContainer />
-                  </div>
-                </Col>
-                <Col xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                    <LastTransactionsList />
-                  </div>
-                </Col>
-              </Row>
-            </>
-          )}
-        </div>
+    <div style={{ display: "flex", flexDirection: "row" }}>
+      <CustomMenu />
+      <div style={{ width: "90vw", flex: "1 1 0%", overflowX: "hidden" }}>
+
+        <Row align={"middle"} justify={"space-between"} style={{ padding: "20px 30px" }}>
+          <div>
+            <h2>Análises</h2>
+          </div>
+        </Row>
+
+        {loading ? (
+          <Loading />
+        ) : (
+          <>
+            <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px" }}>
+              <Col xs={24} sm={12} lg={6} style={{ display: "flex", flexDirection: "column" }}>
+                <div className={styles.balance} style={{ flex: 1, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.03)" }}>
+                  <p className={styles.balance_description}>Transação Mais Cara</p>
+                  <p className={styles.balance_title}>{formatCurrency(transactions?.mostExpensive || 0)}</p>
+                </div>
+              </Col>
+              <Col xs={24} sm={12} lg={6} style={{ display: "flex", flexDirection: "column" }}>
+                <div className={styles.balance} style={{ flex: 1, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.03)" }}>
+                  <p className={styles.balance_description}>Transações de Entrada</p>
+                  <p className={styles.balance_title}>{totalEnterTransactions}</p>
+                </div>
+              </Col>
+              <Col xs={24} sm={12} lg={6} style={{ display: "flex", flexDirection: "column" }}>
+                <div className={styles.balance} style={{ flex: 1, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.03)" }}>
+                  <p className={styles.balance_description}>Transações de Saída</p>
+                  <p className={styles.balance_title}>{totalOutTransactions}</p>
+                </div>
+              </Col>
+              <Col xs={24} sm={12} lg={6} style={{ display: "flex", flexDirection: "column" }}>
+                <div className={styles.balance} style={{ flex: 1, boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.03)" }}>
+                  <p className={styles.balance_description}>Transações Totais</p>
+                  <p className={styles.balance_title}>{transactions?.total}</p>
+                </div>
+              </Col>
+            </Row>
+            <Row gutter={[24, 24]} align="stretch" style={{ marginTop: 24, padding: "0 30px" }}>
+              <Col xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <PlannedSpendingByRealSpendingChartContainer />
+                </div>
+              </Col>
+              <Col xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <AnalysesByMonthChartContainer />
+                </div>
+              </Col>
+            </Row>
+            <Row gutter={[24, 24]} align="stretch" style={{ marginTop: 24, marginBottom: 24, padding: "0 30px" }}>
+              <Col xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <ExpensesByCategoryChartContainer />
+                </div>
+              </Col>
+              <Col xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <LastTransactionsList />
+                </div>
+              </Col>
+            </Row>
+          </>
+        )}
+      </div>
     </div>
   );
 };
