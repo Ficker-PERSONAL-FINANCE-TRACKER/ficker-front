@@ -9,6 +9,7 @@ import { Cookies } from "react-cookie";
 import { 
   BarsOutlined,
   ApiOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import useMediaQuery from "use-media-antd-query";
 import SidebarAlert from "../SidebarAlert";
@@ -70,10 +71,20 @@ const items: MenuItem[] = [
     "5",
     <Image src="/icons/icon-analysis.svg" alt="Análises" width={22} height={22} />
   ),
-  getItem("Integrações", "6", <ApiOutlined style={{ fontSize: 22 }} />),
+  getItem(
+    "Meta de Gastos",
+    "7",
+    <TagOutlined style={{ fontSize: 22 }} />
+  ),
+  getItem(
+    "Objetivos",
+    "8",
+    <Image src="/icons/icon-analysis.svg" alt="Objetivos" width={22} height={22} style={{ filter: 'hue-rotate(45deg)' }} />
+  ),
+  getItem("Integrações", "9", <ApiOutlined style={{ fontSize: 22 }} />),
   getItem(
     "Sair",
-    "7",
+    "10",
     <Image
       src="/icons/icon-logout.svg"
       alt="Sair"
@@ -89,7 +100,9 @@ const paths: Record<string, string> = {
   "3": "/Outputs",
   "4": "/cards",
   "5": "/analysis",
-  "6": "/integrations",
+  "7": "/categories",
+  "8": "/objectives",
+  "9": "/integrations",
 };
 
 const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true }) => {
@@ -168,7 +181,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
               items={items}
               onClick={async ({ key }) => {
                 cookie.set("menu", key);
-                if (key === "7") {
+                if (key === "10") {
                   try {
                     await request({ method: "POST", endpoint: "logout" });
                   } catch (error) {

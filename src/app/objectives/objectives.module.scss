@@ -1,0 +1,73 @@
+.objectiveCard {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+  height: 100%;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    
+    .iconWrapper {
+      background: #6C5DD3;
+      color: #fff;
+    }
+  }
+
+  .cardContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+    gap: 16px;
+  }
+
+  .iconWrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: #F0EFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #6C5DD3;
+    transition: all 0.3s ease;
+  }
+
+  .cardTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #11142D;
+    text-align: center;
+  }
+}
+
+.modalForm {
+  :global {
+    .ant-form-item-label > label {
+      color: #808191;
+      font-size: 13px;
+      font-weight: 500;
+    }
+  }
+}
+
+.input {
+  border-radius: 8px;
+  height: 45px;
+  border: 1px solid #E2E2FB;
+
+  &:hover, &:focus {
+    border-color: #6C5DD3;
+  }
+}
+
+.modalOkBtn {
+  &:hover {
+    opacity: 0.9;
+    background: #6C5DD3 !important;
+  }
+}

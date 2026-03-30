@@ -76,11 +76,25 @@
   min-height: 100vh;
   background: #fff !important;
   z-index: 100;
-  overflow-y: auto; // Adicionado para permitir scroll interno
-  scrollbar-width: none; // Firefox - esconde scrollbar mas mantém funcionalidade
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #6d5dd37e transparent;
   
   &::-webkit-scrollbar {
-    display: none; // Chrome/Safari - esconde scrollbar mas mantém funcionalidade
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #e6e8ec;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #cfd3d9;
   }
 
   .sidebar-footer {
