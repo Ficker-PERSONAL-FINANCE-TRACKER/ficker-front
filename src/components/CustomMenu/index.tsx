@@ -70,11 +70,6 @@ const items: MenuItem[] = [
     "5",
     <Image src="/icons/icon-analysis.svg" alt="Análises" width={22} height={22} />
   ),
-  getItem(
-    "Limites",
-    "8",
-    <Image src="/icons/icon-limit.svg" alt="Limites" width={22} height={22} />
-  ),
   getItem("Integrações", "6", <ApiOutlined style={{ fontSize: 22 }} />),
   getItem(
     "Sair",
@@ -95,7 +90,6 @@ const paths: Record<string, string> = {
   "4": "/cards",
   "5": "/analysis",
   "6": "/integrations",
-  "8": "/limits",
 };
 
 const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true }) => {
