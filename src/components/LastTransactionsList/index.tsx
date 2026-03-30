@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ITransaction } from "@/interfaces";
 import { request } from "@/service/api";
 import Link from "next/link";
+import dayjs from "dayjs";
 
 const LastTransactionsList = () => {
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
@@ -39,10 +40,21 @@ const LastTransactionsList = () => {
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <h4 style={{ margin: 0 }}>Últimas Transações</h4>
-        {transactions.length > 5 && (
-            <Button type="link" onClick={() => setIsModalOpen(true)} style={{ color: '#6C5DD3', fontWeight: 600, padding: 0 }}>
-              Ver mais
-            </Button>
+        {transactions && transactions.length > 0 && (
+          <Button 
+            type="link" 
+            onClick={() => setIsModalOpen(true)} 
+            style={{ 
+              color: '#6C5DD3', 
+              fontWeight: 600, 
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4
+            }}
+          >
+            Ver mais
+          </Button>
         )}
       </div>
 
@@ -85,37 +97,57 @@ const LastTransactionsList = () => {
       </div>
 
       <Modal
-        title="Histórico de Transações"
+        title="Histórico Completo de Transações"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={600}
-        bodyStyle={{ maxHeight: '60vh', overflowY: 'auto', padding: '10px 0' }}
+        width={800}
+        bodyStyle={{ maxHeight: '70vh', overflowY: 'auto', padding: '20px' }}
+        centered
       >
-        <div className="modal-transactions-list">
-          {transactions.map((transaction) => (
-            <div className="transaction-area" key={transaction.id} style={{ borderBottom: '1px solid #f0f0f0', padding: '12px 10px', marginBottom: 0 }}>
-              <div className="transaction-area__infos">
-                <Image
-                  src={transaction.type_id === 1 ? "/icons/icon-income.svg" : "/icons/icon-expense.svg"}
-                  alt="icon"
-                  width={30}
-                  height={30}
-                />
-                <div className="transaction-area__description">
-                  <p style={{ fontWeight: 600 }}>{transaction.transaction_description}</p>
-                  <span>{transaction.type_id === 1 ? "Entrada" : "Saída"}</span>
-                </div>
-              </div>
-              <div
-                className="transaction-area__value"
-                style={{ color: transaction.type_id === 1 ? "#00875A" : "#DE350B", fontWeight: 700 }}
-              >
-                {transaction.type_id === 1 ? "+ " : "- "}
-                {formatCurrency(transaction.transaction_value)}
-              </div>
-            </div>
-          ))}
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #f0f0f0', textAlign: 'left' }}>
+                <th style={{ padding: '12px 8px', color: '#808191', fontWeight: 600 }}>Descrição</th>
+                <th style={{ padding: '12px 8px', color: '#808191', fontWeight: 600 }}>Tipo</th>
+                <th style={{ padding: '12px 8px', color: '#808191', fontWeight: 600 }}>Categoria</th>
+                <th style={{ padding: '12px 8px', color: '#808191', fontWeight: 600 }}>Data</th>
+                <th style={{ padding: '12px 8px', color: '#808191', fontWeight: 600, textAlign: 'right' }}>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((transaction) => (
+                <tr key={transaction.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                  <td style={{ padding: '16px 8px', fontWeight: 500 }}>{transaction.transaction_description}</td>
+                  <td style={{ padding: '16px 8px' }}>
+                    <span style={{ 
+                      padding: '4px 12px', 
+                      borderRadius: '20px', 
+                      fontSize: '12px',
+                      background: transaction.type_id === 1 ? '#E6F7EF' : '#FFEBE6',
+                      color: transaction.type_id === 1 ? '#00875A' : '#DE350B'
+                    }}>
+                      {transaction.type_id === 1 ? "Entrada" : "Saída"}
+                    </span>
+                  </td>
+                  <td style={{ padding: '16px 8px', color: '#808191' }}>{transaction.category_description || "-"}</td>
+                  <td style={{ padding: '16px 8px', color: '#808191' }}>
+                    {dayjs(transaction.date).format("DD/MM/YYYY")}
+                  </td>
+                  <td style={{ 
+                    padding: '16px 8px', 
+                    textAlign: 'right',
+                    fontWeight: 700,
+                    color: transaction.type_id === 1 ? "#00875A" : "#DE350B"
+                  }}>
+                    {transaction.type_id === 1 ? "+ " : "- "}
+                    {formatCurrency(transaction.transaction_value)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Modal>
     </div>
