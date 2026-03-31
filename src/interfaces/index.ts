@@ -1,4 +1,4 @@
-export interface ITransaction {
+﻿export interface ITransaction {
   id: number;
   user_id: number;
   category_id: number;
@@ -10,6 +10,9 @@ export interface ITransaction {
   transaction_value: number;
   installments: number;
   payment_method_id: number;
+  is_credit_card_purchase?: boolean;
+  is_invoice_payment?: boolean;
+  affects_real_spending?: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -24,3 +27,4 @@ export interface Card {
   updated_at: Date;
   user_id: number;
 }
+
