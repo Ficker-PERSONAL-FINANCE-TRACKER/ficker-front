@@ -260,14 +260,25 @@ const Resume = () => {
       const daysInMonth = referenceDate.daysInMonth();
 
       // Calcular o saldo acumulado ANTES do mês de referência
-      let runningBalance = txs.reduce((acc: number, tx: any) => {
+      const openingBalance = txs.reduce((acc: number, tx: any) => {
         const txDate = dayjs(tx.date);
+        const value = parseFloat(tx.transaction_value || 0);
+        const affectsRealSpending =
+          tx.type_id === 2 &&
+          (tx.affects_real_spending === true || tx.payment_method_id == null || Number(tx.payment_method_id) !== 4);
+
         if (txDate.isBefore(startOfMonth)) {
-          const value = parseFloat(tx.transaction_value || 0);
-          return tx.type_id === 1 ? acc + value : acc - value;
+          if (tx.type_id === 1) {
+            return acc + value;
+          }
+
+          if (affectsRealSpending) {
+            return acc - value;
+          }
         }
         return acc;
       }, 0);
+      let runningBalance = openingBalance;
 
       // Inicializar todos os dias do mês com valores zero
       const grouped: { [key: string]: { name: string, entrada: number, saida: number, total: number } } = {};
@@ -291,9 +302,13 @@ const Resume = () => {
           const value = parseFloat(tx.transaction_value || 0);
 
           if (grouped[dayKey]) {
+            const affectsRealSpending =
+              tx.type_id === 2 &&
+              (tx.affects_real_spending === true || tx.payment_method_id == null || Number(tx.payment_method_id) !== 4);
+
             if (tx.type_id === 1) { // 1 = Entrada
               grouped[dayKey].entrada += value;
-            } else if (tx.type_id === 2) { // 2 = Saída
+            } else if (affectsRealSpending) { // 2 = Saída efetivamente paga
               grouped[dayKey].saida += value;
             }
           }
@@ -309,7 +324,19 @@ const Resume = () => {
 
       // Filtrar para começar a partir da primeira movimentação ou saldo inicial
       const firstActiveDayIndex = data.findIndex(day => day.total !== 0 || day.entrada > 0 || day.saida > 0);
-      const filteredData = firstActiveDayIndex !== -1 ? data.slice(firstActiveDayIndex) : [];
+      let filteredData = firstActiveDayIndex !== -1 ? data.slice(firstActiveDayIndex) : [];
+
+      if (filteredData.length > 0 && openingBalance !== filteredData[0].total) {
+        filteredData = [
+          {
+            name: "",
+            entrada: 0,
+            saida: 0,
+            total: openingBalance,
+          },
+          ...filteredData,
+        ];
+      }
 
       setChartData(filteredData);
     } catch (error) {
