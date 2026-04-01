@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
@@ -6,13 +6,13 @@ import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { Card } from "@/interfaces";
-import { 
-  PlusOutlined, 
-  HomeOutlined, 
-  CarOutlined, 
-  MedicineBoxOutlined, 
-  SkinOutlined, 
-  RocketOutlined, 
+import {
+  PlusOutlined,
+  HomeOutlined,
+  CarOutlined,
+  MedicineBoxOutlined,
+  SkinOutlined,
+  RocketOutlined,
   ShoppingOutlined,
   BookOutlined,
   ToolOutlined,
@@ -36,6 +36,51 @@ interface Category {
   updated_at: Date;
 }
 
+interface SuggestedCategory {
+  key: string;
+  label: string;
+  icon: JSX.Element;
+  color: string;
+}
+
+const SUGGESTED_EXPENSE_CATEGORIES: SuggestedCategory[] = [
+  { key: "food", label: "Alimentação", icon: <RestOutlined />, color: "#FFA940" },
+  { key: "home", label: "Casa", icon: <HomeOutlined />, color: "#00B0FF" },
+  { key: "transport", label: "Transporte", icon: <CarOutlined />, color: "#6C5DD3" },
+  { key: "health", label: "Saúde", icon: <MedicineBoxOutlined />, color: "#00875A" },
+  { key: "leisure", label: "Lazer", icon: <CoffeeOutlined />, color: "#FF754C" },
+  { key: "bills", label: "Contas", icon: <ThunderboltOutlined />, color: "#FFD700" },
+  { key: "internet", label: "Internet", icon: <WifiOutlined />, color: "#8E82EF" },
+  { key: "shopping", label: "Compras", icon: <ShoppingOutlined />, color: "#FF4D4F" },
+  { key: "projects", label: "Projetos", icon: <RocketOutlined />, color: "#6C5DD3" },
+];
+
+const normalizeCategoryName = (value: string) =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+const extractCategoriesFromResponse = (response: any): Category[] => {
+  const payload = response?.data;
+
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.data?.categories)) {
+    return payload.data.categories;
+  }
+
+  if (Array.isArray(payload?.categories)) {
+    return payload.categories;
+  }
+
+  return [];
+};
+
 export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: OutputModalProps) => {
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [showCards, setShowCards] = useState(false);
@@ -43,17 +88,6 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [form] = Form.useForm();
   const [cards, setCards] = useState<Card[]>([]);
-
-  const defaultCategories = [
-    { id: 'exp_food', label: 'Alimentação', icon: <RestOutlined />, color: '#FFA940' },
-    { id: 'exp_home', label: 'Casa', icon: <HomeOutlined />, color: '#00B0FF' },
-    { id: 'exp_transp', label: 'Transporte', icon: <CarOutlined />, color: '#6C5DD3' },
-    { id: 'exp_health', label: 'Saúde', icon: <MedicineBoxOutlined />, color: '#00875A' },
-    { id: 'exp_leisure', label: 'Lazer', icon: <CoffeeOutlined />, color: '#FF754C' },
-    { id: 'exp_bills', label: 'Contas', icon: <ThunderboltOutlined />, color: '#FFD700' },
-    { id: 'exp_internet', label: 'Internet', icon: <WifiOutlined />, color: '#8E82EF' },
-    { id: 'exp_shop', label: 'Compras', icon: <ShoppingOutlined />, color: '#FF4D4F' },
-  ];
 
   const handleCancel = () => {
     setIsModalOpen(false);
@@ -70,46 +104,16 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
       setPaymentMethods(response.data.data.payment_methods);
     } catch (error) {}
   };
+
   const getCategories = async () => {
     try {
       const response = await request({
         method: "GET",
         endpoint: "categories/type/2",
       });
-      setCategories(response.data.data.categories);
+      setCategories(extractCategoriesFromResponse(response));
     } catch (error) {
       console.log(error);
-    }
-  };
-
-  const handleFinish = async () => {
-    try {
-      const values = await form.validateFields();
-      
-      let categoryId = values.category_id;
-      let categoryDescription = values.category_description;
-
-      const selectedDefault = defaultCategories.find(c => c.id === values.category_id);
-      if (selectedDefault) {
-        categoryId = 0;
-        categoryDescription = selectedDefault.label;
-      }
-
-      await request({
-        method: "POST",
-        endpoint: "transaction/store",
-        data: {
-          ...values,
-          category_id: categoryId,
-          category_description: categoryDescription,
-          date: dayjs(values.date).format("YYYY-MM-DD"),
-          type_id: 2,
-        },
-      });
-      message.success("Transação adicionada com sucesso!");
-      handleCancel();
-    } catch (errorInfo) {
-      message.error("Erro ao adicionar transação!");
     }
   };
 
@@ -125,20 +129,76 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
     }
   };
 
+  const resolveCategoryPayload = (values: Record<string, any>) => {
+    const rawCategoryId = values.category_id;
+
+    if (typeof rawCategoryId === "string" && rawCategoryId.startsWith("suggestion:")) {
+      const suggestionLabel = rawCategoryId.replace("suggestion:", "");
+      const existingCategory = categories.find(
+        (category) => normalizeCategoryName(category.category_description) === normalizeCategoryName(suggestionLabel)
+      );
+
+      if (existingCategory) {
+        return {
+          category_id: existingCategory.id,
+          category_description: undefined,
+        };
+      }
+
+      return {
+        category_id: 0,
+        category_description: suggestionLabel,
+      };
+    }
+
+    return {
+      category_id: rawCategoryId,
+      category_description: rawCategoryId === 0 ? values.category_description : undefined,
+    };
+  };
+
+  const handleFinish = async () => {
+    try {
+      const values = await form.validateFields();
+      const categoryPayload = resolveCategoryPayload(values);
+
+      await request({
+        method: "POST",
+        endpoint: "transaction/store",
+        data: {
+          ...values,
+          ...categoryPayload,
+          date: dayjs(values.date).format("YYYY-MM-DD"),
+          type_id: 2,
+        },
+      });
+      message.success("Transação adicionada com sucesso!");
+      handleCancel();
+    } catch (errorInfo) {
+      message.error("Erro ao adicionar transação!");
+    }
+  };
+
   useEffect(() => {
+    if (!isModalOpen) return;
+
     getCategories();
     getCards();
     getPaymentMethods();
+    form.resetFields();
+    setShowDescriptionCategory(false);
+    setShowCards(false);
+
     if (initialValues) {
       form.setFieldsValue(initialValues);
       if (initialValues.category_id === 0) {
         setShowDescriptionCategory(true);
       }
-      if (initialValues.payment_method_id === 3) {
+      if (initialValues.payment_method_id === 4) {
         setShowCards(true);
       }
     }
-  }, [initialValues]);
+  }, [isModalOpen, initialValues]);
 
   return (
     <Modal
@@ -163,10 +223,21 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
         onFinish={handleFinish}
         onFinishFailed={(errorInfo) => console.log(errorInfo)}
         onValuesChange={(changedValues) => {
-          if (Object.keys(changedValues)[0] === "category_id") {
-            setShowDescriptionCategory(changedValues.category_id === 0);
+          if (Object.prototype.hasOwnProperty.call(changedValues, "category_id")) {
+            const nextValue = changedValues.category_id;
+            const shouldShowDescription = nextValue === 0;
+            setShowDescriptionCategory(shouldShowDescription);
+
+            if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
+              form.setFieldsValue({ category_description: nextValue.replace("suggestion:", "") });
+            }
+
+            if (!shouldShowDescription && nextValue !== 0) {
+              form.setFieldValue("category_description", undefined);
+            }
           }
-          if (Object.keys(changedValues)[0] === "payment_method_id") {
+
+          if (Object.prototype.hasOwnProperty.call(changedValues, "payment_method_id")) {
             setShowCards(changedValues.payment_method_id === 4);
           }
         }}
@@ -272,10 +343,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
                     <span>Nova Categoria</span>
                   </Space>
                 </Select.Option>
-                
+
                 <Select.OptGroup label="Sugestões">
-                  {defaultCategories.map(cat => (
-                    <Select.Option key={cat.id} value={cat.id}>
+                  {SUGGESTED_EXPENSE_CATEGORIES.map((cat) => (
+                    <Select.Option key={cat.key} value={`suggestion:${cat.label}`}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
                         <span>{cat.label}</span>

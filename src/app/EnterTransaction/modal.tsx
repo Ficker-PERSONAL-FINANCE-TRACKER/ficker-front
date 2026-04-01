@@ -1,18 +1,18 @@
-"use client";
+﻿"use client";
 import { request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space } from "antd";
 import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { 
-  PlusOutlined, 
-  WalletOutlined, 
-  HomeOutlined, 
-  CarOutlined, 
-  MedicineBoxOutlined, 
-  SkinOutlined, 
-  RocketOutlined, 
+import {
+  PlusOutlined,
+  WalletOutlined,
+  HomeOutlined,
+  CarOutlined,
+  MedicineBoxOutlined,
+  SkinOutlined,
+  RocketOutlined,
   ShoppingOutlined,
   BookOutlined,
   DollarOutlined,
@@ -33,45 +33,96 @@ interface Category {
   updated_at: Date;
 }
 
+interface SuggestedCategory {
+  key: string;
+  label: string;
+  icon: JSX.Element;
+  color: string;
+}
+
+const SUGGESTED_INCOME_CATEGORIES: SuggestedCategory[] = [
+  { key: "salary", label: "Salário", icon: <DollarOutlined />, color: "#00875A" },
+  { key: "freelance", label: "Freelance", icon: <RocketOutlined />, color: "#6C5DD3" },
+  { key: "investments", label: "Investimentos", icon: <WalletOutlined />, color: "#FFA940" },
+  { key: "extra", label: "Renda Extra", icon: <StarOutlined />, color: "#00B0FF" },
+];
+
+const normalizeCategoryName = (value: string) =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+const extractCategoriesFromResponse = (response: any): Category[] => {
+  const payload = response?.data;
+
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.data?.categories)) {
+    return payload.data.categories;
+  }
+
+  if (Array.isArray(payload?.categories)) {
+    return payload.categories;
+  }
+
+  return [];
+};
+
 export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTransactionModalProps) => {
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
-
-  const defaultCategories = [
-    { id: 'income_salary', label: 'Salário', icon: <DollarOutlined />, color: '#00875A' },
-    { id: 'income_freelance', label: 'Freelance', icon: <RocketOutlined />, color: '#6C5DD3' },
-    { id: 'income_invest', label: 'Investimentos', icon: <WalletOutlined />, color: '#FFA940' },
-    { id: 'income_extra', label: 'Renda Extra', icon: <StarOutlined />, color: '#00B0FF' },
-  ];
-
   const [form] = Form.useForm();
 
   const handleCancel = () => {
     setIsModalOpen(false);
     form.resetFields();
+    setShowDescriptionCategory(false);
+  };
+
+  const resolveCategoryPayload = (values: Record<string, any>) => {
+    const rawCategoryId = values.category_id;
+
+    if (typeof rawCategoryId === "string" && rawCategoryId.startsWith("suggestion:")) {
+      const suggestionLabel = rawCategoryId.replace("suggestion:", "");
+      const existingCategory = categories.find(
+        (category) => normalizeCategoryName(category.category_description) === normalizeCategoryName(suggestionLabel)
+      );
+
+      if (existingCategory) {
+        return {
+          category_id: existingCategory.id,
+          category_description: undefined,
+        };
+      }
+
+      return {
+        category_id: 0,
+        category_description: suggestionLabel,
+      };
+    }
+
+    return {
+      category_id: rawCategoryId,
+      category_description: rawCategoryId === 0 ? values.category_description : undefined,
+    };
   };
 
   const handleFinish = async () => {
     try {
       const values = await form.validateFields();
-      
-      let categoryId = values.category_id;
-      let categoryDescription = values.category_description;
-
-      // Se for uma categoria padrão, tratamos como uma "nova" com o nome pré-definido
-      const selectedDefault = defaultCategories.find(c => c.id === values.category_id);
-      if (selectedDefault) {
-        categoryId = 0;
-        categoryDescription = selectedDefault.label;
-      }
+      const categoryPayload = resolveCategoryPayload(values);
 
       await request({
         method: "POST",
         endpoint: "transaction/store",
         data: {
           ...values,
-          category_id: categoryId,
-          category_description: categoryDescription,
+          ...categoryPayload,
           date: dayjs(values.date).format("YYYY-MM-DD"),
           type_id: 1,
         },
@@ -82,6 +133,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
       message.error("Erro ao adicionar transação!");
     }
   };
+
   const onChange: DatePickerProps["onChange"] = (date, dateString) => {
     console.log(date, dateString);
   };
@@ -92,16 +144,18 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
         method: "GET",
         endpoint: "categories/type/1",
       });
-      setCategories(response.data.data.categories);
+      setCategories(extractCategoriesFromResponse(response));
     } catch (error) {
       console.log(error);
     }
   };
 
   useEffect(() => {
+    if (!isModalOpen) return;
     form.resetFields();
+    setShowDescriptionCategory(false);
     getCategories();
-  }, []);
+  }, [isModalOpen]);
 
   return (
     <Modal
@@ -128,9 +182,20 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
         }}
         onFinishFailed={(errorInfo) => console.log(errorInfo)}
         onValuesChange={(changedValues) => {
-          if (Object.keys(changedValues)[0] === "category_id") {
-            setShowDescriptionCategory(changedValues.category_id === 0);
+          if (Object.prototype.hasOwnProperty.call(changedValues, "category_id")) {
+            const nextValue = changedValues.category_id;
+            const shouldShowDescription = nextValue === 0;
+            setShowDescriptionCategory(shouldShowDescription);
+
+            if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
+              form.setFieldsValue({ category_description: nextValue.replace("suggestion:", "") });
+            }
+
+            if (!shouldShowDescription && nextValue !== 0) {
+              form.setFieldValue("category_description", undefined);
+            }
           }
+
           if (changedValues.transaction_value) {
             const result = changedValues.transaction_value.replace(/[^0-9]/g, "");
             form.setFieldsValue({ transaction_value: result });
@@ -178,10 +243,10 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
                     <span>Nova Categoria</span>
                   </Space>
                 </Select.Option>
-                
+
                 <Select.OptGroup label="Sugestões">
-                  {defaultCategories.map(cat => (
-                    <Select.Option key={cat.id} value={cat.id}>
+                  {SUGGESTED_INCOME_CATEGORIES.map((cat) => (
+                    <Select.Option key={cat.key} value={`suggestion:${cat.label}`}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
                         <span>{cat.label}</span>
@@ -223,23 +288,6 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
             <Input className={styles.input} placeholder="R$" />
           </Form.Item>
         </Col>
-        {/* <Col style={{ marginBottom: 20 }} xl={15}>
-          <label>Método de pagamento</label>
-          <Form.Item
-            name="payment_method_id"
-            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
-          >
-            <Select
-              className={styles.input}
-              style={{ width: 200, height: 40 }}
-              options={[
-                { value: 0, label: "Dinheiro" },
-                { value: 1, label: "Cartão de Crédito" },
-                { value: 2, label: "Cartão de Débito" },
-              ]}
-            />
-          </Form.Item>
-        </Col> */}
         <Row>
           <Button className={styles.modalButtonWhite} onClick={handleCancel}>
             Cancelar
