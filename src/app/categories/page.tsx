@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useState } from "react";
 import { Row, Col, Progress, Button, Modal, Form, InputNumber, message, Space, Card, Empty, Spin, Checkbox } from "antd";
 import CustomMenu from "@/components/CustomMenu";
@@ -20,14 +20,16 @@ import {
   ThunderboltOutlined,
   WifiOutlined,
   ShoppingOutlined,
-  TagsOutlined
+  TagsOutlined,
 } from "@ant-design/icons";
 import styles from "./categories.module.scss";
 
 interface Category {
   id: number;
+  type_id?: number;
   category_description: string;
   category_spending: number;
+  category_real_spending?: number;
   category_limit?: number;
 }
 
@@ -63,14 +65,8 @@ const CategoriesPage = () => {
         endpoint: "categories",
       });
 
-      const allCategories = data.data.categories as Category[];
-      const expenseCategories = allCategories.filter(cat => {
-        const desc = cat.category_description.toLowerCase();
-        return !desc.includes("salário") &&
-          !desc.includes("freelance") &&
-          !desc.includes("investimentos") &&
-          !desc.includes("renda extra");
-      });
+      const allCategories = (data?.data?.categories ?? []) as Category[];
+      const expenseCategories = allCategories.filter((category) => Number(category.type_id) === 2);
 
       setCategories(expenseCategories);
     } catch (error) {
@@ -89,7 +85,7 @@ const CategoriesPage = () => {
     setSelectedCategory(category);
     form.setFieldsValue({
       category_limit: category.category_limit || 0,
-      keep_future: true
+      keep_future: true,
     });
     setIsModalOpen(true);
   };
@@ -98,7 +94,21 @@ const CategoriesPage = () => {
     try {
       const values = await form.validateFields();
 
-      message.success(`Meta para ${selectedCategory?.category_description} atualizada para ${dayjs().format("MMMM")}!`);
+      if (!selectedCategory) {
+        message.error("Categoria nao selecionada");
+        return;
+      }
+
+      await request({
+        method: "PUT",
+        endpoint: `categories/${selectedCategory.id}/limit`,
+        data: {
+          category_limit: Number(values.category_limit || 0),
+          keep_future: Boolean(values.keep_future),
+        },
+      });
+
+      message.success(`Meta para ${selectedCategory.category_description} atualizada para ${dayjs().format("MMMM")}!`);
       setIsModalOpen(false);
       fetchData();
     } catch (error) {
@@ -106,8 +116,8 @@ const CategoriesPage = () => {
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const formatCurrency = (value: number | string) => {
+    return Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   };
 
   const getProgressColor = (percent: number) => {
@@ -139,7 +149,7 @@ const CategoriesPage = () => {
               {categories.map((category) => {
                 const { icon, color, bg } = getCategoryIcon(category.category_description);
                 const limit = category.category_limit || 1000;
-                const spending = category.category_spending || 0;
+                const spending = category.category_real_spending ?? category.category_spending ?? 0;
                 const percent = Math.min(Math.round((spending / limit) * 100), 100);
 
                 return (
@@ -160,7 +170,7 @@ const CategoriesPage = () => {
                             alignItems: "center",
                             justifyContent: "center",
                             fontSize: 24,
-                            color: color
+                            color: color,
                           }}>
                             {icon}
                           </div>
@@ -224,8 +234,8 @@ const CategoriesPage = () => {
             >
               <InputNumber
                 style={{ width: "100%" }}
-                formatter={value => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-                parser={value => value!.replace(/R\$\s?|(\.*)/g, "").replace(",", ".")}
+                formatter={(value) => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                parser={(value) => value!.replace(/R\$\s?|\./g, "").replace(",", ".")}
                 placeholder="R$ 0,00"
               />
             </Form.Item>

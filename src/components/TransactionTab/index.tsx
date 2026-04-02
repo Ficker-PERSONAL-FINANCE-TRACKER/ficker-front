@@ -105,15 +105,15 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
       return { icon: <TagsOutlined />, color: "#FF4D4F", bg: "#FFF1F0" };
     }
 
-    if (desc.includes("salario")) return { icon: <DollarOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (desc.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A", bg: "#E6F7EF" };
     if (desc.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
     if (desc.includes("invest")) return { icon: <WalletOutlined />, color: "#FFA940", bg: "#FFF7E6" };
     if (desc.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
 
-    if (desc.includes("aliment")) return { icon: <RestOutlined />, color: "#FFA940", bg: "#FFF7E6" };
+    if (desc.includes("alimentação")) return { icon: <RestOutlined />, color: "#FFA940", bg: "#FFF7E6" };
     if (desc.includes("casa")) return { icon: <HomeOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
     if (desc.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
-    if (desc.includes("saude")) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (desc.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
     if (desc.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C", bg: "#FFEBE6" };
     if (desc.includes("conta")) return { icon: <ThunderboltOutlined />, color: "#FFD700", bg: "#FFFBE6" };
     if (desc.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF", bg: "#F5F3FF" };
