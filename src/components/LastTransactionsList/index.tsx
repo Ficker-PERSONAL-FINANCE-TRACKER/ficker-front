@@ -169,6 +169,7 @@ const LastTransactionsList = () => {
             <tbody>
               {transactions.map((transaction) => {
                 const presentation = getTransactionPresentation(transaction);
+                const modalTypeLabel = transaction.type_id === 1 ? "Entrada" : "Saída";
 
                 return (
                   <tr key={transaction.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
@@ -181,7 +182,7 @@ const LastTransactionsList = () => {
                         background: presentation.badgeBg,
                         color: presentation.badgeColor
                       }}>
-                        {presentation.label}
+                        {modalTypeLabel}
                       </span>
                     </td>
                     <td style={{ padding: '16px 8px', color: '#808191' }}>{transaction.category_description || "-"}</td>
