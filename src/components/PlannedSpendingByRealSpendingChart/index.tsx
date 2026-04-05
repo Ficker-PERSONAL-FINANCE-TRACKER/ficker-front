@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   ComposedChart,
   Line,
@@ -18,26 +18,29 @@ interface PlannedSpendingByRealSpendingChartProps {
 
 const PlannedSpendingByRealSpendingChart = ({ data }: PlannedSpendingByRealSpendingChartProps) => {
   return (
-    <ResponsiveContainer width={"100%"} height={250}>
+    <ResponsiveContainer width="100%" height={250}>
       <ComposedChart
         data={data}
         margin={{
           top: 20,
-          right: 80,
+          right: 24,
           bottom: 20,
-          left: 20,
+          left: 28,
         }}
       >
         <CartesianGrid stroke="#f5f5f5" />
         <XAxis
           dataKey="name"
-          label={{ value: "Mês", position: "insideBottomRight", offset: 0 }}
-          scale="band"
+          padding={{ left: 12, right: 12 }}
+          label={{ value: "Mês", position: "insideBottomRight", offset: -4 }}
         />
-        <YAxis label={{ value: "Valor", angle: -90, position: "insideLeft" }} />
+        <YAxis
+          width={72}
+          label={{ value: "Valor", angle: -90, position: "insideLeft", offset: -6 }}
+        />
         <Tooltip />
         <Legend />
-        <Bar dataKey="planejado" barSize={20} fill="#6C5DD3" />
+        <Bar dataKey="planejado" barSize={28} fill="#6C5DD3" />
         <Line type="monotone" dataKey="real" stroke="#87E344" />
       </ComposedChart>
     </ResponsiveContainer>

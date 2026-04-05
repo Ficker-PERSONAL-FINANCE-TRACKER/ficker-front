@@ -1,23 +1,390 @@
-.balance {
-  background-color: #fff;
-  border-radius: 16px;
+﻿.pageContent {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-x: hidden;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.filterSummary {
+  color: #808191;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.filterButton {
+  background: #6c5dd3;
+  border-color: #6c5dd3;
+  color: #fff;
+  border-radius: 12px;
+  height: 40px;
+  padding: 0 18px;
+  font-weight: 600;
+}
+
+.filterButton:hover,
+.filterButton:focus {
+  background: #5b4fd1 !important;
+  border-color: #5b4fd1 !important;
+  color: #fff !important;
+}
+
+.pageTitle {
+  margin: 0;
+  font-weight: 700;
+  font-size: 2rem;
+}
+
+.pageSubtitle {
+  margin: 8px 0 0;
+  color: #808191;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 720px;
+}
+
+.loadingArea {
+  padding: 80px 0;
+}
+
+.metricsGrid,
+.metricsGridTertiary,
+.analysisGrid {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.metricsGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.metricsGridTertiary {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.analysisGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.singleAnalysisRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.cardCategoryChartsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.metricCard,
+.metricCardSecondary {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f3f4f8;
+}
+
+.metricCard {
   padding: 24px;
-  height: 100%;
+}
+
+.metricCardSecondary {
+  padding: 28px;
+}
+
+.metricCardSecondary :global(.card),
+.metricCardSecondary :global(.card-chart) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.metricLabel {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #808191;
+}
+
+.metricValue {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.metricValueSecondary {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.metricSummaryStack {
   display: flex;
   flex-direction: column;
+  gap: 18px;
+}
+
+.metricHint {
+  display: block;
+  margin-top: 10px;
+  color: #808191;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.metricWarning {
+  color: #d48806;
+}
+
+.metricDanger {
+  color: #dc2626;
+}
+
+.metricSuccess {
+  color: #16a34a;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.sectionSubtitle {
+  margin: 6px 0 0;
+  color: #808191;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.filterFieldsRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.rangePicker {
+  width: 100%;
+}
+
+.cardInsightsList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cardInsightItem {
+  border: 1px solid #eef0f6;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fafbff;
+}
+
+.cardInsightTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cardInsightTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cardInsightFlag {
+  display: block;
+  margin-top: 4px;
+  color: #808191;
+  font-size: 12px;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
-  .balance_description {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #999;
-    margin-bottom: 8px;
-    margin-top: 0;
-  }
+.statusDanger {
+  background: #fff1f0;
+  color: #dc2626;
+}
 
-  .balance_title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
+.statusWarning {
+  background: #fff7e6;
+  color: #d48806;
+}
+
+.statusSuccess {
+  background: #e6f7ef;
+  color: #16a34a;
+}
+
+.statusNeutral {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.cardInsightMetrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.cardInsightLabel {
+  display: block;
+  margin-bottom: 4px;
+  color: #808191;
+  font-size: 12px;
+}
+
+.cardInsightSubtext {
+  display: block;
+  margin-top: 4px;
+  color: #808191;
+  font-size: 12px;
+}
+
+.statusSummaryList {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #4b5563;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.topExpenseCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 220px;
+  width: 100%;
+}
+
+.topExpenseCategory {
+  align-self: flex-start;
+  background: #f0efff;
+  color: #6c5dd3;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.topExpenseValue {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.topExpenseDescription {
+  margin: 0;
+  color: #374151;
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.topExpenseMeta {
+  color: #808191;
+  font-size: 13px;
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  color: #808191;
+  text-align: center;
+}
+
+@media (max-width: 1600px) {
+  .metricsGridTertiary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+@media (max-width: 1400px) {
+  .metricsGrid,
+  .analysisGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .metricsGridTertiary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .pageContent {
+    padding: 24px 20px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerActions {
+    justify-content: flex-start;
+  }
+
+  .filterFieldsRow,
+  .metricsGrid,
+  .metricsGridTertiary,
+  .analysisGrid,
+  .cardCategoryChartsGrid,
+  .cardInsightMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  .pageTitle {
+    font-size: 1.7rem;
+  }
+}
+

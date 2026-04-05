@@ -1,4 +1,4 @@
-import React, { PureComponent, useEffect } from "react";
+﻿import React from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { IAnalysesByMonthChartContainer } from "../AnalysesByMonthChartContainer";
 
@@ -8,19 +8,19 @@ export interface AnalysesByMonthChartProps {
 
 const AnalysesByMonthChart = ({ data }: AnalysesByMonthChartProps) => {
   return (
-    <ResponsiveContainer width={"100%"} height={250}>
+    <ResponsiveContainer width="100%" height={250}>
       <LineChart
         data={data}
         margin={{
-          top: 5,
-          right: 30,
-          left: 20,
-          bottom: 5,
+          top: 8,
+          right: 20,
+          left: 28,
+          bottom: 8,
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="mes" />
-        <YAxis />
+        <YAxis width={72} />
         <Tooltip />
         <Legend />
         <Line type="monotone" dataKey="entrada" stroke="#8884d8" />

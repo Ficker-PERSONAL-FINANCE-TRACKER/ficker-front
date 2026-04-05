@@ -1,11 +1,5 @@
-import { request } from "@/service/api";
-import React, { useEffect } from "react";
+﻿import React from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-
-interface AmountByCategory {
-  category_description: string;
-  category_spending: number;
-}
 
 type DataType = {
   name: string;
@@ -22,30 +16,23 @@ type CustomizedLabel = {
   percent: number;
   index: number;
 };
-const colors = ["#6C5DD3", "#87E344", "#D822E3", "#17E3B9", "#F4A74B", "#F45252"];
 
-const ExpensesByCategoryChart = () => {
-  const [data, setData] = React.useState<DataType[]>([]);
+export interface ExpensesByCategoryChartProps {
+  data: DataType[];
+  emptyMessage?: string;
+}
 
-  const getData = async () => {
-    try {
-      const { data } = await request({
-        endpoint: "categories",
-      });
-      const transformInGraphInformations = data.data.categories.map(
-        (category: AmountByCategory, index: number) => {
-          if (category.category_spending === 0) return;
-          return {
-            name: category.category_description,
-            value: category.category_spending,
-            fill: colors[index % colors.length],
-          };
-        }
-      );
-      setData(transformInGraphInformations.filter((item: any) => item !== undefined));
-    } catch (error) { }
-  };
-  const RADIAN = Math.PI / 180;
+const RADIAN = Math.PI / 180;
+
+const currency = (value: number) =>
+  Number(value || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+
+const ExpensesByCategoryChart = ({ data, emptyMessage = "Nenhum gasto encontrado no período." }: ExpensesByCategoryChartProps) => {
+  const total = data.reduce((acc, item) => acc + Number(item.value || 0), 0);
+
   const renderCustomizedLabel = ({
     cx,
     cy,
@@ -54,22 +41,40 @@ const ExpensesByCategoryChart = () => {
     outerRadius,
     percent,
   }: CustomizedLabel) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const percentage = percent * 100;
+    if (percentage < 30) return null;
+
+    const labelText = `${percentage.toFixed(1)}%`;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.4;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
-      <text x={x} y={y} fill="white" textAnchor={x > cx ? "start" : "end"} dominantBaseline="central">
-        {`${(percent * 100).toFixed(0)}%`}
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        fontSize={12}
+        fontWeight={600}
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        {labelText}
       </text>
     );
   };
-  useEffect(() => {
-    getData();
-  }, []);
+
+  if (!data.length) {
+    return (
+      <div style={{ height: 250, display: "flex", alignItems: "center", justifyContent: "center", color: "#808191" }}>
+        {emptyMessage}
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-      <ResponsiveContainer width={"100%"} height={250}>
+    <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
+      <ResponsiveContainer width="100%" height={250}>
         <PieChart width={250} height={250}>
           <Pie
             data={data}
@@ -87,15 +92,22 @@ const ExpensesByCategoryChart = () => {
           </Pie>
         </PieChart>
       </ResponsiveContainer>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {data.map((item, index) => (
-          <div key={index} style={{ display: "flex", alignItems: "center" }}>
-            <div
-              style={{ width: 10, height: 10, backgroundColor: item.fill, marginRight: 10, borderRadius: 30 }}
-            />
-            <p style={{ fontSize: 12 }}>{item.name}</p>
-          </div>
-        ))}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10, minWidth: 220 }}>
+        {data.map((item, index) => {
+          const percentage = total > 0 ? (Number(item.value || 0) / total) * 100 : 0;
+
+          return (
+            <div key={index} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <div style={{ width: 10, height: 10, backgroundColor: item.fill, borderRadius: 30, flexShrink: 0, marginTop: 4 }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <p style={{ fontSize: 12, margin: 0 }}>
+                  {item.name} ({percentage.toFixed(1)}%)
+                </p>
+                <span style={{ fontSize: 12, color: "#808191" }}>{currency(item.value)}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

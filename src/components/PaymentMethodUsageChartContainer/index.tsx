@@ -2,12 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import ExpensesByCategoryChart from "../ExpensesByCategoryChart";
 import { request } from "@/service/api";
 
-interface AnalysisCategory {
-  category_description: string;
-  real_spending_total: number;
-  credit_card_purchase_total: number;
-  expense_composition_total: number;
-  purchase_composition_total: number;
+interface AnalysisPaymentMethod {
+  payment_method_description: string;
+  total_value: number;
 }
 
 type ChartSlice = {
@@ -16,42 +13,42 @@ type ChartSlice = {
   fill: string;
 };
 
-interface ExpensesByCategoryChartContainerProps {
+interface PaymentMethodUsageChartContainerProps {
   queryString?: string;
+  endpoint?: string;
   title?: string;
-  metric?: "real_spending_total" | "credit_card_purchase_total" | "expense_composition_total" | "purchase_composition_total";
   emptyMessage?: string;
   data?: ChartSlice[];
 }
 
-const colors = ["#6C5DD3", "#87E344", "#D822E3", "#17E3B9", "#F4A74B", "#F45252"];
+const colors = ["#6C5DD3", "#87E344", "#17E3B9", "#F4A74B", "#F45252", "#00B8D9"];
 
-const ExpensesByCategoryChartContainer = ({
+const PaymentMethodUsageChartContainer = ({
   queryString = "",
-  title = "Composição por Categoria",
-  metric = "real_spending_total",
-  emptyMessage = "Nenhum gasto encontrado no período.",
+  endpoint = "analysis/payment-methods",
+  title = "Utilização dos Métodos de Pagamento",
+  emptyMessage = "Nenhum uso de método de pagamento encontrado no período.",
   data: providedData,
-}: ExpensesByCategoryChartContainerProps) => {
+}: PaymentMethodUsageChartContainerProps) => {
   const requestIdRef = useRef(0);
   const [data, setData] = useState<ChartSlice[]>(providedData ?? []);
 
   const getData = async (currentRequestId: number) => {
     try {
-      const endpoint = queryString ? `analysis/categories?${queryString}` : "analysis/categories";
+      const resolvedEndpoint = queryString ? `${endpoint}?${queryString}` : endpoint;
       const { data } = await request({
         method: "GET",
-        endpoint,
+        endpoint: resolvedEndpoint,
       });
 
-      const categories = (data?.data?.categories ?? []) as AnalysisCategory[];
-      const transformedData = categories
-        .map((category, index) => {
-          const value = Number(category[metric] || 0);
+      const methods = (data?.data?.payment_methods ?? []) as AnalysisPaymentMethod[];
+      const transformedData = methods
+        .map((method, index) => {
+          const value = Number(method.total_value || 0);
           if (value <= 0) return null;
 
           return {
-            name: category.category_description,
+            name: method.payment_method_description,
             value,
             fill: colors[index % colors.length],
           };
@@ -77,14 +74,14 @@ const ExpensesByCategoryChartContainer = ({
     const currentRequestId = ++requestIdRef.current;
     setData([]);
     getData(currentRequestId);
-  }, [providedData, metric, queryString]);
+  }, [providedData, endpoint, queryString]);
 
   return (
     <div className="card">
-      {title ? <h4>{title}</h4> : null}
+      <h4>{title}</h4>
       <ExpensesByCategoryChart data={data} emptyMessage={emptyMessage} />
     </div>
   );
 };
 
-export default ExpensesByCategoryChartContainer;
+export default PaymentMethodUsageChartContainer;
