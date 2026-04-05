@@ -157,6 +157,20 @@ const Integrations = () => {
     }).format(utcDate);
   };
 
+  const telegramStatusLabel = telegramLinkStatus?.account?.status === "session_expired"
+    ? "sessão expirada"
+    : telegramLinkStatus?.account?.status === "revoked"
+      ? "desvinculada"
+      : telegramLinkStatus?.account?.status ?? null;
+
+  const telegramStatusMessage = telegramLinkStatus?.linked
+    ? "Sua conta está vinculada ao Telegram."
+    : telegramLinkStatus?.account?.status === "session_expired"
+      ? "Sua sessão no Telegram expirou por inatividade. Gere um novo código para vincular novamente."
+      : telegramLinkStatus?.account?.status === "revoked"
+        ? "Sua conta foi desvinculada do Telegram."
+        : "Sua conta ainda não está vinculada ao Telegram.";
+
   useEffect(() => {
     loadTelegramLinkStatus();
   }, []);
@@ -271,15 +285,13 @@ const Integrations = () => {
           ) : (
             <>
               <p>
-                {telegramLinkStatus?.linked
-                  ? "Sua conta está vinculada ao Telegram."
-                  : "Sua conta ainda não está vinculada ao Telegram."}
+                {telegramStatusMessage}
               </p>
 
               {telegramLinkStatus?.account && (
                 <div className="telegram-link-status" style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, marginBottom: 16 }}>
                   <p>
-                    <strong>Status</strong> {telegramLinkStatus.account.status}
+                    <strong>Status</strong> {telegramStatusLabel}
                   </p>
                   <p>
                     <strong>Usuário</strong>{" "}
