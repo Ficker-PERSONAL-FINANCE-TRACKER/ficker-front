@@ -1,3 +1,87 @@
+.pageContent {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-x: hidden;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.filterSummary {
+  color: #808191;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.filterButton {
+  background: #6c5dd3;
+  border-color: #6c5dd3;
+  color: #fff;
+  border-radius: 12px;
+  height: 40px;
+  padding: 0 18px;
+  font-weight: 600;
+}
+
+.filterButton:hover,
+.filterButton:focus {
+  background: #5b4fd1 !important;
+  border-color: #5b4fd1 !important;
+  color: #fff !important;
+}
+
+.pageTitle {
+  margin: 0;
+  font-weight: 700;
+  font-size: 2rem;
+}
+
+.pageSubtitle {
+  margin: 8px 0 0;
+  color: #808191;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 720px;
+}
+
+.helperText {
+  color: #808191;
+  font-size: 12px;
+}
+
+.loadingArea {
+  display: flex;
+  justify-content: center;
+  padding: 100px 0;
+}
+
+.contentArea {
+  padding-bottom: 30px;
+}
+
+.filterFieldsRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.rangePicker {
+  width: 100%;
+}
+
 .categoryCard {
   background: #fff;
   border-radius: 16px;
@@ -14,6 +98,29 @@
     margin: 0;
     font-size: 16px;
     font-weight: 700;
-    color: #11142D;
+    color: #11142d;
+  }
+}
+
+@media (max-width: 900px) {
+  .pageContent {
+    padding: 24px 20px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerActions {
+    justify-content: flex-start;
+  }
+
+  .filterFieldsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .pageTitle {
+    font-size: 1.7rem;
   }
 }
