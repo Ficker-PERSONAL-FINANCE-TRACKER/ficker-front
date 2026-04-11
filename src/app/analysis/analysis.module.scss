@@ -69,6 +69,13 @@
   margin-bottom: 24px;
 }
 
+.metricsGridCompact,
+.analysisGridCompact {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
 .metricsGrid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -78,6 +85,14 @@
 }
 
 .analysisGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metricsGridCompact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.analysisGridCompact {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -349,7 +364,9 @@
 
 @media (max-width: 1400px) {
   .metricsGrid,
-  .analysisGrid {
+  .metricsGridCompact,
+  .analysisGrid,
+  .analysisGridCompact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -376,11 +393,19 @@
 
   .filterFieldsRow,
   .metricsGrid,
+  .metricsGridCompact,
   .metricsGridTertiary,
   .analysisGrid,
+  .analysisGridCompact,
   .cardCategoryChartsGrid,
   .cardInsightMetrics {
     grid-template-columns: 1fr;
+  }
+
+  .detailSummary,
+  .detailContent {
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
   .pageTitle {
@@ -388,3 +413,33 @@
   }
 }
 
+
+.segmentedControl {
+  flex-shrink: 0;
+}
+
+.detailPanel {
+  margin-bottom: 24px;
+  background: #fff;
+  border: 1px solid #f3f4f8;
+  border-radius: 18px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.detailSummary {
+  list-style: none;
+  cursor: pointer;
+  padding: 18px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.detailSummary::-webkit-details-marker {
+  display: none;
+}
+
+.detailContent {
+  padding: 0 24px 24px;
+}

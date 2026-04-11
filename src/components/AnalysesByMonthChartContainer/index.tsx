@@ -6,25 +6,29 @@ import dayjs from "dayjs";
 
 export interface IAnalysesByMonthChartContainer {
   mes: string;
-  entrada: number;
-  saida: number;
+  saldo: number;
+  gastoReal: number;
+  credito: number;
 }
 
 interface TimelinePoint {
   period_start: string;
   income_total: number;
   real_spending_total: number;
+  credit_card_purchase_total: number;
 }
 
 interface AnalysesByMonthChartContainerProps {
   queryString?: string;
   groupBy?: "day" | "month";
+  title?: string;
   data?: IAnalysesByMonthChartContainer[];
 }
 
 const AnalysesByMonthChartContainer = ({
   queryString = "",
   groupBy = "month",
+  title = "Evolucao financeira no periodo",
   data: providedData,
 }: AnalysesByMonthChartContainerProps) => {
   const requestIdRef = useRef(0);
@@ -43,11 +47,21 @@ const AnalysesByMonthChartContainer = ({
       });
 
       const series = (data?.data?.series ?? []) as TimelinePoint[];
-      const transformedData = series.map((item) => ({
-        mes: getPeriodLabel(item.period_start),
-        entrada: Number(item.income_total || 0),
-        saida: Number(item.real_spending_total || 0),
-      }));
+      let runningBalance = 0;
+      let runningReal = 0;
+      let runningCredit = 0;
+      const transformedData = series.map((item) => {
+        runningBalance += Number(item.income_total || 0) - Number(item.real_spending_total || 0);
+        runningReal += Number(item.real_spending_total || 0);
+        runningCredit += Number(item.credit_card_purchase_total || 0);
+
+        return {
+          mes: getPeriodLabel(item.period_start),
+          saldo: runningBalance,
+          gastoReal: runningReal,
+          credito: runningCredit,
+        };
+      });
 
       if (requestIdRef.current === currentRequestId) {
         setChartData(transformedData);
@@ -73,7 +87,7 @@ const AnalysesByMonthChartContainer = ({
 
   return (
     <div className="card">
-      <h4>Fluxo do Período</h4>
+      <h4>{title}</h4>
       <AnalysesByMonthChart data={chartData} />
     </div>
   );

@@ -6,7 +6,7 @@ import ExpensesByCategoryChartContainer from "@/components/ExpensesByCategoryCha
 import PaymentMethodUsageChartContainer from "@/components/PaymentMethodUsageChartContainer";
 import PlannedSpendingByRealSpendingChartContainer from "@/components/PlannedSpendingByRealSppendingChartContainer";
 import { request } from "@/service/api";
-import { Button, DatePicker, Form, Modal, Row, Select, Spin } from "antd";
+import { Button, DatePicker, Form, Modal, Row, Segmented, Select, Spin } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
@@ -100,7 +100,23 @@ type AnalysisTimelinePoint = {
   period_start: string;
   income_total: number;
   real_spending_total: number;
+  credit_card_purchase_total: number;
   planned_spending_total: number | null;
+};
+
+type TransactionTimelineSource = {
+  date: string;
+  type_id: number;
+  transaction_value: number | string;
+  payment_method_id?: number | string | null;
+  affects_real_spending?: boolean | null;
+};
+
+type AccumulatedBalancePoint = {
+  mes: string;
+  saldo: number;
+  gastoReal: number;
+  credito: number;
 };
 
 type AnalysisCategory = {
@@ -135,12 +151,6 @@ type ChartSlice = {
   name: string;
   value: number;
   fill: string;
-};
-
-type TimelineChartPoint = {
-  mes: string;
-  entrada: number;
-  saida: number;
 };
 
 type PlannedVsRealChartPoint = {
@@ -203,6 +213,17 @@ const getTimelineGroupBy = (filters: AnalysisFilters) => {
   return diffInDays <= 62 ? "day" : "month";
 };
 
+const getPlannedVsRealGroupBy = (filters: AnalysisFilters) => {
+  if (filters.mode !== "custom" || !filters.dateFrom || !filters.dateTo) {
+    return "month";
+  }
+
+  const start = dayjs(filters.dateFrom);
+  const end = dayjs(filters.dateTo);
+
+  return start.isSame(end, "month") ? "day" : "month";
+};
+
 const buildCategoryChartData = (
   categories: AnalysisCategory[],
   metric: "real_spending_total" | "credit_card_purchase_total" | "expense_composition_total" | "purchase_composition_total"
@@ -252,12 +273,14 @@ const Analysis = () => {
   const [cards, setCards] = useState<AnalysisCard[]>([]);
   const [topExpenses, setTopExpenses] = useState<TopExpensesPayload>({ transactions: [] });
   const [timelineSeries, setTimelineSeries] = useState<AnalysisTimelinePoint[]>([]);
+  const [balanceTimelineSeries, setBalanceTimelineSeries] = useState<AnalysisTimelinePoint[]>([]);
+  const [openingBalance, setOpeningBalance] = useState(0);
   const [categories, setCategories] = useState<AnalysisCategory[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<AnalysisPaymentMethod[]>([]);
-  const [invoicePaymentMethods, setInvoicePaymentMethods] = useState<AnalysisPaymentMethod[]>([]);
   const [invoices, setInvoices] = useState<AnalysisInvoice[]>([]);
   const [cardCategoryCharts, setCardCategoryCharts] = useState<CardCategoryCharts>({});
   const [loading, setLoading] = useState(true);
+  const [categoryLens, setCategoryLens] = useState<"purchases" | "real" | "credit">("purchases");
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState<AnalysisFilters>({
     mode: "month",
@@ -269,7 +292,25 @@ const Analysis = () => {
   const [form] = Form.useForm<FilterFormValues>();
 
   const queryString = useMemo(() => buildQueryString(filters), [filters]);
-  const timelineGroupBy = useMemo(() => getTimelineGroupBy(filters), [filters]);
+  const timelineGroupBy = useMemo(() => getPlannedVsRealGroupBy(filters), [filters]);
+  const balanceTimelineGroupBy = useMemo(() => {
+    if (filters.mode === "month") {
+      return "day" as const;
+    }
+
+    return getTimelineGroupBy(filters);
+  }, [filters]);
+
+  const balancePeriodStart = useMemo(() => {
+    if (filters.mode === "custom" && filters.dateFrom) {
+      return dayjs(filters.dateFrom).startOf("day");
+    }
+
+    return dayjs()
+      .year(filters.year)
+      .month(filters.month - 1)
+      .startOf("month");
+  }, [filters]);
 
   useEffect(() => {
     const getData = async () => {
@@ -281,22 +322,44 @@ const Analysis = () => {
           cardsResponse,
           topExpensesResponse,
           timelineResponse,
+          balanceTimelineResponse,
+          transactionsResponse,
           categoriesResponse,
           invoicesResponse,
           paymentMethodsResponse,
-          invoicePaymentMethodsResponse,
         ] = await Promise.all([
           request({ method: "GET", endpoint: `analysis/summary?${queryString}` }),
           request({ method: "GET", endpoint: `analysis/cards?${queryString}` }),
           request({ method: "GET", endpoint: `analysis/top-expenses?${queryString}&limit=5` }),
           request({ method: "GET", endpoint: `analysis/timeline?${queryString}&group_by=${timelineGroupBy}` }),
+          request({ method: "GET", endpoint: `analysis/timeline?${queryString}&group_by=${balanceTimelineGroupBy}` }),
+          request({ method: "GET", endpoint: `transaction/all` }),
           request({ method: "GET", endpoint: `analysis/categories?${queryString}` }),
           request({ method: "GET", endpoint: `analysis/invoices?${queryString}` }),
           request({ method: "GET", endpoint: `analysis/payment-methods?${queryString}` }),
-          request({ method: "GET", endpoint: `analysis/invoice-payment-methods?${queryString}` }),
         ]);
 
         const fetchedCards = (cardsResponse.data?.data?.cards ?? []) as AnalysisCard[];
+        const transactions = (transactionsResponse.data?.data?.transactions ?? []) as TransactionTimelineSource[];
+        const calculatedOpeningBalance = transactions.reduce((acc, transaction) => {
+          const txDate = dayjs(transaction.date);
+          const value = Number(transaction.transaction_value || 0);
+          const affectsRealSpending =
+            transaction.type_id === 2 &&
+            (transaction.affects_real_spending === true || transaction.payment_method_id == null || Number(transaction.payment_method_id) !== 4);
+
+          if (txDate.isBefore(balancePeriodStart, "day")) {
+            if (transaction.type_id === 1) {
+              return acc + value;
+            }
+
+            if (affectsRealSpending) {
+              return acc - value;
+            }
+          }
+
+          return acc;
+        }, 0);
         const cardCategoryEntries = await Promise.all(
           fetchedCards.map(async (card) => {
             const cardCategoriesResponse = await request({
@@ -313,10 +376,11 @@ const Analysis = () => {
         setCards(fetchedCards);
         setTopExpenses((topExpensesResponse.data?.data ?? { transactions: [] }) as TopExpensesPayload);
         setTimelineSeries((timelineResponse.data?.data?.series ?? []) as AnalysisTimelinePoint[]);
+        setBalanceTimelineSeries((balanceTimelineResponse.data?.data?.series ?? []) as AnalysisTimelinePoint[]);
+        setOpeningBalance(calculatedOpeningBalance);
         setCategories((categoriesResponse.data?.data?.categories ?? []) as AnalysisCategory[]);
         setInvoices((invoicesResponse.data?.data?.invoices ?? []) as AnalysisInvoice[]);
         setPaymentMethods((paymentMethodsResponse.data?.data?.payment_methods ?? []) as AnalysisPaymentMethod[]);
-        setInvoicePaymentMethods((invoicePaymentMethodsResponse.data?.data?.payment_methods ?? []) as AnalysisPaymentMethod[]);
         setCardCategoryCharts(Object.fromEntries(cardCategoryEntries));
       } catch (error) {
         console.log(error);
@@ -324,10 +388,11 @@ const Analysis = () => {
         setCards([]);
         setTopExpenses({ transactions: [] });
         setTimelineSeries([]);
+        setBalanceTimelineSeries([]);
+        setOpeningBalance(0);
         setCategories([]);
         setInvoices([]);
         setPaymentMethods([]);
-        setInvoicePaymentMethods([]);
         setCardCategoryCharts({});
       } finally {
         setLoading(false);
@@ -335,7 +400,7 @@ const Analysis = () => {
     };
 
     getData();
-  }, [queryString, timelineGroupBy]);
+  }, [balancePeriodStart, balanceTimelineGroupBy, queryString, timelineGroupBy]);
 
   const cardMetrics = useMemo(() => {
     const currentInvoiceTotal = cards.reduce((acc, card) => acc + Number(card.current_invoice_total || 0), 0);
@@ -361,16 +426,6 @@ const Analysis = () => {
     };
   }, [cards]);
 
-  const timelineChartData = useMemo<TimelineChartPoint[]>(
-    () =>
-      timelineSeries.map((item) => ({
-        mes: timelineGroupBy === "day" ? dayjs(item.period_start).format("DD/MM") : dayjs(item.period_start).format("MMM"),
-        entrada: Number(item.income_total || 0),
-        saida: Number(item.real_spending_total || 0),
-      })),
-    [timelineSeries, timelineGroupBy]
-  );
-
   const plannedVsRealChartData = useMemo<PlannedVsRealChartPoint[]>(
     () =>
       timelineSeries.map((item) => ({
@@ -381,6 +436,30 @@ const Analysis = () => {
     [timelineSeries, timelineGroupBy]
   );
 
+  const accumulatedBalanceChartData = useMemo<AccumulatedBalancePoint[]>(() => {
+    let runningBalance = openingBalance;
+    let runningReal = 0;
+    let runningCredit = 0;
+    const chartPoints = balanceTimelineSeries.map((item) => {
+      runningBalance += Number(item.income_total || 0) - Number(item.real_spending_total || 0);
+      runningReal += Number(item.real_spending_total || 0);
+      runningCredit += Number(item.credit_card_purchase_total || 0);
+
+      return {
+        mes: balanceTimelineGroupBy === "day" ? dayjs(item.period_start).format("DD/MM") : dayjs(item.period_start).format("MMM"),
+        saldo: runningBalance,
+        gastoReal: runningReal,
+        credito: runningCredit,
+      };
+    });
+
+    if (chartPoints.length === 0) {
+      return openingBalance !== 0 ? [{ mes: "", saldo: openingBalance, gastoReal: 0, credito: 0 }] : [];
+    }
+
+    return [{ mes: "", saldo: openingBalance, gastoReal: 0, credito: 0 }, ...chartPoints];
+  }, [balanceTimelineGroupBy, balanceTimelineSeries, openingBalance]);
+
   const categoryChartData = useMemo(() => {
     return {
       purchases: buildCategoryChartData(categories, "purchase_composition_total"),
@@ -389,12 +468,7 @@ const Analysis = () => {
     };
   }, [categories]);
 
-  const paymentMethodChartData = useMemo(() => {
-    return {
-      paymentMethods: buildPaymentMethodChartData(paymentMethods),
-      invoicePaymentMethods: buildPaymentMethodChartData(invoicePaymentMethods),
-    };
-  }, [paymentMethods, invoicePaymentMethods]);
+  const paymentMethodChartData = useMemo(() => buildPaymentMethodChartData(paymentMethods), [paymentMethods]);
 
   const cardInvoiceStatusSummary = useMemo<CardInvoiceStatusSummary>(() => {
     return invoices.reduce<CardInvoiceStatusSummary>((acc, invoice) => {
@@ -415,17 +489,6 @@ const Analysis = () => {
   }, [invoices]);
 
   const topExpense = topExpenses.transactions[0] ?? null;
-  const differenceIsPositive = Number(summary?.planned_spending_difference || 0) >= 0;
-  const totalCategoryPurchases = Number(summary?.real_spending_total || 0) + Number(summary?.credit_card_purchase_total || 0);
-  const creditUsagePercentage = totalCategoryPurchases > 0
-    ? (Number(summary?.credit_card_purchase_total || 0) / totalCategoryPurchases) * 100
-    : 0;
-  const invoicePaymentPercentage = Number(summary?.real_spending_total || 0) > 0
-    ? (Number(summary?.invoice_payment_total || 0) / Number(summary?.real_spending_total || 0)) * 100
-    : 0;
-  const netBalancePercentage = Number(summary?.income_total || 0) > 0
-    ? (Number(summary?.balance_delta || 0) / Number(summary?.income_total || 0)) * 100
-    : 0;
   const invoiceSettlementPercentageInPeriod = Number(cardMetrics.invoicesDueTotalInPeriod || 0) > 0
     ? (Number(cardMetrics.invoicesSettledTotalInPeriod || 0) / Number(cardMetrics.invoicesDueTotalInPeriod || 0)) * 100
     : 0;
@@ -439,6 +502,7 @@ const Analysis = () => {
     (card) => card.current_invoice_status === "aguardando_fechamento" || card.current_invoice_status === "awaiting_closure"
   );
   const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "Período";
+  const currentReferenceLabel = `${MONTH_OPTIONS[now.getMonth()]?.label ?? dayjs().format("MMMM")} de ${now.getFullYear()}`;
   const yearOptions = Array.from({ length: 7 }, (_, index) => now.getFullYear() - 3 + index).map((year) => ({
     value: year,
     label: String(year),
@@ -557,19 +621,14 @@ const Analysis = () => {
                 <span className={styles.metricHint}>Tudo o que entrou no caixa no período filtrado.</span>
               </div>
               <div className={styles.metricCard}>
-                <p className={styles.metricLabel}>Gasto real</p>
+                <p className={styles.metricLabel}>Gasto real no período</p>
                 <h3 className={styles.metricValue}>{currency(summary?.real_spending_total)}</h3>
                 <span className={styles.metricHint}>Saídas que realmente afetaram o saldo.</span>
               </div>
               <div className={styles.metricCard}>
-                <p className={styles.metricLabel}>Compras no crédito</p>
-                <h3 className={`${styles.metricValue} ${styles.metricWarning}`}>{currency(summary?.credit_card_purchase_total)}</h3>
-                <span className={styles.metricHint}>Consumo no cartão que ainda não virou gasto real.</span>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricLabel}>Pagamentos de fatura</p>
-                <h3 className={`${styles.metricValue} ${styles.metricDanger}`}>{currency(summary?.invoice_payment_total)}</h3>
-                <span className={styles.metricHint}>Quanto do período foi usado para quitar faturas.</span>
+                <p className={styles.metricLabel}>Planejado no período</p>
+                <h3 className={styles.metricValue}>{currency(summary?.planned_spending_total)}</h3>
+                <span className={styles.metricHint}>Meta de gasto considerada para o recorte atual.</span>
               </div>
               <div className={styles.metricCard}>
                 <p className={styles.metricLabel}>Saldo líquido do período</p>
@@ -578,16 +637,22 @@ const Analysis = () => {
                 </h3>
                 <span className={styles.metricHint}>Entradas do período menos o gasto real do mesmo recorte.</span>
               </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricLabel}>Saldo líquido percentual</p>
-                <h3 className={`${styles.metricValue} ${netBalancePercentage >= 0 ? styles.metricSuccess : styles.metricDanger}`}>
-                  {netBalancePercentage.toFixed(1)}%
-                </h3>
-                <span className={styles.metricHint}>Quanto das entradas do período permaneceu líquido após o gasto real.</span>
+            </div>
+
+            <div className={styles.metricsGridCompact}>
+              <div className={styles.metricCardSecondary}>
+                <p className={styles.metricLabel}>Compras no crédito no período</p>
+                <h3 className={`${styles.metricValueSecondary} ${styles.metricWarning}`}>{currency(summary?.credit_card_purchase_total)}</h3>
+                <span className={styles.metricHint}>Consumo no cartão que ainda não virou gasto real.</span>
               </div>
-              <div className={styles.metricCard}>
+              <div className={styles.metricCardSecondary}>
+                <p className={styles.metricLabel}>Pagamentos de fatura no período</p>
+                <h3 className={`${styles.metricValueSecondary} ${styles.metricDanger}`}>{currency(summary?.invoice_payment_total)}</h3>
+                <span className={styles.metricHint}>Quanto do período foi usado para quitar faturas.</span>
+              </div>
+              <div className={styles.metricCardSecondary}>
                 <p className={styles.metricLabel}>Quitação das faturas do período</p>
-                <h3 className={styles.metricValue}>{currency(cardMetrics.invoicesSettledTotalInPeriod)}</h3>
+                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.invoicesSettledTotalInPeriod)}</h3>
                 <span className={styles.metricHint}>
                   {hasPayableInvoicesInSelectedPeriod && Number(cardMetrics.invoicesDueTotalInPeriod || 0) > 0
                     ? `${invoiceSettlementPercentageInPeriod.toFixed(1)}% do valor das faturas com vencimento no período já foi quitado.`
@@ -598,9 +663,9 @@ const Analysis = () => {
                       : "Nenhuma fatura com vencimento no período selecionado."}
                 </span>
               </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricLabel}>Quitação do aberto atual</p>
-                <h3 className={styles.metricValue}>{currency(cardMetrics.currentInvoicePaidTotal)}</h3>
+              <div className={styles.metricCardSecondary}>
+                <p className={styles.metricLabel}>{`Quitação do aberto atual (${currentReferenceLabel})`}</p>
+                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.currentInvoicePaidTotal)}</h3>
                 <span className={styles.metricHint}>
                   {Number(cardMetrics.payableCardsCount || 0) > 0
                     ? `${currentOpenSettlementPercentage.toFixed(1)}% da fatura atual já foi quitada.`
@@ -613,118 +678,135 @@ const Analysis = () => {
               </div>
             </div>
 
-            <div className={styles.metricsGridTertiary}>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Planejado no período</p>
-                <h3 className={styles.metricValueSecondary}>{currency(summary?.planned_spending_total)}</h3>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Diferença planejado x real</p>
-                <h3 className={`${styles.metricValueSecondary} ${differenceIsPositive ? styles.metricSuccess : styles.metricDanger}`}>
-                  {currency(summary?.planned_spending_difference)}
-                </h3>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Faturas atuais</p>
-                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.currentInvoiceTotal)}</h3>
-                <span className={styles.metricHint}>{cardMetrics.payableCardsCount} cartão(ões) com fatura pagável.</span>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Próxima fatura</p>
-                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.nextInvoiceTotal)}</h3>
-                <span className={styles.metricHint}>Soma da próxima fatura prevista em todos os cartões.</span>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Comprometimento futuro</p>
-                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.futureCommitmentTotal)}</h3>
-                <span className={styles.metricHint}>Compras e parcelas que ainda não viraram fatura atual.</span>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Comprometimento total</p>
-                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.currentCommitmentTotal)}</h3>
-                <span className={styles.metricHint}>Faturas atuais somadas ao comprometimento futuro.</span>
-              </div>
-            </div>
-
-            <div className={styles.analysisGrid}>
+            <div className={styles.analysisGridCompact}>
               <div className={styles.metricCardSecondary}>
                 <PlannedSpendingByRealSpendingChartContainer data={plannedVsRealChartData} />
               </div>
               <div className={styles.metricCardSecondary}>
-                <AnalysesByMonthChartContainer data={timelineChartData} />
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <ExpensesByCategoryChartContainer
-                  title="Compras por Categoria"
-                  emptyMessage="Nenhuma compra encontrada no período."
-                  data={categoryChartData.purchases}
+                <AnalysesByMonthChartContainer
+                  title="Evolução financeira no período"
+                  data={accumulatedBalanceChartData}
                 />
               </div>
               <div className={styles.metricCardSecondary}>
-                <div className={styles.metricSummaryStack}>
+                <div className={styles.sectionHeader}>
                   <div>
-                    <p className={styles.metricLabel}>Total comprado no período</p>
-                    <h3 className={styles.metricValueSecondary}>{currency(totalCategoryPurchases)}</h3>
+                    <h4 className={styles.sectionTitle}>Categorias no período</h4>
+                    <p className={styles.sectionSubtitle}>Uma visão por vez para facilitar a leitura do período.</p>
                   </div>
+                  <Segmented
+                    className={styles.segmentedControl}
+                    value={categoryLens}
+                    onChange={(value) => setCategoryLens(value as "purchases" | "real" | "credit")}
+                    options={[
+                      { label: "Total", value: "purchases" },
+                      { label: "Real", value: "real" },
+                      { label: "Crédito", value: "credit" },
+                    ]}
+                  />
+                </div>
+                <ExpensesByCategoryChartContainer
+                  title=""
+                  emptyMessage={
+                    categoryLens === "real"
+                      ? "Nenhum gasto real encontrado no período."
+                      : categoryLens === "credit"
+                        ? "Nenhum consumo no crédito encontrado no período."
+                        : "Nenhuma compra encontrada no período."
+                  }
+                  data={categoryChartData[categoryLens]}
+                />
+              </div>
+              <div className={styles.metricCardSecondary}>
+                <div className={styles.sectionHeader}>
                   <div>
-                    <p className={styles.metricLabel}>Gasto real</p>
-                    <h3 className={styles.metricValueSecondary}>{currency(summary?.real_spending_total)}</h3>
-                  </div>
-                  <div>
-                    <p className={styles.metricLabel}>Total no crédito</p>
-                    <h3 className={`${styles.metricValueSecondary} ${styles.metricWarning}`}>{currency(summary?.credit_card_purchase_total)}</h3>
-                  </div>
-                  <div>
-                    <p className={styles.metricLabel}>Total pago em faturas</p>
-                    <h3 className={`${styles.metricValueSecondary} ${styles.metricDanger}`}>{currency(summary?.invoice_payment_total)}</h3>
+                    <h4 className={styles.sectionTitle}>Métodos de pagamento no período, em relação ao total</h4>
                   </div>
                 </div>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Percentual de uso do crédito</p>
-                <h3 className={`${styles.metricValueSecondary} ${styles.metricWarning}`}>{creditUsagePercentage.toFixed(1)}%</h3>
-                <span className={styles.metricHint}>Participação das compras no crédito dentro do total comprado no período.</span>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Percentual pago em faturas</p>
-                <h3 className={`${styles.metricValueSecondary} ${styles.metricDanger}`}>{invoicePaymentPercentage.toFixed(1)}%</h3>
-                <span className={styles.metricHint}>Quanto do gasto real do período foi consumido por pagamentos de fatura.</span>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <ExpensesByCategoryChartContainer
-                  title="Gasto real por Categoria"
-                  emptyMessage="Nenhum gasto real encontrado no período."
-                  data={categoryChartData.real}
-                />
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <ExpensesByCategoryChartContainer
-                  title="Compras no Crédito por Categoria"
-                  emptyMessage="Nenhum consumo no crédito encontrado no período."
-                  data={categoryChartData.credit}
-                />
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <PaymentMethodUsageChartContainer data={paymentMethodChartData.paymentMethods} />
-              </div>
-              <div className={styles.metricCardSecondary}>
                 <PaymentMethodUsageChartContainer
-                  title="Métodos de pagamento das faturas"
-                  emptyMessage="Nenhum pagamento de fatura encontrado no período."
-                  data={paymentMethodChartData.invoicePaymentMethods}
+                  title=""
+                  emptyMessage="Nenhum gasto encontrado para os métodos de pagamento no período."
+                  data={paymentMethodChartData}
                 />
               </div>
             </div>
 
-            <div className={styles.singleAnalysisRow}>
-              <div className={styles.metricCardSecondary}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <h4 className={styles.sectionTitle}>Compras no crédito por categoria e cartão</h4>
-                    <p className={styles.sectionSubtitle}>Leitura por cartão do que foi comprado no crédito dentro do período filtrado.</p>
-                  </div>
-                </div>
+            <details className={styles.detailPanel}>
+              <summary className={styles.detailSummary}>Detalhes por cartão no período</summary>
+              <div className={styles.detailContent}>
+                <div className={styles.cardInsightsList}>
+                  {cards.length > 0 ? (
+                    cards.map((card) => {
+                      const availableInvoicesCount = invoices.filter(
+                        (invoice) =>
+                          invoice.card_id === card.card_id &&
+                          invoice.status !== "aguardando_fechamento" &&
+                          invoice.status !== "awaiting_closure"
+                      ).length;
+                      const paidInvoicesCount = Number(card.paid_invoices_count_in_period || 0);
+                      const invoicePaymentSummary = paidInvoicesCount > 0
+                        ? availableInvoicesCount > 0
+                          ? `${paidInvoicesCount} fatura(s) paga(s) de ${availableInvoicesCount} disponível(is)`
+                          : `${paidInvoicesCount} fatura(s) paga(s) no período`
+                        : availableInvoicesCount > 0
+                          ? `0 fatura(s) paga(s) de ${availableInvoicesCount} disponível(is)`
+                          : "Nenhuma fatura disponível no período";
 
+                      return (
+                        <div key={`filtered-card-${card.card_id}`} className={styles.cardInsightItem}>
+                          <div className={styles.cardInsightTop}>
+                            <div>
+                              <h5 className={styles.cardInsightTitle}>{card.card_description}</h5>
+                              <span className={styles.cardInsightFlag}>{card.flag_description || "Cartão"}</span>
+                            </div>
+                          </div>
+
+                          <div className={styles.cardInsightMetrics}>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Compras no período</span>
+                              <strong>{currency(card.purchases_total_in_period)}</strong>
+                              <span className={styles.cardInsightSubtext}>{Number(card.purchases_count_in_period || 0)} lançamento(s)</span>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Ticket médio</span>
+                              <strong>{currency(card.average_purchase_in_period)}</strong>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Maior compra</span>
+                              <strong>{currency(card.largest_purchase_in_period)}</strong>
+                              <span className={styles.cardInsightSubtext}>{card.largest_purchase_description_in_period || "-"}</span>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Última compra</span>
+                              <strong>{currency(card.latest_purchase_in_period)}</strong>
+                              <span className={styles.cardInsightSubtext}>{formatDate(card.latest_purchase_date_in_period)}</span>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Pagamentos de fatura no período</span>
+                              <strong>{currency(card.invoice_payments_total_in_period)}</strong>
+                              <span className={styles.cardInsightSubtext}>
+                                {paidInvoicesCount > 0
+                                  ? "Pago no período"
+                                  : Number(card.invoice_payments_total_in_period || 0) > 0
+                                    ? "Parcialmente pago no período"
+                                    : "Sem pagamento no período"}
+                                {` · ${invoicePaymentSummary}`}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className={styles.emptyState}>Nenhum cartão encontrado para o período.</div>
+                  )}
+                </div>
+              </div>
+            </details>
+
+            <details className={styles.detailPanel}>
+              <summary className={styles.detailSummary}>Compras no crédito no período por categoria e cartão</summary>
+              <div className={styles.detailContent}>
                 {cards.length > 0 ? (
                   <div className={styles.cardCategoryChartsGrid}>
                     {cards.map((card) => (
@@ -748,99 +830,13 @@ const Analysis = () => {
                   <div className={styles.emptyState}>Nenhum cartão encontrado para o período.</div>
                 )}
               </div>
-            </div>
+            </details>
 
             <div className={styles.singleAnalysisRow}>
               <div className={styles.metricCardSecondary}>
                 <div className={styles.sectionHeader}>
                   <div>
-                    <h4 className={styles.sectionTitle}>Cartões no período filtrado</h4>
-                    <p className={styles.sectionSubtitle}>Resumo do que aconteceu com cada cartão dentro do intervalo selecionado.</p>
-                  </div>
-                </div>
-
-                <div className={styles.cardInsightsList}>
-                  {cards.length > 0 ? (
-                    cards.map((card) => {
-                      const invoiceSummaryItems = getInvoiceStatusSummaryItems(card.card_id);
-
-                      return (
-                      <div key={`filtered-card-${card.card_id}`} className={styles.cardInsightItem}>
-                        <div className={styles.cardInsightTop}>
-                          <div>
-                            <h5 className={styles.cardInsightTitle}>{card.card_description}</h5>
-                            <span className={styles.cardInsightFlag}>{card.flag_description || "Cartão"}</span>
-                          </div>
-                        </div>
-
-                        <div className={styles.cardInsightMetrics}>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Compras no período</span>
-                            <strong>{currency(card.purchases_total_in_period)}</strong>
-                            <span className={styles.cardInsightSubtext}>{Number(card.purchases_count_in_period || 0)} lançamento(s)</span>
-                          </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Ticket médio</span>
-                            <strong>{currency(card.average_purchase_in_period)}</strong>
-                          </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Maior compra</span>
-                            <strong>{currency(card.largest_purchase_in_period)}</strong>
-                            <span className={styles.cardInsightSubtext}>{card.largest_purchase_description_in_period || "-"}</span>
-                          </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Última compra</span>
-                            <strong>{currency(card.latest_purchase_in_period)}</strong>
-                            <span className={styles.cardInsightSubtext}>{formatDate(card.latest_purchase_date_in_period)}</span>
-                          </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Pagamentos de fatura</span>
-                            <strong>{currency(card.invoice_payments_total_in_period)}</strong>
-                            <span className={styles.cardInsightSubtext}>
-                              {Number(card.paid_invoices_count_in_period || 0) > 0
-                                ? "Pago no período"
-                                : Number(card.invoice_payments_total_in_period || 0) > 0
-                                  ? "Parcialmente pago no período"
-                                  : "Sem pagamento no período"}
-                              {` · ${Number(card.paid_invoices_count_in_period || 0)} fatura(s) paga(s)`}
-                            </span>
-                          </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Situação atual das faturas do período</span>
-                            {invoiceSummaryItems.length > 0 ? (
-                              <>
-                                <strong>{invoiceSummaryItems.join(" · ")}</strong>
-                                <ul className={styles.statusSummaryList}>
-                                  {invoiceSummaryItems.map((item) => (
-                                    <li key={`${card.card_id}-${item}`}>{item}</li>
-                                  ))}
-                                </ul>
-                                <span className={styles.cardInsightSubtext}>
-                                  Considera o status atual das faturas com vencimento no período, mesmo se a quitação aconteceu depois.
-                                </span>
-                              </>
-                            ) : (
-                              <span className={styles.cardInsightSubtext}>
-                                Nenhuma fatura com vencimento dentro do período filtrado.
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      );
-                    })
-                  ) : (
-                    <div className={styles.emptyState}>Nenhum cartão encontrado para o período.</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.singleAnalysisRow}>
-              <div className={styles.metricCardSecondary}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <h4 className={styles.sectionTitle}>Cartões e crédito</h4>
+                    <h4 className={styles.sectionTitle}>{`Cartões e crédito atuais (${currentReferenceLabel})`}</h4>
                     <p className={styles.sectionSubtitle}>Situação atual dos cartões, independente do período filtrado.</p>
                   </div>
                 </div>
@@ -899,7 +895,7 @@ const Analysis = () => {
               <div className={styles.metricCardSecondary}>
                 <div className={styles.sectionHeader}>
                   <div>
-                    <h4 className={styles.sectionTitle}>Maior gasto do período</h4>
+                    <h4 className={styles.sectionTitle}>Maior gasto no período</h4>
                     <p className={styles.sectionSubtitle}>O lançamento que mais pesou no período atual.</p>
                   </div>
                 </div>

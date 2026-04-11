@@ -344,29 +344,7 @@ const ObjectivesPage = () => {
         <section className={styles.sectionBlock}>
           <div className={styles.sectionHeader}>
             <div>
-              <h3 className={styles.sectionTitle}>Criar novo objetivo</h3>
-              <p className={styles.sectionDescription}>Escolha o tipo de objetivo e preencha os dados para começar.</p>
-            </div>
-          </div>
-
-          <Row gutter={[24, 24]}>
-            {objectiveTypes.map((type) => (
-              <Col xs={24} sm={12} lg={8} xl={6} key={type.id}>
-                <Card hoverable className={styles.objectiveCard} onClick={() => handleOpenCreateModal(type)}>
-                  <div className={styles.cardContent}>
-                    <div className={styles.iconWrapper}>{type.icon}</div>
-                    <span className={styles.cardTitle}>{type.title}</span>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </section>
-
-        <section className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <div>
-              <h3 className={styles.sectionTitle}>Objetivos salvos</h3>
+              <h3 className={styles.sectionTitle}>Objetivos</h3>
               <p className={styles.sectionDescription}>Veja o progresso atual, ajuste dados e remova objetivos que nao fazem mais sentido.</p>
             </div>
             <Tag className={styles.counterTag}>{objectives.length} objetivo(s)</Tag>
@@ -498,7 +476,27 @@ const ObjectivesPage = () => {
           )}
         </section>
 
-        <Modal
+<section className={styles.sectionBlock}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <h3 className={styles.sectionTitle}>Criar novo objetivo</h3>
+              <p className={styles.sectionDescription}>Escolha o tipo de objetivo e preencha os dados para começar.</p>
+            </div>
+          </div>
+
+          <Row gutter={[24, 24]}>
+            {objectiveTypes.map((type) => (
+              <Col xs={24} sm={12} lg={8} xl={6} key={type.id}>
+                <Card hoverable className={styles.objectiveCard} onClick={() => handleOpenCreateModal(type)}>
+                  <div className={styles.cardContent}>
+                    <div className={styles.iconWrapper}>{type.icon}</div>
+                    <span className={styles.cardTitle}>{type.title}</span>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </section>        <Modal
           title={editingObjective ? "Editar objetivo" : "Defina seu objetivo"}
           open={isModalOpen}
           onOk={handleSave}
