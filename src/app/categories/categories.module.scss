@@ -27,20 +27,26 @@
 }
 
 .filterButton {
-  background: #6c5dd3;
-  border-color: #6c5dd3;
-  color: #fff;
-  border-radius: 12px;
+  background: #6c5dd3 !important;
+  border: none !important;
+  border-color: #6c5dd3 !important;
+  color: #f8fafc !important;
+  border-radius: 8px;
   height: 40px;
   padding: 0 18px;
-  font-weight: 600;
+  font-weight: 400;
+  box-shadow: none !important;
 }
 
 .filterButton:hover,
 .filterButton:focus {
-  background: #5b4fd1 !important;
-  border-color: #5b4fd1 !important;
-  color: #fff !important;
+  background: #6c5dd3 !important;
+  border: none !important;
+  border-color: #6c5dd3 !important;
+  color: #f8fafc !important;
+  opacity: 0.7;
+  transition: 0.3s;
+  box-shadow: none !important;
 }
 
 .pageTitle {
