@@ -12,35 +12,40 @@
   margin: 0;
 }
 
-.topActions {
+.headerActions {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.periodSelector {
-  display: flex;
-  background: rgba(108, 93, 211, 0.1);
-  padding: 4px;
-  border-radius: 12px;
+.filterSummary {
+  color: #808191;
+  font-size: 13px;
+  font-weight: 600;
+}
 
-  button {
-    border: none;
-    background: transparent;
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: #808191;
+.filterButton {
+  background: #6c5dd3 !important;
+  border: none !important;
+  border-color: #6c5dd3 !important;
+  color: #f8fafc !important;
+  border-radius: 8px;
+  height: 40px;
+  padding: 0 18px;
+  font-weight: 400;
+}
 
-    &.active {
-      background: #fff;
-      color: #6C5DD3;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
-    }
-  }
+.filterButton:hover,
+.filterButton:focus {
+  background: #6c5dd3 !important;
+  border: none !important;
+  border-color: #6c5dd3 !important;
+  color: #f8fafc !important;
+  opacity: 0.7;
+  transition: 0.3s;
+  box-shadow: none !important;
 }
 
 .notification {
@@ -49,6 +54,7 @@
   font-size: 20px;
   display: flex;
   align-items: center;
+  min-height: 40px;
 }
 
 .balance {
@@ -194,5 +200,16 @@
         font-size: 16px !important;
       }
     }
+  }
+}
+
+@media (max-width: 900px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerActions {
+    justify-content: flex-start;
   }
 }
