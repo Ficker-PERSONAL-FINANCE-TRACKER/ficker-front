@@ -60,8 +60,8 @@ const MyCategoriesList = () => {
 
   return (
     <div className="card">
-      <div className="title-area">
-        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#11142D' }}>Gastos por Categoria</h4>
+      <div className="title-area" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#11142D', margin: 0 }}>Gastos por Categoria</h4>
         <a className="title-area__button" onClick={showModal}>
           <img src="/icons/icon-more.svg" alt="new_category" />
         </a>

@@ -1,12 +1,12 @@
 "use client";
 import Image from "next/image";
-import { Button, Col, Row, Typography, message, Tour, Badge, Space, Modal, Form, Input } from "antd";
+import { Button, Col, Row, Typography, message, Tour, Badge, Space, Modal, Form, Input, Progress } from "antd";
 import type { TourProps } from "antd";
 import {
   BellOutlined, PlusOutlined, SwapOutlined,
   CreditCardOutlined, PlusCircleOutlined,
   MinusCircleOutlined, ShopOutlined, EyeOutlined, EyeInvisibleOutlined, MoreOutlined,
-  WalletOutlined, TagOutlined, LineChartOutlined
+  WalletOutlined, TagOutlined, LineChartOutlined, RocketOutlined
 } from "@ant-design/icons";
 import styles from "./resume.module.scss";
 import { ResumeTemporalFilter, type ResumeFilters } from "./temporalFilter";
@@ -72,6 +72,7 @@ const Resume = () => {
   const [chartData, setChartData] = useState<any[]>([]);
   const [showAnimatedChart, setShowAnimatedChart] = useState(false);
   const [isLoadingChart, setIsLoadingChart] = useState(true);
+  const [objectives, setObjectives] = useState<any[]>([]);
 
   const formatCurrency = (value: any): string => {
     const numValue = parseFloat(value || 0);
@@ -296,6 +297,18 @@ const Resume = () => {
     }
   };
 
+  const getObjectives = async () => {
+    try {
+      const { data } = await request({
+        method: "GET",
+        endpoint: "objectives",
+      });
+      setObjectives(data.data.objectives || []);
+    } catch (error) {
+      console.error("Erro ao buscar objetivos:", error);
+    }
+  };
+
   const getPeriodBudgetSummary = async () => {
     try {
       const queryString = buildAnalysisQueryString(filters);
@@ -439,6 +452,7 @@ const Resume = () => {
     getBalance();
     getUser();
     getCardsData();
+    getObjectives();
   }, []);
 
   useEffect(() => {
@@ -577,10 +591,10 @@ const Resume = () => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "row" }}>
+    <div style={{ display: "flex", flexDirection: "row", height: "100vh", overflow: "hidden" }}>
       <CustomMenu />
-      <div style={{ width: "90vw", flex: "1 1 0%", overflowX: "hidden" }}>
-        <div className={styles.header} style={{ padding: "20px 30px", marginBottom: 10 }}>
+      <div style={{ flex: "1 1 0%", overflowY: "auto", overflowX: "hidden" }}>
+        <div className={styles.header} style={{ padding: "30px 30px", marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <h2>
               Olá, {user?.name ? user.name.split(" ").slice(0, 2).join(" ") : "John Amorim"}!
@@ -598,9 +612,9 @@ const Resume = () => {
         </div>
       {/* The Alert Banner has been moved to the sidebar */}
 
-      <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 30px 30px" }}>
+      <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 12px 30px" }}>
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
-          <div ref={refSaldo} className={styles.balance} style={{ flex: 1, padding: '24px 32px' }}>
+          <div ref={refSaldo} className={styles.balance} style={{ flex: 1, padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
                 <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
@@ -614,26 +628,20 @@ const Resume = () => {
               <div
                 onClick={handleClickShowSaldo}
                 style={{
-                  width: 60, height: 60, borderRadius: '50%', background: '#F4F5F7',
-                  display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: '#808191', fontSize: 24
+                  width: 40, height: 40, borderRadius: '10px', background: '#F4F5F7',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#808191', fontSize: 18, transition: 'all 0.2s'
                 }}
               >
                 {showSaldo ? <EyeInvisibleOutlined /> : <EyeOutlined />}
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3 className={styles.balance_description} style={{ margin: 0 }}>Visão Geral</h3>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6C5DD3' }} />
-                  <span style={{ fontSize: 11, color: '#808191' }}>Saldo</span>
-                </div>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 className={styles.balance_description} style={{ margin: 0, fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Visão Geral</h3>
             </div>
 
-            <div style={{ width: '100%', height: 160, marginTop: 10 }}>
+            <div style={{ width: '100%', height: 70 }}>
               {isLoadingChart ? (
                 <div style={{ textAlign: 'center', color: '#808191' }}>Carregando dados...</div>
               ) : chartData.length > 0 ? (
@@ -643,47 +651,129 @@ const Resume = () => {
                     initial={{ clipPath: "inset(0 100% 0 0)" }}
                     animate={{ clipPath: "inset(0 0% 0 0)" }}
                     transition={{ duration: 0.9, ease: "easeOut" }}
-                    style={{ width: "100%", height: 200 }}
+                    style={{ width: "100%", height: 80 }}
                   >
-                    <ResponsiveContainer width="100%" height={200}>
-                      <AreaChart data={chartData}>
+                    <ResponsiveContainer width="100%" height={80}>
+                      <AreaChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6C5DD3" stopOpacity={0.1} />
+                            <stop offset="5%" stopColor="#6C5DD3" stopOpacity={0.08} />
                             <stop offset="95%" stopColor="#6C5DD3" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
-                        <XAxis
-                          dataKey="name"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: '#808191', fontSize: 10 }}
-                          interval="preserveStartEnd"
-                        />
-                        <YAxis hide />
                         <Tooltip content={<CustomTooltip />} />
                         <Area
                           type="monotone"
                           dataKey="total"
                           stroke="#6C5DD3"
-                          strokeWidth={3}
+                          strokeWidth={2}
                           fillOpacity={1}
                           fill="url(#colorTotal)"
                           isAnimationActive={false}
-                          dot={<RenderDot />}
-                          activeDot={{ r: 6, strokeWidth: 0, fill: '#6C5DD3' }}
+                          dot={false}
+                          activeDot={{ r: 4, strokeWidth: 0, fill: '#6C5DD3' }}
                         />
                       </AreaChart>
                     </ResponsiveContainer>
                   </motion.div>
                 ) : (
-                  <div style={{ width: "100%", height: 200 }} />
+                  <div style={{ width: "100%", height: 120 }} />
                 )
               ) : (
-                <div style={{ textAlign: 'center', color: '#808191' }}>
+                <div style={{ textAlign: 'center', color: '#808191', height: 120, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Ainda não possui dados</p>
                   <p style={{ fontSize: 12 }}>Suas transações aparecerão aqui.</p>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #F4F5F7' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h3 className={styles.balance_description} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+                  <RocketOutlined style={{ marginRight: 6, fontSize: 12 }} />
+                  Objetivos
+                </h3>
+                <Button type="link" size="small" onClick={() => router.push('/objectives')} style={{ color: '#6C5DD3', padding: 0 }}>
+                  Ver todos
+                </Button>
+              </div>
+
+              {objectives.length > 0 ? (
+                <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 18 }}>
+                  {objectives.slice(0, 3).map((obj) => {
+                    const percent = Math.round(obj.progress_percentage || 0);
+                    const circumference = 2 * Math.PI * 36;
+                    const strokeDashoffset = circumference - (percent / 100) * circumference;
+                    const colors = ['#6C5DD3', '#00875A', '#FF754C', '#FAAD14'];
+                    const color = colors[objectives.indexOf(obj) % colors.length];
+                    
+                    return (
+                      <div key={obj.id} style={{ textAlign: 'center' }}>
+                        <div style={{ position: 'relative', width: 80, height: 80 }}>
+                          <svg width="80" height="80" viewBox="0 0 80 80">
+                            <circle
+                              cx="40"
+                              cy="40"
+                              r="36"
+                              fill="none"
+                              stroke="#F4F5F7"
+                              strokeWidth="6"
+                            />
+                            <circle
+                              cx="40"
+                              cy="40"
+                              r="36"
+                              fill="none"
+                              stroke={color}
+                              strokeWidth="6"
+                              strokeLinecap="round"
+                              strokeDasharray={circumference}
+                              strokeDashoffset={strokeDashoffset}
+                              transform="rotate(-90 40 40)"
+                              style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                            />
+                          </svg>
+                          <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            fontSize: 16,
+                            fontWeight: 700,
+                            color: '#11142D'
+                          }}>
+                            {percent}%
+                          </div>
+                        </div>
+                        <span style={{ 
+                          display: 'block', 
+                          marginTop: 8, 
+                          fontSize: 11, 
+                          fontWeight: 600, 
+                          color: '#11142D',
+                          maxWidth: 80,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {obj.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                  <p style={{ fontSize: 13, color: '#808191', marginBottom: 12 }}>Você ainda não definiu objetivos.</p>
+                  <Button 
+                    type="dashed" 
+                    size="small" 
+                    icon={<PlusOutlined />} 
+                    onClick={() => router.push('/objectives')}
+                    style={{ borderRadius: 8, color: '#808191' }}
+                  >
+                    Criar objetivo
+                  </Button>
                 </div>
               )}
             </div>
@@ -691,7 +781,7 @@ const Resume = () => {
         </Col>
 
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
-          <div ref={refPlanejado} className={styles.balance} style={{ flex: 1, padding: '20px 24px' }}>
+          <div ref={refPlanejado} className={styles.balance} style={{ flex: 1, padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
@@ -758,7 +848,7 @@ const Resume = () => {
 
           {/* Quick Actions area */}
           <div className={styles.quickActions} style={{ marginTop: 20 }}>
-            <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 16, color: '#808191' }}>Ações rápidas</p>
+            <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 16, color: '#808191' }}>Ações</p>
             <div className={styles.buttonsContainer} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
               <div className={styles.actionButton} style={{ background: '#E6F7EF' }} onClick={() => router.push('/EnterTransaction')}>
                 <PlusCircleOutlined style={{ fontSize: 24, color: '#00875A' }} />
@@ -777,7 +867,7 @@ const Resume = () => {
         </Col>
 
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
-          <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '16px 24px', position: 'relative', overflow: 'visible' }}>
+          <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '24px', position: 'relative', overflow: 'visible' }}>
             <p className={styles.balance_description} style={{ marginBottom: 12 }}>Meus Cartões (total de gastos)</p>
             <p className={styles.balance_title} style={{ marginBottom: 24 }}><AnimatedNumber value={totalCardsInvoice} duration={1500} format={formatCurrency} /></p>
 
@@ -903,7 +993,7 @@ const Resume = () => {
           </div>
         </Col>
       </Row>
-      <Row gutter={[24, 24]} align="stretch" style={{ marginTop: 24, marginBottom: 24 }}>
+      <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 30px 30px" }}>
         <Col ref={refCategorias} xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ flex: 1 }}>
             <MyCategoriesList />

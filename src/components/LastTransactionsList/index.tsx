@@ -1,4 +1,4 @@
-﻿import { Image, Empty, Button, Modal } from "antd";
+import { Image, Empty, Button, Modal } from "antd";
 import "./styles.scss";
 import { useEffect, useState } from "react";
 import { ITransaction } from "@/interfaces";
@@ -84,8 +84,8 @@ const LastTransactionsList = () => {
 
   return (
     <div className="card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h4 style={{ margin: 0 }}>Últimas Transações</h4>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#11142D', margin: 0 }}>Últimas Transações</h4>
         {transactions && transactions.length > 0 && (
           <Button 
             type="link" 
