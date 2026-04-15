@@ -7,9 +7,10 @@ import styles from "@/app/EnterTransaction/entertransaction.module.scss";
 interface ModalNewCategoryProps {
   isModalOpen: boolean;
   setIsModalOpen: (value: boolean) => void;
+  onCategoryCreated?: () => void;
 }
 
-export const ModalNewCategory = ({ isModalOpen, setIsModalOpen }: ModalNewCategoryProps) => {
+export const ModalNewCategory = ({ isModalOpen, setIsModalOpen, onCategoryCreated }: ModalNewCategoryProps) => {
   const [form] = Form.useForm();
 
   const handleCancel = () => {
@@ -28,6 +29,7 @@ export const ModalNewCategory = ({ isModalOpen, setIsModalOpen }: ModalNewCatego
         },
       });
       message.success("Categoria adicionada com sucesso!");
+      onCategoryCreated?.();
       handleCancel();
     } catch (errorInfo) {
       message.error("Erro ao adicionar categoria!");

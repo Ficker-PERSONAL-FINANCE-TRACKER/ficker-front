@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Steps, Form, InputNumber, Select, Button, Input, Card, Row, Col, message, Space, Typography } from "antd";
 import { request } from "@/service/api";
-import { UserOutlined, DollarOutlined, CreditCardOutlined, RocketOutlined, CheckCircleFilled } from "@ant-design/icons";
+import { UserOutlined, DollarOutlined, CreditCardOutlined, RocketOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -20,8 +20,6 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
   const [formCard] = Form.useForm();
   const [formObjective] = Form.useForm();
 
-  const [salaryData, setSalaryData] = useState<{ recurring_income: number; description: string } | null>(null);
-  const [goalData, setGoalData] = useState<{ planned_spending: number } | null>(null);
   const [cardsData, setCardsData] = useState<any[]>([]);
   const [objectivesData, setObjectivesData] = useState<any[]>([]);
 
@@ -36,26 +34,21 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
     try {
       const { data } = await request({ method: "GET", endpoint: "user" });
       if (data?.data?.recurring_income) {
-        setSalaryData({
-          recurring_income: data.data.recurring_income,
-          description: data.data.income_description || "Salário",
-        });
         formSalary.setFieldsValue({
           recurring_income: data.data.recurring_income,
-          description: data.data.income_description || "Salário",
+          description: data.data.income_description || "Salario",
         });
       }
-    } catch (e) {
+    } catch {
       console.log("No salary data yet");
     }
 
     try {
       const { data } = await request({ method: "GET", endpoint: "balance" });
       if (data?.data?.planned_spending) {
-        setGoalData({ planned_spending: data.data.planned_spending });
         formGoal.setFieldsValue({ planned_spending: data.data.planned_spending });
       }
-    } catch (e) {
+    } catch {
       console.log("No goal data yet");
     }
 
@@ -64,7 +57,7 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
       if (data?.data?.cards) {
         setCardsData(data.data.cards);
       }
-    } catch (e) {
+    } catch {
       console.log("No cards data yet");
     }
 
@@ -73,7 +66,7 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
       if (data?.data?.objectives) {
         setObjectivesData(data.data.objectives);
       }
-    } catch (e) {
+    } catch {
       console.log("No objectives data yet");
     }
   };
@@ -90,10 +83,10 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
           income_description: values.description,
         },
       });
-      message.success("Salário configurado com sucesso!");
+      message.success("Salario configurado com sucesso!");
       setCurrentStep(1);
     } catch (error: any) {
-      message.error(error?.response?.data?.message || "Erro ao salvar salário.");
+      message.error(error?.response?.data?.message || "Erro ao salvar salario.");
     } finally {
       setLoading(false);
     }
@@ -133,12 +126,12 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
             invoice: 0,
           },
         });
-        message.success("Cartão adicionado com sucesso!");
+        message.success("Cartao adicionado com sucesso!");
         loadInitialData();
       }
       setCurrentStep(3);
     } catch (error: any) {
-      message.error(error?.response?.data?.message || "Erro ao salvar cartão.");
+      message.error(error?.response?.data?.message || "Erro ao salvar cartao.");
     } finally {
       setLoading(false);
     }
@@ -180,10 +173,10 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
         method: "POST",
         endpoint: "onboarding/complete",
       });
-      message.success("Configuração inicial concluída!");
+      message.success("Configuracao inicial concluida!");
       onComplete();
     } catch (error: any) {
-      message.error(error?.response?.data?.message || "Erro ao finalizar configuração.");
+      message.error(error?.response?.data?.message || "Erro ao finalizar configuracao.");
     } finally {
       setLoading(false);
     }
@@ -200,9 +193,9 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
   };
 
   const steps = [
-    { title: "Salário", icon: <UserOutlined /> },
+    { title: "Salario", icon: <UserOutlined /> },
     { title: "Meta", icon: <DollarOutlined /> },
-    { title: "Cartão", icon: <CreditCardOutlined /> },
+    { title: "Cartao", icon: <CreditCardOutlined /> },
     { title: "Objetivos", icon: <RocketOutlined /> },
   ];
 
@@ -211,7 +204,7 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
       case 0:
         return (
           <div style={{ padding: "20px 0" }}>
-            <Title level={4} style={{ marginBottom: 8 }}>Qual é o seu salário?</Title>
+            <Title level={4} style={{ marginBottom: 8 }}>Qual e o seu salario?</Title>
             <Text type="secondary" style={{ display: "block", marginBottom: 24 }}>
               Informe sua renda mensal para ajudar a planejar seus gastos.
             </Text>
@@ -230,9 +223,9 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
               </Form.Item>
               <Form.Item
                 name="description"
-                label="Descrição (opcional)"
+                label="Descricao (opcional)"
               >
-                <Input placeholder="Ex: Salário, Freelance..." />
+                <Input placeholder="Ex: Salario, Freelance..." />
               </Form.Item>
             </Form>
           </div>
@@ -241,9 +234,9 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
       case 1:
         return (
           <div style={{ padding: "20px 0" }}>
-            <Title level={4} style={{ marginBottom: 8 }}>Qual é sua meta de gasto?</Title>
+            <Title level={4} style={{ marginBottom: 8 }}>Qual e sua meta de gasto?</Title>
             <Text type="secondary" style={{ display: "block", marginBottom: 24 }}>
-              Defina quanto você planeja gastar por mês para manter suas finanças sob controle.
+              Defina quanto voce planeja gastar por mes para manter suas financas sob controle.
             </Text>
             <Form form={formGoal} layout="vertical">
               <Form.Item
@@ -265,14 +258,14 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
       case 2:
         return (
           <div style={{ padding: "20px 0" }}>
-            <Title level={4} style={{ marginBottom: 8 }}>Você tem cartões de crédito?</Title>
+            <Title level={4} style={{ marginBottom: 8 }}>Voce tem cartoes de credito?</Title>
             <Text type="secondary" style={{ display: "block", marginBottom: 24 }}>
-              Adicione seus cartões para acompanhar suas faturas.
+              Adicione seus cartoes para acompanhar suas faturas.
             </Text>
 
             {cardsData.length > 0 && (
               <div style={{ marginBottom: 24 }}>
-                <Text strong>Seus cartões:</Text>
+                <Text strong>Seus cartoes:</Text>
                 <Row gutter={[12, 12]} style={{ marginTop: 12 }}>
                   {cardsData.map((card) => (
                     <Col span={12} key={card.id}>
@@ -292,7 +285,7 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
                 <Col span={12}>
                   <Form.Item
                     name="last_digits"
-                    label="Últimos 4 dígitos"
+                    label="Ultimos 4 digitos"
                   >
                     <Input maxLength={4} placeholder="1234" />
                   </Form.Item>
@@ -321,7 +314,7 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
       case 3:
         return (
           <div style={{ padding: "20px 0" }}>
-            <Title level={4} style={{ marginBottom: 8 }}>Você tem objetivos financeiros?</Title>
+            <Title level={4} style={{ marginBottom: 8 }}>Voce tem objetivos financeiros?</Title>
             <Text type="secondary" style={{ display: "block", marginBottom: 24 }}>
               Defina seus objetivos para acompanhar seu progresso.
             </Text>
@@ -350,7 +343,7 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
                     name="name"
                     label="Nome do objetivo"
                   >
-                    <Input placeholder="Ex: Viagem, Casa própria..." />
+                    <Input placeholder="Ex: Viagem, Casa propria..." />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
@@ -388,7 +381,7 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
       <div style={{ textAlign: "center", marginBottom: 32 }}>
         <img src="/logo.png" alt="Ficker" style={{ height: 40, marginBottom: 16 }} />
         <Title level={3} style={{ marginBottom: 4 }}>Configure sua conta</Title>
-        <Text type="secondary">Precisamos de algumas informações para personalizar sua experiência.</Text>
+        <Text type="secondary">Precisamos de algumas informacoes para personalizar sua experiencia.</Text>
       </div>
 
       <Steps
@@ -426,8 +419,8 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
                 currentStep === 0
                   ? handleSaveSalary
                   : currentStep === 1
-                  ? handleSaveGoal
-                  : handleSaveCard
+                    ? handleSaveGoal
+                    : handleSaveCard
               }
               style={{ background: "#6C5DD3", borderColor: "#6C5DD3" }}
             >

@@ -11,6 +11,8 @@ export interface CustomTourStep {
   target: TourTarget;
   placement?: "top" | "bottom" | "left" | "right";
   offset?: number;
+  offsetX?: number;
+  offsetY?: number;
 }
 
 interface RectState {
@@ -79,6 +81,8 @@ export default function CustomTour({
     const gap = 2;
     const bubbleWidth = 340;
     const bubbleHeight = 170;
+    const offsetX = step.offsetX ?? 0;
+    const offsetY = step.offsetY ?? 0;
 
     let top = nextRect.y + nextRect.height + gap;
     let left = nextRect.x;
@@ -108,8 +112,8 @@ export default function CustomTour({
 
     setBubbleStyle({
       position: "fixed",
-      top: Math.max(16, Math.min(top, maxTop)),
-      left: Math.max(16, Math.min(left, maxLeft)),
+      top: Math.max(16, Math.min(top + offsetY, maxTop)),
+      left: Math.max(16, Math.min(left + offsetX, maxLeft)),
       width: bubbleWidth,
       zIndex: zIndex + 2,
     });
@@ -243,7 +247,7 @@ export default function CustomTour({
               color: "#98A2B3",
             }}
           >
-            ×
+            x
           </button>
         </div>
 
@@ -270,12 +274,8 @@ export default function CustomTour({
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: 2 }}>
-            {!isFirst && (
-              <Button onClick={() => onChange(current - 1)}>
-                Anterior
-              </Button>
-            )}
+          <div style={{ display: "flex", gap: 8 }}>
+            {!isFirst && <Button onClick={() => onChange(current - 1)}>Anterior</Button>}
 
             <Button
               type="primary"
@@ -292,7 +292,7 @@ export default function CustomTour({
                 borderRadius: 10,
               }}
             >
-              {isLast ? "Concluir" : "Próximo"}
+              {isLast ? "Concluir" : "Proximo"}
             </Button>
           </div>
         </div>

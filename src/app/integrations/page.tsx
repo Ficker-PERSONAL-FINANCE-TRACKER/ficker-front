@@ -1,12 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Row, Col, Card, Button, Modal, Space, message, Typography, Badge, Tag, Input, Steps } from "antd";
+import { Row, Col, Card, Button, Modal, Space, message, Typography, Badge, Tag } from "antd";
 import { 
   SendOutlined, 
   WhatsAppOutlined, 
-  CheckCircleFilled,
-  InfoCircleOutlined,
-  InstagramOutlined 
+  CheckCircleFilled
 } from "@ant-design/icons";
 import CustomMenu from "@/components/CustomMenu";
 import styles from "../EnterTransaction/entertransaction.module.scss";
@@ -37,8 +35,6 @@ const Integrations = () => {
   const [telegramCode, setTelegramCode] = useState<string | null>(null);
   const [telegramCodeExpiresAt, setTelegramCodeExpiresAt] = useState<string | null>(null);
   const [telegramLinkStatus, setTelegramLinkStatus] = useState<TelegramLinkStatus | null>(null);
-
-  // WhatsApp states
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [whatsappLoading, setWhatsappLoading] = useState(false);
   const [whatsappLinkStatus, setWhatsappLinkStatus] = useState<{ linked: boolean; account?: any } | null>(null);
@@ -195,11 +191,21 @@ const Integrations = () => {
     }).format(utcDate);
   };
 
-  const telegramStatusLabel = telegramLinkStatus?.account?.status === "session_expired"
-    ? "sessão expirada"
-    : telegramLinkStatus?.account?.status === "revoked"
-      ? "desvinculada"
-      : telegramLinkStatus?.account?.status ?? null;
+  const telegramStatusTranslations: Record<string, string> = {
+    active: "ativa",
+    linked: "vinculada",
+    verified: "verificada",
+    pending: "pendente",
+    unverified: "não verificada",
+    session_expired: "sessão expirada",
+    revoked: "desvinculada",
+    inactive: "inativa",
+    blocked: "bloqueada",
+  };
+
+  const telegramStatusLabel = telegramLinkStatus?.account?.status
+    ? telegramStatusTranslations[telegramLinkStatus.account.status] ?? telegramLinkStatus.account.status
+    : null;
 
   const telegramStatusMessage = telegramLinkStatus?.linked
     ? "Sua conta está vinculada ao Telegram."
@@ -247,20 +253,16 @@ const Integrations = () => {
                     <Title level={4} style={{ margin: 0 }}>Telegram</Title>
                   </div>
                 </div>
+                {telegramLinkStatus?.linked && (
+                  <CheckCircleFilled style={{ color: '#52c41a', fontSize: 20 }} />
+                )}
               </div>
               
               <Text type="secondary" style={{ display: 'block', marginBottom: 24, minHeight: 60 }}>
                 Receba notificações, registre transações e consulte seu saldo diretamente pelo bot do Telegram.
               </Text>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                <div>
-                  {telegramLinkStatus?.linked && (
-                    <Tag icon={<CheckCircleFilled />} color="success" style={{ borderRadius: 12, padding: '2px 10px', fontWeight: 600 }}>
-                      Conectado
-                    </Tag>
-                  )}
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button 
                   onClick={handleOpenTelegramModal}
                   style={{ borderRadius: 8 }}
@@ -324,76 +326,6 @@ const Integrations = () => {
         </Row>
       </div>
 
-      <Modal
-        open={telegramModalOpen}
-        title="Gerenciar conta no Telegram"
-        onCancel={() => setTelegramModalOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setTelegramModalOpen(false)}>
-            Fechar
-          </Button>,
-        ]}
-      >
-        <div className="telegram-link-modal">
-          {telegramLoading ? (
-            <p>Carregando status do Telegram...</p>
-          ) : (
-            <>
-              <p>
-                {telegramStatusMessage}
-              </p>
-
-              {telegramLinkStatus?.account && (
-                <div className="telegram-link-status" style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, marginBottom: 16 }}>
-                  <p>
-                    <strong>Status</strong> {telegramStatusLabel}
-                  </p>
-                  <p>
-                    <strong>Usuário</strong>{" "}
-                    {telegramLinkStatus.account.telegram_username
-                      ? `@${telegramLinkStatus.account.telegram_username}`
-                      : telegramLinkStatus.account.telegram_user_id}
-                  </p>
-                </div>
-              )}
-
-              <Space className="telegram-link-actions" wrap style={{ marginBottom: 16 }}>
-                <Button type="primary" loading={telegramCodeLoading} onClick={handleTelegramLinkCode}>
-                  {telegramLinkStatus?.linked ? "Gerar novo código" : "Vincular"}
-                </Button>
-                <Button
-                  danger
-                  loading={telegramUnlinkLoading}
-                  onClick={handleTelegramUnlink}
-                  disabled={!telegramLinkStatus?.linked}
-                >
-                  Desvincular
-                </Button>
-              </Space>
-
-              {telegramCode && (
-                <div style={{ background: '#F5F3FF', border: '1px solid #DED9F6', padding: 16, borderRadius: 8 }}>
-                  <p style={{ marginBottom: 8 }}>Use este código no bot do Telegram <a href="https://t.me/FickerTelegramBot" target="_blank" rel="noreferrer" style={{ color: '#6C5DD3', fontWeight: 600 }}>@FickerTelegramBot</a> para vincular sua conta:</p>
-                  <div style={{ 
-                    fontSize: 24, 
-                    fontWeight: 700, 
-                    textAlign: 'center', 
-                    padding: '12px', 
-                    background: '#fff', 
-                    borderRadius: 4, 
-                    marginBottom: 8,
-                    letterSpacing: 2,
-                    color: '#6C5DD3'
-                  }}>
-                    {telegramCode}
-                  </div>
-                  <p style={{ fontSize: 12, margin: 0 }}>Validade: {formatTelegramExpiry(telegramCodeExpiresAt ?? undefined)}</p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </Modal>
       <Modal
         open={whatsappModalOpen}
         title="Vincular conta no WhatsApp"
@@ -473,6 +405,76 @@ const Integrations = () => {
                 </ul>
               </div>
             </div>
+          )}
+        </div>
+      </Modal>
+      <Modal
+        open={telegramModalOpen}
+        title="Gerenciar conta no Telegram"
+        onCancel={() => setTelegramModalOpen(false)}
+        footer={[
+          <Button key="close" onClick={() => setTelegramModalOpen(false)}>
+            Fechar
+          </Button>,
+        ]}
+      >
+        <div className="telegram-link-modal">
+          {telegramLoading ? (
+            <p>Carregando status do Telegram...</p>
+          ) : (
+            <>
+              <p>
+                {telegramStatusMessage}
+              </p>
+
+              {telegramLinkStatus?.account && (
+                <div className="telegram-link-status" style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, marginBottom: 16 }}>
+                  <p>
+                    <strong>Status</strong> {telegramStatusLabel}
+                  </p>
+                  <p>
+                    <strong>Usuário</strong>{" "}
+                    {telegramLinkStatus.account.telegram_username
+                      ? `@${telegramLinkStatus.account.telegram_username}`
+                      : telegramLinkStatus.account.telegram_user_id}
+                  </p>
+                </div>
+              )}
+
+              <Space className="telegram-link-actions" wrap style={{ marginBottom: 16 }}>
+                <Button type="primary" loading={telegramCodeLoading} onClick={handleTelegramLinkCode}>
+                  {telegramLinkStatus?.linked ? "Gerar novo código" : "Vincular"}
+                </Button>
+                <Button
+                  danger
+                  loading={telegramUnlinkLoading}
+                  onClick={handleTelegramUnlink}
+                  disabled={!telegramLinkStatus?.linked}
+                >
+                  Desvincular
+                </Button>
+              </Space>
+
+              {telegramCode && (
+                <div style={{ background: '#F5F3FF', border: '1px solid #DED9F6', padding: 16, borderRadius: 8 }}>
+                  <p style={{ marginBottom: 8 }}>Use este código no bot do Telegram <a href="https://t.me/FickerTelegramBot" target="_blank" rel="noreferrer" style={{ color: '#6C5DD3', fontWeight: 600 }}>@FickerTelegramBot</a> para vincular sua conta:</p>
+                  <div style={{ 
+                    fontSize: 24, 
+                    fontWeight: 700, 
+                    textAlign: 'center', 
+                    padding: '12px', 
+                    background: '#fff', 
+                    borderRadius: 4, 
+                    marginBottom: 8,
+                    letterSpacing: 2,
+                    color: '#6C5DD3'
+                  }}>
+                    {telegramCode}
+                  </div>
+                  <p style={{ fontSize: 12, margin: 0 }}>Validade: {formatTelegramExpiry(telegramCodeExpiresAt ?? undefined)}</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </Modal>

@@ -11,8 +11,8 @@
 }
 
 .transactions-area {
-    max-height: 300px;
-    overflow-y: auto;
+    min-height: 300px;
+    overflow-y: visible;
 }
 
 .transaction-area {

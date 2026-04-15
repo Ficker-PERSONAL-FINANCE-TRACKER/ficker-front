@@ -135,7 +135,7 @@
 .quickActions {
   background: #fff;
   border-radius: 16px;
-  padding: 24px;
+  padding: 16px 24px;
   display: flex;
   flex-direction: column;
 
@@ -212,34 +212,4 @@
   .headerActions {
     justify-content: flex-start;
   }
-}
-
-.customTour :global(.ant-tour-inner) {
-  border-radius: 16px;
-  box-shadow: 0 16px 40px rgba(17, 20, 45, 0.18);
-}
-
-.customTour :global(.ant-tour-header) {
-  margin-bottom: 8px;
-}
-
-.customTour :global(.ant-tour-title) {
-  font-weight: 700;
-  font-size: 18px;
-  color: #11142d;
-}
-
-.customTour :global(.ant-tour-description) {
-  color: #666c7a;
-  line-height: 1.5;
-}
-
-.customTour :global(.ant-tour-indicators) {
-  margin-top: 8px;
-}
-
-.customTour :global(.ant-btn-primary) {
-  background: #6c5dd3;
-  border-color: #6c5dd3;
-  border-radius: 10px;
 }

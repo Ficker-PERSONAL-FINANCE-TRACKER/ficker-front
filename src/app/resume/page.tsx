@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
-import { Button, Col, Row, Typography, message, Tour, Badge, Space, Modal, Form, Input, Progress } from "antd";
-import type { TourProps } from "antd";
+import { Button, Col, Row, Typography, message, Badge, Space, Modal, Form, Input, Tooltip as AntTooltip } from "antd";
 import {
   BellOutlined, PlusOutlined, SwapOutlined,
   CreditCardOutlined, PlusCircleOutlined,
@@ -10,8 +9,9 @@ import {
 } from "@ant-design/icons";
 import styles from "./resume.module.scss";
 import { ResumeTemporalFilter, type ResumeFilters } from "./temporalFilter";
-import MyCategoriesList from "@/components/MyCategoriesList";
+import MyCategoriesList, { type AmountByCategory } from "@/components/MyCategoriesList";
 import LastTransactionsList from "@/components/LastTransactionsList";
+import { type ITransaction } from "@/interfaces";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { request } from "@/service/api";
 import { useRouter } from "next/navigation";
@@ -34,6 +34,20 @@ interface BalanceProps {
 interface PeriodBudgetSummary {
   planned_spending_total: number;
   real_spending_total: number;
+}
+
+interface ResumeCategorySummary extends AmountByCategory {
+  category_id: number;
+}
+
+interface HoveredChartPoint {
+  label: string;
+  data: {
+    entrada: number;
+    saida: number;
+    total: number;
+  };
+  x: number;
 }
 
 const buildAnalysisQueryString = (filters: ResumeFilters) => {
@@ -73,7 +87,13 @@ const Resume = () => {
   const [chartData, setChartData] = useState<any[]>([]);
   const [showAnimatedChart, setShowAnimatedChart] = useState(false);
   const [isLoadingChart, setIsLoadingChart] = useState(true);
+  const [categorySummaries, setCategorySummaries] = useState<ResumeCategorySummary[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [periodTransactions, setPeriodTransactions] = useState<ITransaction[]>([]);
+  const [periodBalance, setPeriodBalance] = useState(0);
   const [objectives, setObjectives] = useState<any[]>([]);
+  const [hoveredChartPoint, setHoveredChartPoint] = useState<HoveredChartPoint | null>(null);
+  const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
   const formatCurrency = (value: any): string => {
     const numValue = parseFloat(value || 0);
@@ -169,12 +189,6 @@ const Resume = () => {
   const [tourStep, setTourStep] = useState(0);
   const [gastoPlanejado, setGastoPlanejado] = useState("");
 
-  const refSaldo = useRef<HTMLDivElement | null>(null);
-  const refPlanejado = useRef<HTMLDivElement | null>(null);
-  const refReal = useRef<HTMLDivElement | null>(null);
-  const refCategorias = useRef<HTMLDivElement | null>(null);
-  const refTransacoes = useRef<HTMLDivElement | null>(null);
-
   const handleFinishEditGoal = async (values: any) => {
     try {
       await request({
@@ -192,6 +206,12 @@ const Resume = () => {
       message.error("Algo deu errado ao atualizar a meta!");
     }
   };
+  const refSaldo = useRef(null);
+  const refPlanejado = useRef(null);
+  const refReal = useRef(null);
+  const refCategorias = useRef(null);
+  const refTransacoes = useRef(null);
+  const refMenu = useRef(null);
 
   const handleClickShowSaldo = () => {
     setShowSaldo(!showSaldo);
@@ -299,18 +319,6 @@ const Resume = () => {
     }
   };
 
-  const getObjectives = async () => {
-    try {
-      const { data } = await request({
-        method: "GET",
-        endpoint: "objectives",
-      });
-      setObjectives(data.data.objectives || []);
-    } catch (error) {
-      console.error("Erro ao buscar objetivos:", error);
-    }
-  };
-
   const getPeriodBudgetSummary = async () => {
     try {
       const queryString = buildAnalysisQueryString(filters);
@@ -329,16 +337,57 @@ const Resume = () => {
     }
   };
 
+  const getObjectives = async () => {
+    try {
+      const { data } = await request({
+        method: "GET",
+        endpoint: "objectives",
+      });
+      setObjectives(data.data.objectives || []);
+    } catch (error) {
+      console.error("Erro ao buscar objetivos:", error);
+    }
+  };
+
+  const getCategorySummaries = async () => {
+    try {
+      setIsLoadingCategories(true);
+      const queryString = buildAnalysisQueryString(filters);
+      const response = await request({ method: "GET", endpoint: `analysis/categories?${queryString}&type_id=2` });
+      const categories = (response.data?.data?.categories ?? []).map((category: any) => ({
+        category_id: Number(category.category_id || 0),
+        category_description: String(category.category_description || "Sem categoria"),
+        category_spending: Number(
+          category.expense_composition_total ??
+          (Number(category.real_spending_total || 0) + Number(category.credit_card_purchase_total || 0))
+        ),
+      }));
+
+      setCategorySummaries(
+        categories
+          .filter((category: ResumeCategorySummary) => category.category_id !== 0)
+          .sort((a: ResumeCategorySummary, b: ResumeCategorySummary) => b.category_spending - a.category_spending)
+      );
+    } catch (error) {
+      console.error("Erro ao buscar categorias do período:", error);
+      setCategorySummaries([]);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
   const getTransactionsData = async () => {
     try {
       setIsLoadingChart(true);
       const response = await request({
         endpoint: "transaction/all",
       });
-      const txs = response?.data?.data?.transactions || [];
+      const txs = (response?.data?.data?.transactions || []) as ITransaction[];
 
       if (txs.length === 0) {
         setChartData([]);
+        setPeriodTransactions([]);
+        setPeriodBalance(0);
         setIsLoadingChart(false);
         return;
       }
@@ -418,6 +467,17 @@ const Resume = () => {
         }
       });
 
+      const filteredTransactions = txs
+        .filter((tx: ITransaction) => {
+          const txDate = dayjs(tx.date);
+
+          return (
+            (txDate.isAfter(periodStart) || txDate.isSame(periodStart, "day")) &&
+            (txDate.isBefore(periodEnd) || txDate.isSame(periodEnd, "day"))
+          );
+        })
+        .sort((a: ITransaction, b: ITransaction) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf());
+
       // Converter para array ordenado por dia e calcular saldo acumulado dia a dia
       const data = Object.values(grouped).sort((a, b) => a.sortKey - b.sortKey);
       data.forEach((day: any) => {
@@ -443,8 +503,11 @@ const Resume = () => {
       }
 
       setChartData(filteredData);
+      setPeriodTransactions(filteredTransactions);
+      setPeriodBalance(runningBalance);
     } catch (error) {
       console.error("Erro ao buscar transações para o gráfico:", error);
+      setPeriodBalance(0);
     } finally {
       setIsLoadingChart(false);
     }
@@ -460,7 +523,15 @@ const Resume = () => {
   useEffect(() => {
     getTransactionsData();
     getPeriodBudgetSummary();
+    getCategorySummaries();
   }, [filters]);
+
+  useEffect(() => {
+    setBalance((prev) => ({
+      ...prev,
+      balance: periodBalance,
+    }));
+  }, [periodBalance]);
 
   const handleCloseTour = () => {
     setOpenTour(false);
@@ -508,20 +579,55 @@ const Resume = () => {
     return null;
   };
 
-  const getStepGap = (ref: React.RefObject<HTMLElement | null>, extraOffset = 10) => {
-  const el = ref.current;
-  if (!el) {
-    return { offset: 10, radius: 16 };
-  }
+  const handleChartMouseMove = (state: any) => {
+    if (
+      state?.isTooltipActive &&
+      state?.activePayload?.length &&
+      typeof state?.activeCoordinate?.x === "number"
+    ) {
+      const payload = state.activePayload[0].payload;
 
-  const styles = window.getComputedStyle(el);
-  const radius = parseInt(styles.borderRadius || "16", 10);
+      setHoveredChartPoint({
+        label: String(state.activeLabel ?? payload.name ?? ""),
+        data: {
+          entrada: Number(payload.entrada || 0),
+          saida: Number(payload.saida || 0),
+          total: Number(payload.total || 0),
+        },
+        x: state.activeCoordinate.x,
+      });
+      return;
+    }
 
-  return {
-    offset: extraOffset,
-    radius: Number.isNaN(radius) ? 16 : radius,
+    setHoveredChartPoint(null);
   };
-};
+
+  const handleChartMouseLeave = () => {
+    setHoveredChartPoint(null);
+  };
+
+  const renderChartTooltipCard = (point: HoveredChartPoint) => (
+    <div style={{ width: 190 }}>
+      {CustomTooltip({
+        active: true,
+        payload: [{ payload: point.data }],
+        label: point.label,
+      })}
+    </div>
+  );
+
+  const hoveredTooltipLeft = (() => {
+    if (!hoveredChartPoint) {
+      return 8;
+    }
+
+    const containerWidth = chartContainerRef.current?.clientWidth ?? 320;
+    const tooltipWidth = 190;
+    const minLeft = 8;
+    const maxLeft = Math.max(containerWidth - tooltipWidth - 8, minLeft);
+
+    return Math.min(Math.max(hoveredChartPoint.x - tooltipWidth / 2, minLeft), maxLeft);
+  })();
 
   const steps = [
     {
@@ -529,40 +635,43 @@ const Resume = () => {
       description:
         "Comece visualizando seu saldo total e o progresso dos seus objetivos financeiros mais importantes logo no primeiro card.",
       target: () => refSaldo.current,
-      placement: "bottom" as const,
+      placement: "right" as const,
       offset: 12,
     },
     {
-      title: "Gestão de Orçamento",
+      title: "Gestao de Orcamento",
       description:
-        "Aqui você acompanha quanto planejou gastar versus seu gasto real.",
+        "Aqui voce acompanha quanto planejou gastar versus seu gasto real.",
       target: () => refPlanejado.current,
       placement: "bottom" as const,
       offset: 12,
     },
     {
-      title: "Meus Cartões",
+      title: "Meus Cartoes",
       description:
-        "Visualize faturas e limites disponíveis de forma intuitiva.",
+        "Visualize faturas e limites disponiveis de forma intuitiva.",
       target: () => refReal.current,
-      placement: "bottom" as const,
+      placement: "left" as const,
       offset: 12,
+      offsetX: -40,
     },
     {
       title: "Categorias de Gastos",
       description:
-        "Entenda exatamente para onde seu dinheiro está indo.",
+        "Entenda exatamente para onde seu dinheiro esta indo.",
       target: () => refCategorias.current,
       placement: "top" as const,
       offset: 12,
+      offsetY: 2,
     },
     {
-      title: "Últimas Transações",
+      title: "Ultimas Transacoes",
       description:
-        "Acesse rapidamente seu histórico recente.",
+        "Acesse rapidamente seu historico recente.",
       target: () => refTransacoes.current,
       placement: "top" as const,
       offset: 12,
+      offsetY: 23,
     },
   ];
 
@@ -577,10 +686,10 @@ const Resume = () => {
         <circle
           cx={cx}
           cy={cy}
-          r={4}
+          r={2.8}
           fill="#6C5DD3"
           stroke="#fff"
-          strokeWidth={2}
+          strokeWidth={0.4}
           key={`dot-${index}`}
         />
       );
@@ -589,10 +698,10 @@ const Resume = () => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "row", height: "100vh", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "row", minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
       <CustomMenu />
-      <div style={{ flex: "1 1 0%", overflowY: "auto", overflowX: "hidden" }}>
-        <div className={styles.header} style={{ padding: "30px 30px", marginBottom: 12 }}>
+      <div style={{ flex: 1, overflowX: "hidden" }}>
+        <div className={styles.header} style={{ padding: "20px 30px", marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <h2>
               Olá, {user?.name ? user.name.split(" ").slice(0, 2).join(" ") : "John Amorim"}!
@@ -601,28 +710,37 @@ const Resume = () => {
           <div className={styles.headerActions}>
             <span className={styles.filterSummary}>{filterSummary}</span>
             <ResumeTemporalFilter filters={filters} onChange={setFilters} />
-            <div 
-              className={styles.notification} 
+            <div
+              className={styles.notification}
               onClick={() => {
                 setTourStep(0);
                 setOpenTour(true);
               }}
-              style={{ cursor: 'pointer', background: '#f4f5f7', width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{
+                cursor: "pointer",
+                background: "#f4f5f7",
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
-              <InfoCircleOutlined style={{ fontSize: 20, color: '#808191' }} />
+              <InfoCircleOutlined style={{ fontSize: 20, color: "#808191" }} />
             </div>
-            <div className={styles.notification} style={{ background: '#f4f5f7', width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Badge dot color="#FF754C" offset={[-2, 4]}>
-                <BellOutlined style={{ fontSize: 20, color: '#808191' }} />
+            <div className={styles.notification}>
+              <Badge dot color="#FF754C">
+                <BellOutlined style={{ fontSize: 22 }} />
               </Badge>
             </div>
           </div>          
         </div>
       {/* The Alert Banner has been moved to the sidebar */}
 
-      <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 12px 30px" }}>
-        <Col  xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
-          <div ref={refSaldo} className={styles.balance} style={{ flex: 1, padding: '24px' }}>
+      <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 30px 30px" }}>
+        <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
+          <div ref={refSaldo} className={styles.balance} style={{ flex: 1, padding: '24px 32px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
                 <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
@@ -636,63 +754,86 @@ const Resume = () => {
               <div
                 onClick={handleClickShowSaldo}
                 style={{
-                  width: 40, height: 40, borderRadius: '10px', background: '#F4F5F7',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: '#808191', fontSize: 18, transition: 'all 0.2s'
+                  width: 40, height: 40, borderRadius: '50%', background: '#F4F5F7',
+                  display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#808191', fontSize: 18
                 }}
               >
                 {showSaldo ? <EyeInvisibleOutlined /> : <EyeOutlined />}
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 className={styles.balance_description} style={{ margin: 0, fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Visão Geral</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 className={styles.balance_description} style={{ margin: 0 }}>Visão Geral</h3>
             </div>
 
-            <div style={{ width: '100%', height: 70 }}>
-              {isLoadingChart ? (
-                <div style={{ textAlign: 'center', color: '#808191' }}>Carregando dados...</div>
-              ) : chartData.length > 0 ? (
-                showAnimatedChart ? (
-                  <motion.div
-                    key={chartRevealKey}
-                    initial={{ clipPath: "inset(0 100% 0 0)" }}
-                    animate={{ clipPath: "inset(0 0% 0 0)" }}
-                    transition={{ duration: 0.9, ease: "easeOut" }}
-                    style={{ width: "100%", height: 80 }}
-                  >
-                    <ResponsiveContainer width="100%" height={80}>
-                      <AreaChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6C5DD3" stopOpacity={0.08} />
-                            <stop offset="95%" stopColor="#6C5DD3" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area
-                          type="monotone"
-                          dataKey="total"
-                          stroke="#6C5DD3"
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#colorTotal)"
-                          isAnimationActive={false}
-                          dot={false}
-                          activeDot={{ r: 4, strokeWidth: 0, fill: '#6C5DD3' }}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </motion.div>
+            <div style={{ width: '100%', marginTop: 10, position: 'relative' }}>
+              <div
+                ref={chartContainerRef}
+                style={{ width: '100%', height: 50 }}
+              >
+                {isLoadingChart ? (
+                  <div style={{ textAlign: 'center', color: '#808191' }}>Carregando dados...</div>
+                ) : chartData.length > 0 ? (
+                  showAnimatedChart ? (
+                    <motion.div
+                      key={chartRevealKey}
+                      initial={{ clipPath: "inset(0 100% 0 0)" }}
+                      animate={{ clipPath: "inset(0 0% 0 0)" }}
+                      transition={{ duration: 0.9, ease: "easeOut" }}
+                      style={{ width: "100%", height: 70 }}
+                    >
+                      <ResponsiveContainer width="100%" height={70}>
+                        <AreaChart
+                          data={chartData}
+                          onMouseMove={handleChartMouseMove}
+                          onMouseLeave={handleChartMouseLeave}
+                        >
+                          <defs>
+                            <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#6C5DD3" stopOpacity={0.1} />
+                              <stop offset="95%" stopColor="#6C5DD3" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <YAxis hide />
+                          <Tooltip content={() => null} cursor={false} />
+                          <Area
+                            type="monotone"
+                            dataKey="total"
+                            stroke="#6C5DD3"
+                            strokeWidth={2}
+                            fillOpacity={1}
+                            fill="url(#colorTotal)"
+                            isAnimationActive={false}
+                            dot={<RenderDot />}
+                            activeDot={{ r: 6, strokeWidth: 0, fill: '#6C5DD3' }}
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </motion.div>
+                  ) : (
+                    <div style={{ width: "100%", height: 200 }} />
+                  )
                 ) : (
-                  <div style={{ width: "100%", height: 120 }} />
-                )
-              ) : (
-                <div style={{ textAlign: 'center', color: '#808191', height: 120, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Ainda não possui dados</p>
-                  <p style={{ fontSize: 12 }}>Suas transações aparecerão aqui.</p>
+                  <div style={{ textAlign: 'center', color: '#808191' }}>
+                    <p style={{ fontSize: 14, fontWeight: 500, marginBottom: 4 }}>Ainda não possui dados</p>
+                    <p style={{ fontSize: 12 }}>Suas transações aparecerão aqui.</p>
+                  </div>
+                )}
+              </div>
+              {hoveredChartPoint ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 80,
+                    left: hoveredTooltipLeft,
+                    pointerEvents: 'none',
+                    zIndex: 2,
+                  }}
+                >
+                  {renderChartTooltipCard(hoveredChartPoint)}
                 </div>
-              )}
+              ) : null}
             </div>
 
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #F4F5F7' }}>
@@ -710,34 +851,34 @@ const Resume = () => {
                 <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 18 }}>
                   {objectives.slice(0, 3).map((obj) => {
                     const percent = Math.round(obj.progress_percentage || 0);
-                    const circumference = 2 * Math.PI * 36;
+                    const circumference = 2 * Math.PI * 32;
                     const strokeDashoffset = circumference - (percent / 100) * circumference;
                     const colors = ['#6C5DD3', '#00875A', '#FF754C', '#FAAD14'];
                     const color = colors[objectives.indexOf(obj) % colors.length];
-                    
+
                     return (
-                      <div key={obj.id} style={{ textAlign: 'center' }}>
-                        <div style={{ position: 'relative', width: 80, height: 80 }}>
-                          <svg width="80" height="80" viewBox="0 0 80 80">
+                        <div key={obj.id} style={{ textAlign: 'center' }}>
+                        <div style={{ position: 'relative', width: 72, height: 72 }}>
+                          <svg width="72" height="72" viewBox="0 0 72 72">
                             <circle
-                              cx="40"
-                              cy="40"
-                              r="36"
+                              cx="36"
+                              cy="36"
+                              r="32"
                               fill="none"
                               stroke="#F4F5F7"
                               strokeWidth="6"
                             />
                             <circle
-                              cx="40"
-                              cy="40"
-                              r="36"
+                              cx="36"
+                              cy="36"
+                              r="32"
                               fill="none"
                               stroke={color}
                               strokeWidth="6"
                               strokeLinecap="round"
                               strokeDasharray={circumference}
                               strokeDashoffset={strokeDashoffset}
-                              transform="rotate(-90 40 40)"
+                              transform="rotate(-90 36 36)"
                               style={{ transition: 'stroke-dashoffset 0.5s ease' }}
                             />
                           </svg>
@@ -746,37 +887,40 @@ const Resume = () => {
                             top: '50%',
                             left: '50%',
                             transform: 'translate(-50%, -50%)',
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: 700,
                             color: '#11142D'
                           }}>
                             {percent}%
                           </div>
                         </div>
-                        <span style={{ 
-                          display: 'block', 
-                          marginTop: 8, 
-                          fontSize: 11, 
-                          fontWeight: 600, 
-                          color: '#11142D',
-                          maxWidth: 80,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {obj.name}
-                        </span>
+                        <AntTooltip placement="bottom" title={<span style={{ fontSize: 12 }}>{obj.name}</span>}>
+                          <span style={{
+                            display: 'block',
+                            marginTop: 8,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: '#11142D',
+                            maxWidth: 80,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            cursor: 'default'
+                          }}>
+                            {obj.name}
+                          </span>
+                        </AntTooltip>
                       </div>
                     );
                   })}
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                  <p style={{ fontSize: 13, color: '#808191', marginBottom: 12 }}>Você ainda não definiu objetivos.</p>
-                  <Button 
-                    type="dashed" 
-                    size="small" 
-                    icon={<PlusOutlined />} 
+                  <p style={{ fontSize: 13, color: '#808191', marginBottom: 12 }}>Voce ainda nao definiu objetivos.</p>
+                  <Button
+                    type="dashed"
+                    size="small"
+                    icon={<PlusOutlined />}
                     onClick={() => router.push('/objectives')}
                     style={{ borderRadius: 8, color: '#808191' }}
                   >
@@ -789,7 +933,7 @@ const Resume = () => {
         </Col>
 
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
-          <div ref={refPlanejado} className={styles.balance} style={{ flex: 1, padding: '24px' }}>
+          <div ref={refPlanejado} className={styles.balance} style={{ flex: 1, padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
@@ -856,7 +1000,7 @@ const Resume = () => {
 
           {/* Quick Actions area */}
           <div className={styles.quickActions} style={{ marginTop: 20 }}>
-            <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 16, color: '#808191' }}>Ações</p>
+            <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 16, color: '#808191' }}>Ações rápidas</p>
             <div className={styles.buttonsContainer} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
               <div className={styles.actionButton} style={{ background: '#E6F7EF' }} onClick={() => router.push('/EnterTransaction')}>
                 <PlusCircleOutlined style={{ fontSize: 24, color: '#00875A' }} />
@@ -875,7 +1019,7 @@ const Resume = () => {
         </Col>
 
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
-          <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '24px', position: 'relative', overflow: 'visible' }}>
+          <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '16px 24px', position: 'relative', overflow: 'visible' }}>
             <p className={styles.balance_description} style={{ marginBottom: 12 }}>Meus Cartões (total de gastos)</p>
             <p className={styles.balance_title} style={{ marginBottom: 24 }}><AnimatedNumber value={totalCardsInvoice} duration={1500} format={formatCurrency} /></p>
 
@@ -1001,15 +1145,15 @@ const Resume = () => {
           </div>
         </Col>
       </Row>
-      <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 30px 30px" }}>
-        <Col ref={refCategorias} xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ flex: 1 }}>
-            <MyCategoriesList />
+      <Row gutter={[24, 24]} style={{ padding: "0 30px 30px 30px", marginTop: 0 }}>
+        <Col ref={refCategorias} xs={24} lg={12} xl={12}>
+          <div>
+            <MyCategoriesList categories={categorySummaries} loading={isLoadingCategories} onRefresh={getCategorySummaries} />
           </div>
         </Col>
-        <Col ref={refTransacoes} xs={24} lg={12} xl={12} style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ flex: 1 }}>
-            <LastTransactionsList />
+        <Col ref={refTransacoes} xs={24} lg={12} xl={12}>
+          <div>
+            <LastTransactionsList transactions={periodTransactions} loading={isLoadingChart} />
           </div>
         </Col>
       </Row>

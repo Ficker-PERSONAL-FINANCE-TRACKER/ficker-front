@@ -1,26 +1,17 @@
 import { Image, Empty, Button, Modal } from "antd";
 import "./styles.scss";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ITransaction } from "@/interfaces";
-import { request } from "@/service/api";
 import Link from "next/link";
 import dayjs from "dayjs";
 
-const LastTransactionsList = () => {
-  const [transactions, setTransactions] = useState<ITransaction[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface LastTransactionsListProps {
+  transactions: ITransaction[];
+  loading?: boolean;
+}
 
-  const getTransactions = async () => {
-    try {
-      const { data } = await request({
-        method: "GET",
-        endpoint: "transaction/all",
-      });
-      setTransactions(data.data.transactions);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+const LastTransactionsList = ({ transactions, loading = false }: LastTransactionsListProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const formatCurrency = (value: any) => {
     const formattedValue = parseFloat(value).toLocaleString("pt-BR", {
@@ -76,16 +67,12 @@ const LastTransactionsList = () => {
     };
   };
 
-  useEffect(() => {
-    getTransactions();
-  }, []);
-
   const displayedTransactions = transactions && transactions.length > 0 ? transactions.slice(0, 5) : [];
 
   return (
     <div className="card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#11142D', margin: 0 }}>Últimas Transações</h4>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <h4 style={{ margin: 0 }}>Últimas Transações</h4>
         {transactions && transactions.length > 0 && (
           <Button 
             type="link" 
@@ -105,7 +92,11 @@ const LastTransactionsList = () => {
       </div>
 
       <div className="transactions-area">
-        {displayedTransactions.length > 0 ? (
+        {loading ? (
+          <div style={{ minHeight: 180, display: "flex", alignItems: "center", justifyContent: "center", color: "#808191" }}>
+            Carregando transações...
+          </div>
+        ) : displayedTransactions.length > 0 ? (
           displayedTransactions.map((transaction) => {
             const presentation = getTransactionPresentation(transaction);
 

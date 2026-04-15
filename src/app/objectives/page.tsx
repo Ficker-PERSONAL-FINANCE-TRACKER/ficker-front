@@ -339,10 +339,12 @@ const ObjectivesPage = () => {
             <h2 className={styles.pageTitle}>Objetivos</h2>
             <p className={styles.pageSubtitle}>Crie, acompanhe e edite os objetivos que voce quer tirar do papel.</p>
           </div>
-          <Tag className={styles.counterTag}>{objectives.length} objetivo(s)</Tag>
         </div>
 
         <section className={styles.sectionBlock}>
+          <div className={styles.sectionHeader}>
+            <Tag className={styles.counterTag}>{objectives.length} objetivo(s)</Tag>
+          </div>
 
           {loading ? (
             <div className={styles.loadingArea}>

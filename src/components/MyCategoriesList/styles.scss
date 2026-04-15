@@ -6,32 +6,43 @@
 }
 
 .categories-area {
-    margin-top: 15px;
-    max-height: 250px;
-    overflow-y: auto;
+    min-height: 300px;
+    overflow-y: visible;
 }
 
 .category-area {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
+    display: grid;
+    grid-template-columns: 140px 1fr 110px;
     align-items: center;
+    column-gap: 16px;
+    margin-bottom: 15px;
     padding: 0 10px;
+    min-height: 44px;
 }
 
 .category-area__infos {
     display: flex;
-    justify-content: center;
     align-items: center;
+    gap: 10px;
+    min-width: 0;
 }
 
 .category-area__description {
     display: block;
-    margin-left: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: medium;
+    font-weight: 400;
+    color: #11142D;
 }
 
 .category-area__value {
-    color: #808191;
+    color: #11142D;
+    text-align: right;
+    white-space: nowrap;
+    font-weight: 400;
+    font-size: medium;
 }
 
 .circle {
@@ -47,11 +58,20 @@
 .title-area {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    margin-bottom: -8px;
 
     h4 {
         margin: 0;
+        line-height: 40px;
     }
+}
+
+.title-area__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
 }
 
 .title-area__button {
@@ -67,4 +87,10 @@
 .title-area__button:hover {
     background-color: #eaeaea;
     border-radius: 50%;
+}
+
+.categories-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }

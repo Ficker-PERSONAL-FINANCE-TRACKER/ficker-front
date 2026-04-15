@@ -1,32 +1,25 @@
 import "./styles.scss";
-import { useEffect, useState } from "react";
-import { request } from "@/service/api";
+import { useMemo, useState } from "react";
 import { ModalNewCategory } from "../ModalNewCategory";
-import { Empty, Button } from "antd";
+import { Empty, Button, Spin, Modal } from "antd";
 
-interface AmountByCategory {
+export interface AmountByCategory {
   category_description: string;
   category_spending: number;
 }
 
-const MyCategoriesList = () => {
-  const [categories, setCategories] = useState<AmountByCategory[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+interface MyCategoriesListProps {
+  categories: AmountByCategory[];
+  loading?: boolean;
+  onRefresh?: () => void;
+}
 
-  const getCategories = async () => {
-    try {
-      const { data } = await request({
-        method: "GET",
-        endpoint: "categories",
-      });
-      setCategories(data.data.categories);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+const MyCategoriesList = ({ categories, loading = false, onRefresh }: MyCategoriesListProps) => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
 
   const showModal = () => {
-    setIsModalOpen(true);
+    setIsCreateModalOpen(true);
   };
 
   const formatCurrency = (value: any) => {
@@ -52,23 +45,79 @@ const MyCategoriesList = () => {
     "#3A8735",
   ];
 
-  useEffect(() => {
-    getCategories();
-  }, [isModalOpen]);
-
   const totalCategoriesSpending = categories.reduce((acc, curr) => acc + curr.category_spending, 0);
+  const sortedCategories = useMemo(
+    () =>
+      [...categories]
+        .filter((category) => Number(category.category_spending || 0) > 0)
+        .sort((a, b) => Number(b.category_spending || 0) - Number(a.category_spending || 0)),
+    [categories]
+  );
+  const visibleCategories = useMemo(() => sortedCategories.slice(0, 5), [sortedCategories]);
+  const renderCategoryRow = (category: AmountByCategory, index: number) => (
+    <div className="category-area" key={`${category.category_description}-${index}`}>
+      <div className="category-area__infos">
+        <span
+          style={{
+            background: colorPalette[index % colorPalette.length],
+          }}
+          className="circle"
+        ></span>
+        <div className="category-area__description">{category.category_description}</div>
+      </div>
+
+      <div style={{ flex: 1, height: "6px", background: "#f0f0f5", borderRadius: "3px", overflow: "hidden" }}>
+        <div
+          style={{
+            width: `${(category.category_spending / totalCategoriesSpending) * 100}%`,
+            height: "100%",
+            background: colorPalette[index % colorPalette.length],
+            borderRadius: "3px",
+          }}
+        />
+      </div>
+
+      <div className="category-area__value">{formatCurrency(category.category_spending)}</div>
+    </div>
+  );
 
   return (
     <div className="card">
-      <div className="title-area" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <h4 style={{ fontSize: '18px', fontWeight: 700, color: '#11142D', margin: 0 }}>Gastos por Categoria</h4>
-        <a className="title-area__button" onClick={showModal}>
-          <img src="/icons/icon-more.svg" alt="new_category" />
-        </a>
+      <div className="title-area">
+        <h4>Top Categorias de Gastos</h4>
+        <div className="title-area__actions">
+          {sortedCategories.length > 0 && (
+            <Button
+              type="link"
+              onClick={() => setIsListModalOpen(true)}
+              style={{
+                color: "#6C5DD3",
+                fontWeight: 600,
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              Ver mais
+            </Button>
+          )}
+          <a className="title-area__button" onClick={showModal}>
+            <img src="/icons/icon-more.svg" alt="new_category" />
+          </a>
+        </div>
       </div>
-      <ModalNewCategory isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+      <ModalNewCategory
+        isModalOpen={isCreateModalOpen}
+        setIsModalOpen={setIsCreateModalOpen}
+        onCategoryCreated={onRefresh}
+      />
       <div className="categories-area">
-        {categories?.length === 0 || !categories?.some((c) => c.category_spending > 0) ? (
+        {loading ? (
+          <div style={{ minHeight: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Spin />
+          </div>
+        ) : categories?.length === 0 || !categories?.some((c) => c.category_spending > 0) ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description="Nenhuma categoria adicionada."
@@ -77,34 +126,22 @@ const MyCategoriesList = () => {
             <Button type="primary" onClick={showModal}>Adicionar Categoria</Button>
           </Empty>
         ) : (
-          categories?.map((category, index) =>
-            category.category_spending === 0 ? null : (
-              <div className="category-area" key={index} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-                <div className="category-area__infos" style={{ minWidth: '100px', flexShrink: 0 }}>
-                  <span
-                    style={{
-                      background: colorPalette[index % colorPalette.length],
-                    }}
-                    className="circle"
-                  ></span>
-                  <div className="category-area__description" style={{ fontWeight: 500, fontSize: '14px', color: '#11142D', whiteSpace: 'nowrap' }}>{category.category_description}</div>
-                </div>
-                
-                <div style={{ flex: 1, height: '6px', background: '#f0f0f5', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      width: `${(category.category_spending / totalCategoriesSpending) * 100}%`, 
-                      height: '100%', 
-                      background: colorPalette[index % colorPalette.length],
-                      borderRadius: '3px'
-                    }} />
-                </div>
-
-                <div className="category-area__value" style={{ fontWeight: 600, fontSize: '14px', color: '#11142D', minWidth: '80px', textAlign: 'right' }}>{formatCurrency(category.category_spending)}</div>
-              </div>
-            )
-          )
+          visibleCategories.map((category, index) => renderCategoryRow(category, index))
         )}
       </div>
+      <Modal
+        title="Top Categorias de Gastos"
+        open={isListModalOpen && sortedCategories.length > 0}
+        onCancel={() => setIsListModalOpen(false)}
+        footer={null}
+        width={760}
+        bodyStyle={{ maxHeight: "70vh", overflowY: "auto", padding: "20px" }}
+        centered
+      >
+        <div className="categories-modal-list">
+          {sortedCategories.map((category, index) => renderCategoryRow(category, index))}
+        </div>
+      </Modal>
     </div>
   );
 };
