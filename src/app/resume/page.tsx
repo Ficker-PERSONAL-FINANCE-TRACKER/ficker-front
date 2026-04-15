@@ -6,7 +6,7 @@ import {
   BellOutlined, PlusOutlined, SwapOutlined,
   CreditCardOutlined, PlusCircleOutlined,
   MinusCircleOutlined, ShopOutlined, EyeOutlined, EyeInvisibleOutlined, MoreOutlined,
-  WalletOutlined, TagOutlined, LineChartOutlined, RocketOutlined
+  WalletOutlined, TagOutlined, LineChartOutlined, RocketOutlined, InfoCircleOutlined
 } from "@ant-design/icons";
 import styles from "./resume.module.scss";
 import { ResumeTemporalFilter, type ResumeFilters } from "./temporalFilter";
@@ -21,6 +21,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import { motion } from "framer-motion";
 import CustomMenu from "@/components/CustomMenu";
+import CustomTour from "@/components/CustomTour";
 
 dayjs.locale("pt-br");
 
@@ -165,7 +166,14 @@ const Resume = () => {
   };
   const [isEditMode, setIsEditMode] = useState(false);
   const [openTour, setOpenTour] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
   const [gastoPlanejado, setGastoPlanejado] = useState("");
+
+  const refSaldo = useRef<HTMLDivElement | null>(null);
+  const refPlanejado = useRef<HTMLDivElement | null>(null);
+  const refReal = useRef<HTMLDivElement | null>(null);
+  const refCategorias = useRef<HTMLDivElement | null>(null);
+  const refTransacoes = useRef<HTMLDivElement | null>(null);
 
   const handleFinishEditGoal = async (values: any) => {
     try {
@@ -184,12 +192,6 @@ const Resume = () => {
       message.error("Algo deu errado ao atualizar a meta!");
     }
   };
-  const refSaldo = useRef(null);
-  const refPlanejado = useRef(null);
-  const refReal = useRef(null);
-  const refCategorias = useRef(null);
-  const refTransacoes = useRef(null);
-  const refMenu = useRef(null);
 
   const handleClickShowSaldo = () => {
     setShowSaldo(!showSaldo);
@@ -462,6 +464,7 @@ const Resume = () => {
 
   const handleCloseTour = () => {
     setOpenTour(false);
+    setTourStep(0);
     localStorage.setItem("hasSeenOnboardingTour", "true");
   };
 
@@ -505,67 +508,62 @@ const Resume = () => {
     return null;
   };
 
-  const steps: TourProps['steps'] = [
+  const getStepGap = (ref: React.RefObject<HTMLElement | null>, extraOffset = 10) => {
+  const el = ref.current;
+  if (!el) {
+    return { offset: 10, radius: 16 };
+  }
+
+  const styles = window.getComputedStyle(el);
+  const radius = parseInt(styles.borderRadius || "16", 10);
+
+  return {
+    offset: extraOffset,
+    radius: Number.isNaN(radius) ? 16 : radius,
+  };
+};
+
+  const steps = [
     {
-      title: 'Bem-vindo ao Ficker!',
-      description: 'Vamos fazer um tour rápido para você conhecer o sistema. Este é o seu Saldo Atual.',
+      title: "Bem-vindo ao Ficker!",
+      description:
+        "Comece visualizando seu saldo total e o progresso dos seus objetivos financeiros mais importantes logo no primeiro card.",
       target: () => refSaldo.current,
+      placement: "bottom" as const,
+      offset: 12,
     },
     {
-      title: 'Gasto Planejado',
-      description: 'Aqui você pode definir e visualizar quanto planeja gastar no mês. Clique no ícone de lápis para editar.',
+      title: "Gestão de Orçamento",
+      description:
+        "Aqui você acompanha quanto planejou gastar versus seu gasto real.",
       target: () => refPlanejado.current,
+      placement: "bottom" as const,
+      offset: 12,
     },
     {
-      title: 'Gasto Real',
-      description: 'Este é o valor que você já gastou até agora. Fique de olho para não passar do planejado!',
+      title: "Meus Cartões",
+      description:
+        "Visualize faturas e limites disponíveis de forma intuitiva.",
       target: () => refReal.current,
+      placement: "bottom" as const,
+      offset: 12,
     },
     {
-      title: 'Minhas Categorias',
-      description: 'Você pode criar categorias customizadas para organizar suas despesas e receitas.',
+      title: "Categorias de Gastos",
+      description:
+        "Entenda exatamente para onde seu dinheiro está indo.",
       target: () => refCategorias.current,
+      placement: "top" as const,
+      offset: 12,
     },
     {
-      title: 'Últimas Transações',
-      description: 'Aqui aparecerá o histórico das suas movimentações financeiras recentes.',
+      title: "Últimas Transações",
+      description:
+        "Acesse rapidamente seu histórico recente.",
       target: () => refTransacoes.current,
+      placement: "top" as const,
+      offset: 12,
     },
-    {
-      title: 'Entradas',
-      description: 'Aqui você registra todo o dinheiro que entra, como seu salário e outros ganhos.',
-      target: () => document.querySelector('a[href="/EnterTransaction"]')?.closest('.ant-menu-item') as HTMLElement,
-    },
-    {
-      title: 'Saídas',
-      description: 'Registre suas despesas, contas e qualquer tipo de gasto de dinheiro.',
-      target: () => document.querySelector('a[href="/Outputs"]')?.closest('.ant-menu-item') as HTMLElement,
-    },
-    {
-      title: 'Meus Cartões',
-      description: 'Acompanhe as suas faturas de cartões de crédito para ter um controle detalhado.',
-      target: () => document.querySelector('a[href="/cards"]')?.closest('.ant-menu-item') as HTMLElement,
-    },
-    {
-      title: 'Análises',
-      description: 'Visualize gráficos e relatórios detalhados para entender e planejar seu dinheiro.',
-      target: () => document.querySelector('a[href="/analysis"]')?.closest('.ant-menu-item') as HTMLElement,
-    },
-    {
-      title: 'Primeira Entrada',
-      description: (
-        <div>
-          <p style={{ marginBottom: 10 }}>Tudo pronto! Que tal registrar sua primeira movimentação financeira agora?</p>
-          <Button type="primary" onClick={() => {
-            handleCloseTour();
-            router.push('/EnterTransaction');
-          }}>
-            Fazer primeira entrada
-          </Button>
-        </div>
-      ),
-      target: () => document.querySelector('a[href="/EnterTransaction"]')?.closest('.ant-menu-item') as HTMLElement,
-    }
   ];
 
   const RenderDot = (props: any) => {
@@ -603,9 +601,19 @@ const Resume = () => {
           <div className={styles.headerActions}>
             <span className={styles.filterSummary}>{filterSummary}</span>
             <ResumeTemporalFilter filters={filters} onChange={setFilters} />
-            <div className={styles.notification}>
-              <Badge dot color="#FF754C">
-                <BellOutlined style={{ fontSize: 22 }} />
+            <div 
+              className={styles.notification} 
+              onClick={() => {
+                setTourStep(0);
+                setOpenTour(true);
+              }}
+              style={{ cursor: 'pointer', background: '#f4f5f7', width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <InfoCircleOutlined style={{ fontSize: 20, color: '#808191' }} />
+            </div>
+            <div className={styles.notification} style={{ background: '#f4f5f7', width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Badge dot color="#FF754C" offset={[-2, 4]}>
+                <BellOutlined style={{ fontSize: 20, color: '#808191' }} />
               </Badge>
             </div>
           </div>          
@@ -613,7 +621,7 @@ const Resume = () => {
       {/* The Alert Banner has been moved to the sidebar */}
 
       <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 12px 30px" }}>
-        <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
+        <Col  xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
           <div ref={refSaldo} className={styles.balance} style={{ flex: 1, padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
@@ -1005,7 +1013,13 @@ const Resume = () => {
           </div>
         </Col>
       </Row>
-      <Tour open={openTour} onClose={handleCloseTour} steps={steps} />
+      <CustomTour
+        open={openTour}
+        steps={steps}
+        current={tourStep}
+        onChange={setTourStep}
+        onClose={handleCloseTour}
+      />
       <Modal
         title="Editar Meta do Mês"
         open={isEditMode}
