@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { IAnalysesByMonthChartContainer } from "../AnalysesByMonthChartContainer";
 
 export interface AnalysesByMonthChartProps {
@@ -123,8 +123,8 @@ const AnalysesByMonthChart = ({ data }: AnalysesByMonthChartProps) => {
 
   return (
     <>
-      <ResponsiveContainer width="100%" height={150}>
-        <AreaChart data={chartData}>
+      <ResponsiveContainer width="100%" height={260}>
+        <ComposedChart data={chartData}>
           <defs>
             <linearGradient id="analysisBalanceFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={COLORS.saldo} stopOpacity={0.1} />
@@ -132,7 +132,13 @@ const AnalysesByMonthChart = ({ data }: AnalysesByMonthChartProps) => {
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="mes" hide />
+          <XAxis
+            dataKey="mes"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#808191", fontSize: 10 }}
+            interval="preserveStartEnd"
+          />
           <YAxis hide domain={["auto", "auto"]} />
           <Tooltip content={<CustomTooltip />} />
           <Area
@@ -145,41 +151,24 @@ const AnalysesByMonthChart = ({ data }: AnalysesByMonthChartProps) => {
             dot={<RenderBalanceDot />}
             activeDot={{ r: 6, strokeWidth: 0, fill: COLORS.saldo }}
           />
-        </AreaChart>
+          <Line
+            type="monotone"
+            dataKey="gastoReal"
+            stroke={COLORS.gastoReal}
+            strokeWidth={2.5}
+            dot={{ r: 3, fill: COLORS.gastoReal, strokeWidth: 0 }}
+            activeDot={{ r: 5, strokeWidth: 0, fill: COLORS.gastoReal }}
+          />
+          <Line
+            type="monotone"
+            dataKey="credito"
+            stroke={COLORS.credito}
+            strokeWidth={2.5}
+            dot={{ r: 3, fill: COLORS.credito, strokeWidth: 0 }}
+            activeDot={{ r: 5, strokeWidth: 0, fill: COLORS.credito }}
+          />
+        </ComposedChart>
       </ResponsiveContainer>
-
-      <div style={{ marginTop: 10 }}>
-        <ResponsiveContainer width="100%" height={105}>
-          <LineChart data={chartData}>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis
-              dataKey="mes"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "#808191", fontSize: 10 }}
-              interval="preserveStartEnd"
-            />
-            <YAxis hide domain={[0, "auto"]} />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              type="monotone"
-              dataKey="gastoReal"
-              stroke={COLORS.gastoReal}
-              strokeWidth={2.5}
-              dot={{ r: 3, fill: COLORS.gastoReal, strokeWidth: 0 }}
-              activeDot={{ r: 5, strokeWidth: 0, fill: COLORS.gastoReal }}
-            />
-            <Line
-              type="monotone"
-              dataKey="credito"
-              stroke={COLORS.credito}
-              strokeWidth={2.5}
-              dot={{ r: 3, fill: COLORS.credito, strokeWidth: 0 }}
-              activeDot={{ r: 5, strokeWidth: 0, fill: COLORS.credito }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
 
       <ChartLegend />
     </>

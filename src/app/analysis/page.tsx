@@ -61,6 +61,11 @@ type AnalysisCard = {
   current_invoice_closure_date?: string | null;
   current_invoice_original_total?: number;
   current_invoice_paid_total?: number;
+  reference_invoice_pay_day?: string | null;
+  reference_invoice_closure_date?: string | null;
+  reference_invoice_original_total?: number;
+  reference_invoice_paid_total?: number;
+  reference_invoice_status?: string;
   next_invoice_pay_day?: string | null;
   next_invoice_total?: number;
   purchases_total_in_period?: number;
@@ -75,6 +80,9 @@ type AnalysisCard = {
   invoices_due_total_in_period?: number;
   invoices_settled_total_in_period?: number;
   invoice_payments_total_in_period?: number;
+  previous_invoice_payments_total_in_period?: number;
+  previous_paid_invoices_count_in_period?: number;
+  previous_partial_invoices_count_in_period?: number;
   paid_invoices_count_in_period?: number;
   current_invoice_total: number;
   open_invoice_total: number;
@@ -145,7 +153,7 @@ type AnalysisInvoice = {
 };
 
 type CardCategoryCharts = Record<number, ChartSlice[]>;
-type CardInvoiceStatusSummary = Record<number, { paid: number; partial: number; open: number }>;
+type CardInvoiceStatusSummary = Record<number, { paid: number; partial: number; noPayment: number }>;
 
 type ChartSlice = {
   name: string;
@@ -408,8 +416,8 @@ const Analysis = () => {
     const futureCommitmentTotal = cards.reduce((acc, card) => acc + Number(card.future_commitment_total || 0), 0);
     const currentCommitmentTotal = currentInvoiceTotal + futureCommitmentTotal;
     const payableCardsCount = cards.filter((card) => card.can_pay_current_invoice && Number(card.current_invoice_total || 0) > 0).length;
-    const currentInvoiceOriginalTotal = cards.reduce((acc, card) => acc + Number(card.current_invoice_original_total || 0), 0);
-    const currentInvoicePaidTotal = cards.reduce((acc, card) => acc + Number(card.current_invoice_paid_total || 0), 0);
+    const referenceInvoiceOriginalTotal = cards.reduce((acc, card) => acc + Number(card.reference_invoice_original_total || 0), 0);
+    const referenceInvoicePaidTotal = cards.reduce((acc, card) => acc + Number(card.reference_invoice_paid_total || 0), 0);
     const invoicesDueTotalInPeriod = cards.reduce((acc, card) => acc + Number(card.invoices_due_total_in_period || 0), 0);
     const invoicesSettledTotalInPeriod = cards.reduce((acc, card) => acc + Number(card.invoices_settled_total_in_period || 0), 0);
 
@@ -419,8 +427,8 @@ const Analysis = () => {
       futureCommitmentTotal,
       currentCommitmentTotal,
       payableCardsCount,
-      currentInvoiceOriginalTotal,
-      currentInvoicePaidTotal,
+      referenceInvoiceOriginalTotal,
+      referenceInvoicePaidTotal,
       invoicesDueTotalInPeriod,
       invoicesSettledTotalInPeriod,
     };
@@ -472,7 +480,11 @@ const Analysis = () => {
 
   const cardInvoiceStatusSummary = useMemo<CardInvoiceStatusSummary>(() => {
     return invoices.reduce<CardInvoiceStatusSummary>((acc, invoice) => {
-      const current = acc[invoice.card_id] ?? { paid: 0, partial: 0, open: 0 };
+      if (invoice.status === "aguardando_fechamento" || invoice.status === "awaiting_closure") {
+        return acc;
+      }
+
+      const current = acc[invoice.card_id] ?? { paid: 0, partial: 0, noPayment: 0 };
       const normalizedStatus = normalizeInvoiceSummaryStatus(invoice.status);
 
       if (normalizedStatus === "paid") {
@@ -480,7 +492,7 @@ const Analysis = () => {
       } else if (normalizedStatus === "partial") {
         current.partial += 1;
       } else {
-        current.open += 1;
+        current.noPayment += 1;
       }
 
       acc[invoice.card_id] = current;
@@ -488,18 +500,46 @@ const Analysis = () => {
     }, {});
   }, [invoices]);
 
+  const invoicePaymentsKpiSummary = useMemo(() => {
+    const totals = Object.values(cardInvoiceStatusSummary).reduce(
+      (acc, summary) => ({
+        paid: acc.paid + Number(summary.paid || 0),
+        partial: acc.partial + Number(summary.partial || 0),
+        noPayment: acc.noPayment + Number(summary.noPayment || 0),
+      }),
+      { paid: 0, partial: 0, noPayment: 0 }
+    );
+
+    const previousPaid = cards.reduce(
+      (acc, card) => acc + Number(card.previous_paid_invoices_count_in_period || 0),
+      0
+    );
+    const previousPartial = cards.reduce(
+      (acc, card) => acc + Number(card.previous_partial_invoices_count_in_period || 0),
+      0
+    );
+
+    return [
+      totals.paid > 0 ? `${totals.paid} quitada${totals.paid > 1 ? "s" : ""}` : null,
+      totals.partial > 0 ? `${totals.partial} parcial${totals.partial > 1 ? "is" : ""}` : null,
+      totals.noPayment > 0 ? `${totals.noPayment} sem pagamento` : null,
+      previousPaid > 0 ? `${previousPaid} paga${previousPaid > 1 ? "s" : ""} de fatura anterior` : null,
+      previousPartial > 0 ? `${previousPartial} parcial${previousPartial > 1 ? "is" : ""} de fatura anterior` : null,
+    ].filter((item): item is string => Boolean(item));
+  }, [cardInvoiceStatusSummary, cards]);
+
   const topExpense = topExpenses.transactions[0] ?? null;
   const invoiceSettlementPercentageInPeriod = Number(cardMetrics.invoicesDueTotalInPeriod || 0) > 0
     ? (Number(cardMetrics.invoicesSettledTotalInPeriod || 0) / Number(cardMetrics.invoicesDueTotalInPeriod || 0)) * 100
     : 0;
-  const currentOpenSettlementPercentage = Number(cardMetrics.currentInvoiceOriginalTotal || 0) > 0
-    ? (Number(cardMetrics.currentInvoicePaidTotal || 0) / Number(cardMetrics.currentInvoiceOriginalTotal || 0)) * 100
+  const currentOpenSettlementPercentage = Number(cardMetrics.referenceInvoiceOriginalTotal || 0) > 0
+    ? (Number(cardMetrics.referenceInvoicePaidTotal || 0) / Number(cardMetrics.referenceInvoiceOriginalTotal || 0)) * 100
     : 0;
   const hasInvoicesInSelectedPeriod = invoices.length > 0;
   const hasPayableInvoicesInSelectedPeriod = invoices.some((invoice) => invoice.status !== "aguardando_fechamento");
-  const hasCurrentInvoice = cards.some((card) => card.current_invoice_status !== "no_invoice");
-  const hasCurrentInvoiceAwaitingClosure = cards.some(
-    (card) => card.current_invoice_status === "aguardando_fechamento" || card.current_invoice_status === "awaiting_closure"
+  const hasReferenceInvoice = cards.some((card) => (card.reference_invoice_status ?? "no_invoice") !== "no_invoice");
+  const hasReferenceInvoiceAwaitingClosure = cards.some(
+    (card) => card.reference_invoice_status === "aguardando_fechamento" || card.reference_invoice_status === "awaiting_closure"
   );
   const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "Período";
   const currentReferenceLabel = `${MONTH_OPTIONS[now.getMonth()]?.label ?? dayjs().format("MMMM")} de ${now.getFullYear()}`;
@@ -551,9 +591,9 @@ const Analysis = () => {
     }
 
     return [
-      summary.paid > 0 ? `${summary.paid} paga${summary.paid > 1 ? "s" : ""}` : null,
-      summary.partial > 0 ? `${summary.partial} parcialmente quitada${summary.partial > 1 ? "s" : ""}` : null,
-      summary.open > 0 ? `${summary.open} em aberto` : null,
+      summary.paid > 0 ? `${summary.paid} quitada${summary.paid > 1 ? "s" : ""}` : null,
+      summary.partial > 0 ? `${summary.partial} parcial${summary.partial > 1 ? "is" : ""}` : null,
+      summary.noPayment > 0 ? `${summary.noPayment} sem pagamento` : null,
     ].filter((item): item is string => item !== null);
   };
 
@@ -648,7 +688,13 @@ const Analysis = () => {
               <div className={styles.metricCardSecondary}>
                 <p className={styles.metricLabel}>Pagamentos de fatura no período</p>
                 <h3 className={`${styles.metricValueSecondary} ${styles.metricDanger}`}>{currency(summary?.invoice_payment_total)}</h3>
-                <span className={styles.metricHint}>Quanto do período foi usado para quitar faturas.</span>
+                <span className={styles.metricHint}>
+                  {Number(summary?.invoice_payment_total || 0) > 0
+                    ? `Pago no período${invoicePaymentsKpiSummary.length > 0 ? ` · ${invoicePaymentsKpiSummary.join(" · ")}` : ""}`
+                    : invoicePaymentsKpiSummary.length > 0
+                      ? `Sem pagamento no período · ${invoicePaymentsKpiSummary.join(" · ")}`
+                      : "Quanto do período foi usado para quitar faturas."}
+                </span>
               </div>
               <div className={styles.metricCardSecondary}>
                 <p className={styles.metricLabel}>Quitação das faturas do período</p>
@@ -665,12 +711,12 @@ const Analysis = () => {
               </div>
               <div className={styles.metricCardSecondary}>
                 <p className={styles.metricLabel}>{`Quitação do aberto atual (${currentReferenceLabel})`}</p>
-                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.currentInvoicePaidTotal)}</h3>
+                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.referenceInvoicePaidTotal)}</h3>
                 <span className={styles.metricHint}>
-                  {Number(cardMetrics.payableCardsCount || 0) > 0
+                  {Number(cardMetrics.referenceInvoiceOriginalTotal || 0) > 0
                     ? `${currentOpenSettlementPercentage.toFixed(1)}% da fatura atual já foi quitada.`
-                    : hasCurrentInvoice
-                      ? hasCurrentInvoiceAwaitingClosure
+                    : hasReferenceInvoice
+                      ? hasReferenceInvoiceAwaitingClosure
                         ? "Nenhuma fatura disponível para pagamento no momento."
                         : "Nenhuma quitação registrada para o aberto atual."
                       : "Nenhuma fatura em aberto no momento."}
@@ -737,20 +783,27 @@ const Analysis = () => {
                 <div className={styles.cardInsightsList}>
                   {cards.length > 0 ? (
                     cards.map((card) => {
-                      const availableInvoicesCount = invoices.filter(
-                        (invoice) =>
-                          invoice.card_id === card.card_id &&
-                          invoice.status !== "aguardando_fechamento" &&
-                          invoice.status !== "awaiting_closure"
-                      ).length;
-                      const paidInvoicesCount = Number(card.paid_invoices_count_in_period || 0);
-                      const invoicePaymentSummary = paidInvoicesCount > 0
-                        ? availableInvoicesCount > 0
-                          ? `${paidInvoicesCount} fatura(s) paga(s) de ${availableInvoicesCount} disponível(is)`
-                          : `${paidInvoicesCount} fatura(s) paga(s) no período`
-                        : availableInvoicesCount > 0
-                          ? `0 fatura(s) paga(s) de ${availableInvoicesCount} disponível(is)`
-                          : "Nenhuma fatura disponível no período";
+                      const invoiceStatusSummaryItems = getInvoiceStatusSummaryItems(card.card_id);
+                      const previousPaidInvoicesCount = Number(card.previous_paid_invoices_count_in_period || 0);
+                      const previousPartialInvoicesCount = Number(card.previous_partial_invoices_count_in_period || 0);
+                      const previousInvoiceSummaryItems = [
+                        previousPaidInvoicesCount > 0
+                          ? `${previousPaidInvoicesCount} paga${previousPaidInvoicesCount > 1 ? "s" : ""} de fatura anterior`
+                          : null,
+                        previousPartialInvoicesCount > 0
+                          ? `${previousPartialInvoicesCount} parcial${previousPartialInvoicesCount > 1 ? "is" : ""} de fatura anterior`
+                          : null,
+                      ].filter((item): item is string => Boolean(item));
+                      const invoicePaymentSummaryItems = [
+                        ...invoiceStatusSummaryItems,
+                        ...previousInvoiceSummaryItems,
+                      ].filter((item): item is string => Boolean(item));
+                      const invoicePaymentSummary = invoicePaymentSummaryItems.length > 0
+                        ? invoicePaymentSummaryItems.join(" · ")
+                        : "Nenhuma fatura disponível no período";
+                      const invoicePaymentContext = Number(card.invoice_payments_total_in_period || 0) > 0
+                        ? "Pago no período"
+                        : "Sem pagamento no período";
 
                       return (
                         <div key={`filtered-card-${card.card_id}`} className={styles.cardInsightItem}>
@@ -785,11 +838,7 @@ const Analysis = () => {
                               <span className={styles.cardInsightLabel}>Pagamentos de fatura no período</span>
                               <strong>{currency(card.invoice_payments_total_in_period)}</strong>
                               <span className={styles.cardInsightSubtext}>
-                                {paidInvoicesCount > 0
-                                  ? "Pago no período"
-                                  : Number(card.invoice_payments_total_in_period || 0) > 0
-                                    ? "Parcialmente pago no período"
-                                    : "Sem pagamento no período"}
+                                {invoicePaymentContext}
                                 {` · ${invoicePaymentSummary}`}
                               </span>
                             </div>
@@ -843,47 +892,73 @@ const Analysis = () => {
 
                 <div className={styles.cardInsightsList}>
                   {cards.length > 0 ? (
-                    cards.map((card) => (
-                      <div key={card.card_id} className={styles.cardInsightItem}>
-                        <div className={styles.cardInsightTop}>
-                          <div>
-                            <h5 className={styles.cardInsightTitle}>{card.card_description}</h5>
-                            <span className={styles.cardInsightFlag}>{card.flag_description || "Cartão"}</span>
-                          </div>
-                          <span className={`${styles.statusPill} ${getCardStatusClass(card.current_invoice_status)}`}>
-                            {getCardStatusLabel(card.current_invoice_status)}
-                          </span>
-                        </div>
+                    cards.map((card) => {
+                      const hasReferenceInvoice = !(
+                        card.reference_invoice_pay_day == null
+                        && Number(card.reference_invoice_original_total || 0) <= 0
+                      );
+                      const displayInvoiceStatus = hasReferenceInvoice
+                        ? (card.reference_invoice_status ?? card.current_invoice_status)
+                        : card.current_invoice_status;
+                      const displayInvoiceTotal = hasReferenceInvoice
+                        ? Number(card.reference_invoice_original_total || 0)
+                        : Number(card.current_invoice_total || 0);
+                      const displayInvoicePaid = hasReferenceInvoice
+                        ? Number(card.reference_invoice_paid_total || 0)
+                        : Number(card.current_invoice_paid_total || 0);
+                      const displayClosureDate = hasReferenceInvoice
+                        ? (card.reference_invoice_closure_date ?? card.current_invoice_closure_date)
+                        : card.current_invoice_closure_date;
+                      const displayPayDay = hasReferenceInvoice
+                        ? (card.reference_invoice_pay_day ?? card.current_invoice_pay_day)
+                        : card.current_invoice_pay_day;
 
-                        <div className={styles.cardInsightMetrics}>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Fatura atual</span>
-                            <strong>{currency(card.current_invoice_total)}</strong>
+                      return (
+                        <div key={card.card_id} className={styles.cardInsightItem}>
+                          <div className={styles.cardInsightTop}>
+                            <div>
+                              <h5 className={styles.cardInsightTitle}>{card.card_description}</h5>
+                              <span className={styles.cardInsightFlag}>{card.flag_description || "Cartão"}</span>
+                            </div>
+                            <span className={`${styles.statusPill} ${getCardStatusClass(displayInvoiceStatus)}`}>
+                              {getCardStatusLabel(displayInvoiceStatus)}
+                            </span>
                           </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Total em aberto</span>
-                            <strong>{currency(card.open_invoice_total)}</strong>
-                          </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Comprometimento futuro</span>
-                            <strong>{currency(card.future_commitment_total)}</strong>
-                          </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Fechamento</span>
-                            <strong>{formatDate(card.current_invoice_closure_date)}</strong>
-                          </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Vencimento</span>
-                            <strong>{formatDate(card.current_invoice_pay_day)}</strong>
-                          </div>
-                          <div>
-                            <span className={styles.cardInsightLabel}>Próxima fatura</span>
-                            <strong>{currency(card.next_invoice_total)}</strong>
-                            <span className={styles.cardInsightSubtext}>{formatDate(card.next_invoice_pay_day)}</span>
+
+                          <div className={styles.cardInsightMetrics}>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Fatura atual</span>
+                              <strong>{currency(displayInvoiceTotal)}</strong>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Pago até agora</span>
+                              <strong>{currency(displayInvoicePaid)}</strong>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Total em aberto</span>
+                              <strong>{currency(card.open_invoice_total)}</strong>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Comprometimento futuro</span>
+                              <strong>{currency(card.future_commitment_total)}</strong>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Fechamento</span>
+                              <strong>{formatDate(displayClosureDate)}</strong>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Vencimento</span>
+                              <strong>{formatDate(displayPayDay)}</strong>
+                            </div>
+                            <div>
+                              <span className={styles.cardInsightLabel}>Próxima fatura</span>
+                              <strong>{currency(card.next_invoice_total)}</strong>
+                              <span className={styles.cardInsightSubtext}>{formatDate(card.next_invoice_pay_day)}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className={styles.emptyState}>Nenhum cartão encontrado para o período.</div>
                   )}

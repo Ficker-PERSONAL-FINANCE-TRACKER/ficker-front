@@ -10,7 +10,6 @@ import {
   Modal,
   Radio,
   Row,
-  Select,
   Spin,
   Table,
   Tag,
@@ -40,16 +39,6 @@ interface InvoiceItem {
   payment_count?: number;
 }
 
-interface PaymentMethod {
-  id: number;
-  description: string;
-}
-
-interface CategoryOption {
-  id: number;
-  category_description: string;
-}
-
 export const PayInvoiceModal = ({
   isModalOpen,
   setIsModalOpen,
@@ -59,20 +48,14 @@ export const PayInvoiceModal = ({
 }: PayInvoiceModalProps) => {
   const [form] = Form.useForm();
   const [loadingInvoices, setLoadingInvoices] = useState(false);
-  const [loadingMethods, setLoadingMethods] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(false);
   const [paying, setPaying] = useState(false);
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [selectedPayDay, setSelectedPayDay] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleCancel = () => {
     setIsModalOpen(false);
     setInvoices([]);
-    setPaymentMethods([]);
-    setCategories([]);
     setSelectedPayDay(null);
     setErrorMessage("");
     form.resetFields();
@@ -117,52 +100,6 @@ export const PayInvoiceModal = ({
     }
   };
 
-  const getPaymentMethods = async () => {
-    try {
-      setLoadingMethods(true);
-
-      const response = await request({
-        method: "GET",
-        endpoint: "payment/methods",
-      });
-
-      const methods = response?.data?.data?.payment_methods ?? [];
-      const filteredMethods = methods.filter((method: PaymentMethod) => method.id !== 4);
-
-      setPaymentMethods(filteredMethods);
-    } catch (error: any) {
-      setErrorMessage("Nao foi possivel carregar os metodos de pagamento.");
-    } finally {
-      setLoadingMethods(false);
-    }
-  };
-
-  const getCategories = async () => {
-    try {
-      setLoadingCategories(true);
-
-      const response = await request({
-        method: "GET",
-        endpoint: "categories/type/2",
-      });
-
-      const payload = response?.data;
-      if (Array.isArray(payload)) {
-        setCategories(payload);
-      } else if (Array.isArray(payload?.data?.categories)) {
-        setCategories(payload.data.categories);
-      } else if (Array.isArray(payload?.categories)) {
-        setCategories(payload.categories);
-      } else {
-        setCategories([]);
-      }
-    } catch (error: any) {
-      setErrorMessage("Nao foi possivel carregar as categorias.");
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
-
   const handlePayInvoice = async () => {
     try {
       setPaying(true);
@@ -179,8 +116,6 @@ export const PayInvoiceModal = ({
         method: "POST",
         endpoint: `cards/${cardId}/invoices/${selectedPayDay}/pay`,
         data: {
-          payment_method_id: values.payment_method_id,
-          category_id: values.category_id === "default" ? null : values.category_id,
           amount_paid: Number(values.amount_paid),
         },
       });
@@ -196,11 +131,7 @@ export const PayInvoiceModal = ({
         return;
       }
 
-      if (error?.response?.data?.errors?.payment_method_id?.length) {
-        setErrorMessage(error.response.data.errors.payment_method_id[0]);
-      } else if (error?.response?.data?.errors?.category_id?.length) {
-        setErrorMessage(error.response.data.errors.category_id[0]);
-      } else if (error?.response?.data?.errors?.amount_paid?.length) {
+      if (error?.response?.data?.errors?.amount_paid?.length) {
         setErrorMessage(error.response.data.errors.amount_paid[0]);
       } else if (error?.response?.data?.data?.message) {
         setErrorMessage(error.response.data.data.message);
@@ -217,11 +148,6 @@ export const PayInvoiceModal = ({
   useEffect(() => {
     if (isModalOpen) {
       getInvoices();
-      getPaymentMethods();
-      getCategories();
-      form.setFieldsValue({
-        category_id: "default",
-      });
     }
   }, [isModalOpen, form]);
 
@@ -277,7 +203,7 @@ export const PayInvoiceModal = ({
       width={980}
       style={{ maxWidth: "calc(100vw - 32px)" }}
     >
-      {loadingInvoices || loadingMethods || loadingCategories ? (
+      {loadingInvoices ? (
         <Row justify="center" style={{ padding: "20px 0" }}>
           <Spin size="large" />
         </Row>
@@ -372,45 +298,6 @@ export const PayInvoiceModal = ({
           )}
 
           <Form form={form} layout="vertical">
-            <Row gutter={16}>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  label="Metodo de pagamento"
-                  name="payment_method_id"
-                  rules={[{ required: true, message: "Selecione o metodo de pagamento." }]}
-                >
-                  <Select
-                    placeholder="Selecione"
-                    disabled={!hasAnyPayableInvoice}
-                    options={paymentMethods.map((method) => ({
-                      value: method.id,
-                      label: method.description,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col xs={24} md={12}>
-                <Form.Item
-                  label="Categoria"
-                  name="category_id"
-                  rules={[{ required: true, message: "Selecione a categoria." }]}
-                >
-                  <Select
-                    placeholder="Selecione"
-                    disabled={!hasAnyPayableInvoice}
-                    options={[
-                      { value: "default", label: "Pagamento de fatura" },
-                      ...categories.map((category) => ({
-                        value: category.id,
-                        label: category.category_description,
-                      })),
-                    ]}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
             <Form.Item
               label="Valor a pagar"
               name="amount_paid"
@@ -482,11 +369,6 @@ export const PayInvoiceModal = ({
               showIcon
               style={{ marginBottom: 16 }}
               message={`Fatura selecionada: ${dayjs(selectedInvoice.pay_day).format("DD/MM/YYYY")}`}
-              description={[
-                `Total da fatura: ${formatCurrency(selectedInvoice.total)}`,
-                `Pago ate agora: ${formatCurrency(selectedInvoice.paid_total)}`,
-                `Valor em aberto: ${formatCurrency(selectedInvoice.open_total)}`,
-              ].join(" | ")}
             />
           )}
 
@@ -510,5 +392,3 @@ export const PayInvoiceModal = ({
     </Modal>
   );
 };
-
-
