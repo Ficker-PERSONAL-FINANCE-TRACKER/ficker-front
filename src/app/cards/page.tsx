@@ -1,9 +1,19 @@
 ﻿"use client";
-import { Col, Row, Spin, Typography } from "antd";
+
+import {
+  Col,
+  Dropdown,
+  Empty,
+  MenuProps,
+  Modal,
+  Row,
+  Spin,
+  Typography,
+  message,
+} from "antd";
 import Image from "next/image";
-import styles from "../EnterTransaction/entertransaction.module.scss";
 import { NewCardModal } from "./modal";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { request } from "@/service/api";
 import dayjs from "dayjs";
 import CardPage from "./card";
@@ -11,6 +21,7 @@ import SearchField from "@/components/SearchField";
 import CustomMenu from "@/components/CustomMenu";
 import { motion } from "framer-motion";
 import AnimatedNumber from "@/components/AnimatedNumber";
+import styles from "./cards.module.scss";
 
 interface Card {
   best_day: number;
@@ -23,55 +34,103 @@ interface Card {
   user_id: number;
   invoice: number;
   invoice_pay_day?: string | null;
+  archived_at?: string | null;
+}
+
+type CardAction = "archive" | "unarchive" | "delete";
+
+interface ActionModalState {
+  open: boolean;
+  action: CardAction | null;
+  card: Card | null;
 }
 
 const Cards = () => {
-  const { Title, Text } = Typography;
+  const { Text } = Typography;
+  const [, contextHolder] = Modal.useModal();
+  const [messageApi, messageContextHolder] = message.useMessage();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [cards, setCards] = useState<Card[]>([]);
+  const [archivedCards, setArchivedCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card>({} as Card);
+  const [showArchived, setShowArchived] = useState(false);
+  const [actionModal, setActionModal] = useState<ActionModalState>({
+    open: false,
+    action: null,
+    card: null,
+  });
 
   const openModal = () => {
     setIsModalOpen(true);
   };
 
+  const hydrateCards = async (rawCards: Card[]) => {
+    return Promise.all(
+      rawCards.map(async (card: Card) => {
+        try {
+          const invoiceResponse = await request({
+            method: "GET",
+            endpoint: `cards/${card.id}/invoice`,
+          });
+
+          return {
+            ...card,
+            invoice: invoiceResponse?.data?.data?.invoice || 0,
+            invoice_pay_day: invoiceResponse?.data?.data?.pay_day || null,
+          };
+        } catch (error) {
+          return {
+            ...card,
+            invoice: card.invoice || 0,
+            invoice_pay_day: null,
+          };
+        }
+      })
+    );
+  };
+
   const getCards = async () => {
+    setLoading(true);
+
     try {
-      const response = await request({
-        method: "GET",
-        endpoint: "cards",
-        loaderStateSetter: setLoading,
-      });
+      const [activeResponse, archivedResponse] = await Promise.all([
+        request({
+          method: "GET",
+          endpoint: "cards",
+        }),
+        request({
+          method: "GET",
+          endpoint: "cards",
+          params: { status: "archived" },
+        }),
+      ]);
 
-      const rawCards = response?.data?.data?.cards ?? [];
+      const rawActiveCards = activeResponse?.data?.data?.cards ?? [];
+      const rawArchivedCards = archivedResponse?.data?.data?.cards ?? [];
 
-      const cardsWithInvoices = await Promise.all(
-        rawCards.map(async (card: Card) => {
-          try {
-            const invoiceResponse = await request({
-              method: "GET",
-              endpoint: `cards/${card.id}/invoice`,
-            });
+      const [activeCards, archivedCardsResult] = await Promise.all([
+        hydrateCards(rawActiveCards),
+        hydrateCards(rawArchivedCards),
+      ]);
 
-            return {
-              ...card,
-              invoice: invoiceResponse?.data?.data?.invoice || 0,
-              invoice_pay_day: invoiceResponse?.data?.data?.pay_day || null,
-            };
-          } catch (error) {
-            return {
-              ...card,
-              invoice: card.invoice || 0,
-              invoice_pay_day: null,
-            };
-          }
-        })
-      );
+      setCards(activeCards);
+      setArchivedCards(archivedCardsResult);
 
-      setCards(cardsWithInvoices);
+      if (Object.keys(selectedCard).length > 0) {
+        const refreshedSelectedCard = activeCards.find((card) => card.id === selectedCard.id);
+        if (refreshedSelectedCard) {
+          setSelectedCard(refreshedSelectedCard);
+        } else {
+          setSelectedCard({} as Card);
+        }
+      }
     } catch (error) {
       console.log(error);
+      messageApi.error("Nao foi possivel carregar os cartoes.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -127,6 +186,221 @@ const Cards = () => {
     return `${String(card.expiration).padStart(2, "0")}/${String(showDate(card.expiration)).padStart(2, "0")}`;
   };
 
+  const closeActionModal = () => {
+    setActionModal({ open: false, action: null, card: null });
+  };
+
+  const openActionModal = (action: CardAction, card: Card) => {
+    setActionModal({ open: true, action, card });
+  };
+
+  const actionCopy = useMemo(() => {
+    if (!actionModal.action || !actionModal.card) {
+      return null;
+    }
+
+    const cardName = actionModal.card.card_description;
+
+    if (actionModal.action === "archive") {
+      return {
+        title: "Arquivar cartao?",
+        okText: "Arquivar",
+        okType: "default" as const,
+        content: (
+          <>
+            <p>
+              O cartao <strong>{cardName}</strong> saira da lista principal e ira para Arquivados.
+            </p>
+            <ul className={styles.modalList}>
+              <li>Compras, faturas e historico continuarao preservados.</li>
+              <li>Novas compras no credito ficarao bloqueadas enquanto ele estiver arquivado.</li>
+            </ul>
+          </>
+        ),
+      };
+    }
+
+    if (actionModal.action === "unarchive") {
+      return {
+        title: "Restaurar cartao?",
+        okText: "Restaurar",
+        okType: "default" as const,
+        content: (
+          <>
+            <p>
+              O cartao <strong>{cardName}</strong> voltara para a lista principal.
+            </p>
+            <ul className={styles.modalList}>
+              <li>Ele voltara a aparecer entre os cartoes ativos.</li>
+              <li>Novas compras no credito serao permitidas novamente.</li>
+            </ul>
+          </>
+        ),
+      };
+    }
+
+    return {
+      title: "Excluir cartao permanentemente?",
+      okText: "Excluir permanentemente",
+      okType: "primary" as const,
+      danger: true,
+      content: (
+        <>
+          <p>
+            O cartao <strong>{cardName}</strong> sera removido definitivamente.
+          </p>
+          <ul className={styles.modalList}>
+            <li>Compras, parcelas e vinculos analiticos desse cartao serao removidos.</li>
+            <li>Pagamentos de fatura relacionados podem ser recalculados ou excluidos.</li>
+          </ul>
+        </>
+      ),
+    };
+  }, [actionModal.action, actionModal.card]);
+
+  const handleActionConfirm = async () => {
+    if (!actionModal.action || !actionModal.card) {
+      return;
+    }
+
+    setActionLoading(true);
+
+    try {
+      if (actionModal.action === "archive") {
+        await request({
+          method: "PATCH",
+          endpoint: `cards/${actionModal.card.id}/archive`,
+        });
+        messageApi.success("Cartao arquivado com sucesso.");
+      }
+
+      if (actionModal.action === "unarchive") {
+        await request({
+          method: "PATCH",
+          endpoint: `cards/${actionModal.card.id}/unarchive`,
+        });
+        messageApi.success("Cartao restaurado com sucesso.");
+      }
+
+      if (actionModal.action === "delete") {
+        await request({
+          method: "DELETE",
+          endpoint: `cards/${actionModal.card.id}`,
+        });
+        messageApi.success("Cartao excluido com sucesso.");
+      }
+
+      closeActionModal();
+      await getCards();
+    } catch (error: any) {
+      const apiMessage = error?.response?.data?.message;
+      messageApi.error(apiMessage || "Nao foi possivel concluir a acao.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const buildMenuItems = (card: Card): MenuProps["items"] => {
+    if (card.archived_at) {
+      return [
+        {
+          key: "unarchive",
+          label: "Restaurar cartao",
+        },
+        {
+          key: "delete",
+          label: <span className={styles.deleteAction}>Excluir permanentemente</span>,
+        },
+      ];
+    }
+
+    return [
+      {
+        key: "archive",
+        label: "Arquivar cartao",
+      },
+      {
+        key: "delete",
+        label: <span className={styles.deleteAction}>Excluir permanentemente</span>,
+      },
+    ];
+  };
+
+  const handleMenuClick = (card: Card, key: string) => {
+    if (key === "archive" || key === "unarchive" || key === "delete") {
+      openActionModal(key, card);
+    }
+  };
+
+  const renderCard = (card: Card, archived = false) => {
+    const cardNode = (
+      <div className={styles.cardWrap}>
+        <Dropdown
+          trigger={["click"]}
+          menu={{
+            items: buildMenuItems(card),
+            onClick: ({ key, domEvent }) => {
+              domEvent.stopPropagation();
+              handleMenuClick(card, key);
+            },
+          }}
+          placement="bottomRight"
+        >
+          <button
+            type="button"
+            className={styles.cardActionButton}
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+          >
+            <span className={styles.cardActionIcon}>⋯</span>
+          </button>
+        </Dropdown>
+
+        <motion.div
+          whileHover={{ scale: 1.02, translateY: -5 }}
+          className={`${styles.cardShell} ${styles.cardInteractive} ${archived ? styles.cardArchived : ""}`}
+          style={{ background: getFlagColor(card.flag_id) }}
+        >
+          <div className={styles.cardCircleTop} />
+          <div className={styles.cardCircleBottom} />
+
+          <div className={styles.cardTopRow}>
+            <div className={styles.cardInfo}>
+              <div className={styles.cardDescription}>{card.card_description}</div>
+              <div className={styles.cardLabel}>Fatura</div>
+              <div className={styles.cardValue}>
+                <AnimatedNumber value={card.invoice} duration={1500} format={formatCurrency} />
+              </div>
+            </div>
+            <div className={styles.flagArea}>
+              <Image src={getFlagImage(card.flag_id)} alt="Flag" width={34} height={20} style={{ objectFit: "contain" }} />
+              {card.flag_id === 3 && <div className={styles.flagLabel}>mastercard</div>}
+            </div>
+          </div>
+
+          <div className={styles.cardBottomRow}>
+            <div className={styles.cardMask}>**** **** ****</div>
+            <div>
+              <div className={styles.cardDueLabel}>Vencimento</div>
+              <div className={styles.cardDueValue}>{getDisplayedDueDate(card)}</div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+
+    return (
+      <Col
+        key={card.id}
+        className={styles.cardColumn}
+        onClick={() => setSelectedCard(card)}
+      >
+        {cardNode}
+      </Col>
+    );
+  };
+
   useEffect(() => {
     getCards();
   }, [isModalOpen]);
@@ -135,7 +409,9 @@ const Cards = () => {
     <div style={{ display: "flex", flexDirection: "row" }}>
       <CustomMenu />
       <NewCardModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-      <div style={{ width: "90vw", flex: "1 1 0%", overflowX: "hidden" }}>
+      {contextHolder}
+      {messageContextHolder}
+      <div className={styles.pageShell}>
         <div className={styles.titleArea}>
           <div>
             <h2>{`Meus cartões ${Object.keys(selectedCard).length > 0 ? "> " + selectedCard.card_description : ""}`}</h2>
@@ -152,69 +428,65 @@ const Cards = () => {
             <Spin size="large" />
           </Row>
         ) : (
-          <Row justify={"start"} style={{ padding: "20px 30px" }}>
-            {Object.keys(selectedCard).length > 0 ? (
-              <CardPage card={selectedCard} />
-            ) : (
-              <>
-                {cards.map((card) => (
-                  <Col
-                    key={card.id}
-                    style={{ padding: "12px", flex: "0 0 25%", maxWidth: "25%" }}
-                    onClick={() => setSelectedCard(card)}
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.02, translateY: -5 }}
-                      style={{
-                        height: "130px",
-                        background: getFlagColor(card.flag_id),
-                        borderRadius: 12,
-                        padding: "20px",
-                        color: "#fff",
-                        boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.1)",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between",
-                        position: "relative",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div style={{ position: "absolute", top: "-20%", right: "-20%", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255, 255, 255, 0.05)", zIndex: 0 }} />
-                      <div style={{ position: "absolute", bottom: "-25%", left: "-25%", width: "100px", height: "100px", borderRadius: "50%", background: "rgba(255, 255, 255, 0.03)", zIndex: 0 }} />
+          <>
+            <Row justify={"start"} className={styles.gridArea}>
+              {Object.keys(selectedCard).length > 0 ? (
+                <CardPage card={selectedCard} />
+              ) : cards.length > 0 ? (
+                cards.map((card) => renderCard(card))
+              ) : (
+                <Col span={24}>
+                  <Empty description="Nenhum cartao ativo encontrado." />
+                </Col>
+              )}
+            </Row>
 
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", zIndex: 1 }}>
-                        <div style={{ width: "75%" }}>
-                          <div style={{ fontSize: 11, color: "rgba(255, 255, 255, 0.8)", marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{card.card_description}</div>
-                          <div style={{ fontSize: 10, color: "rgba(255, 255, 255, 0.7)", marginBottom: 0 }}>Fatura</div>
-                          <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.5px" }}>
-                            <AnimatedNumber value={card.invoice} duration={1500} format={formatCurrency} />
-                          </div>
-                        </div>
-                        <div style={{ textAlign: "right" }}>
-                          <Image src={getFlagImage(card.flag_id)} alt="Flag" width={34} height={20} style={{ objectFit: "contain" }} />
-                          {card.flag_id === 3 && (
-                            <div style={{ fontSize: 7, color: "#fff", marginTop: 1, opacity: 0.9, fontWeight: 500, textTransform: "lowercase" }}>mastercard</div>
-                          )}
-                        </div>
-                      </div>
+            {Object.keys(selectedCard).length === 0 && (
+              <div className={styles.archivedSection}>
+                <button
+                  type="button"
+                  className={styles.archivedToggle}
+                  onClick={() => setShowArchived((current) => !current)}
+                >
+                  <span className={styles.archivedTitle}>Arquivados</span>
+                  <span className={styles.archivedCount}>{archivedCards.length}</span>
+                </button>
+                <div className={styles.archivedHint}>
+                  Cartoes fora da lista principal continuam disponiveis aqui para restauracao ou exclusao definitiva.
+                </div>
 
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", position: "relative", zIndex: 1 }}>
-                        <div style={{ fontSize: 11, letterSpacing: 2, color: "rgba(255, 255, 255, 0.9)", fontWeight: 500 }}>
-                          **** **** ****
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 9, color: "rgba(255, 255, 255, 0.7)", textAlign: "right" }}>Vencimento</div>
-                          <div style={{ fontSize: 12, color: "#fff", fontWeight: 500 }}>{getDisplayedDueDate(card)}</div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </Col>
-                ))}
-              </>
+                {showArchived && (
+                  <Row justify={"start"} className={styles.archivedContent}>
+                    {archivedCards.length > 0 ? (
+                      archivedCards.map((card) => renderCard(card, true))
+                    ) : (
+                      <Col span={24}>
+                        <Text type="secondary">Nenhum cartao arquivado no momento.</Text>
+                      </Col>
+                    )}
+                  </Row>
+                )}
+              </div>
             )}
-          </Row>
+          </>
         )}
+
+        <Modal
+          open={actionModal.open}
+          title={actionCopy?.title}
+          okText={actionCopy?.okText}
+          okType={actionCopy?.okType}
+          okButtonProps={{
+            danger: actionModal.action === "delete",
+            loading: actionLoading,
+          }}
+          cancelText="Cancelar"
+          onCancel={closeActionModal}
+          onOk={handleActionConfirm}
+          destroyOnClose
+        >
+          {actionCopy?.content}
+        </Modal>
       </div>
     </div>
   );

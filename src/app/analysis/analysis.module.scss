@@ -252,6 +252,14 @@
   font-size: 12px;
 }
 
+.statusPillGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .statusPill {
   display: inline-flex;
   align-items: center;
@@ -279,6 +287,16 @@
 }
 
 .statusNeutral {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.statusActive {
+  background: #eef2ff;
+  color: #5b5bd6;
+}
+
+.statusArchive {
   background: #f3f4f6;
   color: #6b7280;
 }

@@ -20,6 +20,24 @@ interface Category {
   updated_at: Date;
 }
 
+const extractCategoriesFromResponse = (response: any): Category[] => {
+  const payload = response?.data;
+
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.data?.categories)) {
+    return payload.data.categories;
+  }
+
+  if (Array.isArray(payload?.categories)) {
+    return payload.categories;
+  }
+
+  return [];
+};
+
 export const EditTransactionModal = ({
   isModalOpen,
   setIsModalOpen,
@@ -53,7 +71,7 @@ export const EditTransactionModal = ({
         method: "GET",
         endpoint: `categories/type/${typeId}`,
       });
-      setCategories(response.data.data.categories);
+      setCategories(extractCategoriesFromResponse(response));
     } catch (error) {
       console.log(error);
     }
@@ -82,9 +100,19 @@ export const EditTransactionModal = ({
   };
 
   useEffect(() => {
+    if (!isModalOpen) return;
+
     getCategories(transaction.type_id);
-    form.resetFields();
-  }, []);
+    form.setFieldsValue({
+      transaction_description: transaction.transaction_description,
+      date: dayjs(transaction.date),
+      category_id: transaction.category_id,
+      installments: transaction.installments,
+      transaction_value: transaction.transaction_value,
+      category_description: transaction.category_id === 0 ? transaction.category_description : undefined,
+    });
+    setShowDescriptionCategory(transaction.category_id === 0);
+  }, [isModalOpen, transaction, form]);
 
   return (
     <Modal
@@ -121,7 +149,7 @@ export const EditTransactionModal = ({
           }
         }}
       >
-        <Col>
+        <div>
           <label>Descrição</label>
           <Form.Item
             name="transaction_description"
@@ -129,8 +157,8 @@ export const EditTransactionModal = ({
           >
             <Input className={styles.input} style={{ width: "95%" }} data-testid="description" />
           </Form.Item>
-        </Col>
-        <Col style={{ marginTop: 20 }}>
+        </div>
+        <div style={{ marginTop: 20 }}>
           <label>Data</label>
           <Form.Item name="date" rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}>
             <DatePicker
@@ -145,7 +173,7 @@ export const EditTransactionModal = ({
               }}
             />
           </Form.Item>
-        </Col>
+        </div>
         <Row style={{ marginTop: 20 }}>
           <Col>
             <label>Categoria</label>
@@ -190,7 +218,7 @@ export const EditTransactionModal = ({
           ) : null}
         </Row>
         {transaction.installments ? (
-          <Col>
+          <div>
             <label>Parcelas</label>
             <Form.Item
               name="installments"
@@ -204,9 +232,9 @@ export const EditTransactionModal = ({
                 ))}
               </Select>
             </Form.Item>
-          </Col>
+          </div>
         ) : null}
-        <Col style={{ marginBottom: 20 }} xl={15}>
+        <div style={{ marginBottom: 20 }}>
           <label>Valor</label>
           <Form.Item
             name="transaction_value"
@@ -214,7 +242,7 @@ export const EditTransactionModal = ({
           >
             <Input className={styles.input} placeholder="R$" data-testid="value" />
           </Form.Item>
-        </Col>
+        </div>
         <Row
           style={{
             display: "flex",

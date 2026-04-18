@@ -160,7 +160,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
               <EditTransactionModal
                 isModalOpen={editModal}
                 setIsModalOpen={setEditModal}
-                transaction={{ ...selectedTransaction, type_id: typeId }}
+                transaction={selectedTransaction}
               />
 
               <TransactionInstallmentsModal
@@ -182,10 +182,11 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                   <tr key={transaction.id}>
                     <td className={styles.tdEdit}>
                       <button
-                        style={{ background: "none", border: "none" }}
+                        type="button"
+                        className={styles.editButton}
                         onClick={() => openEditModal(transaction)}
                       >
-                        <Image src="/edit.png" alt="Editar" width={20} height={20} />
+                        <Image src="/edit.png" alt="Editar" width={24} height={24} />
                       </button>
                     </td>
 

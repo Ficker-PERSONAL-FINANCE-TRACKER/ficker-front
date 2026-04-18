@@ -19,8 +19,9 @@ interface Card {
 interface CardProps {
   card: Card;
   totalValue?: number;
+  archived?: boolean;
 }
-export const CardInformation = ({ card, totalValue }: CardProps) => {
+export const CardInformation = ({ card, totalValue, archived = false }: CardProps) => {
   const { Text, Title } = Typography;
 
   const formatCurrency = (value: any): string => {
@@ -86,14 +87,26 @@ export const CardInformation = ({ card, totalValue }: CardProps) => {
           borderRadius: 12,
           padding: "24px",
           color: "#fff",
-          boxShadow: "0px 15px 35px rgba(0, 0, 0, 0.2)",
+          boxShadow: archived ? "0px 12px 28px rgba(108, 93, 211, 0.12)" : "0px 15px 35px rgba(0, 0, 0, 0.2)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
           position: "relative",
           overflow: "hidden",
+          filter: archived ? "saturate(0.72) brightness(1.02)" : "none",
+          opacity: archived ? 0.72 : 1,
         }}
       >
+        {archived && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(180deg, rgba(248, 247, 255, 0.08) 0%, rgba(255, 255, 255, 0.18) 100%)",
+              zIndex: 0,
+            }}
+          />
+        )}
         <div style={{ position: "absolute", top: "-20%", right: "-20%", width: "150px", height: "150px", borderRadius: "50%", background: "rgba(255, 255, 255, 0.05)", zIndex: 0 }} />
         <div style={{ position: "absolute", bottom: "-25%", left: "-25%", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255, 255, 255, 0.03)", zIndex: 0 }} />
 

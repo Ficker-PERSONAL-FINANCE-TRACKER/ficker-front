@@ -34,6 +34,32 @@ interface Category {
   updated_at: Date;
 }
 
+const normalizeCategoryName = (value: string) =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+const extractCategoriesFromResponse = (response: any): Category[] => {
+  const payload = response?.data;
+
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (Array.isArray(payload?.data?.categories)) {
+    return payload.data.categories;
+  }
+
+  if (Array.isArray(payload?.categories)) {
+    return payload.categories;
+  }
+
+  return [];
+};
+
 export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: CardTransactionModalProps) => {
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -62,32 +88,52 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
         method: "GET",
         endpoint: "categories/type/2",
       });
-      setCategories(response.data);
+      setCategories(extractCategoriesFromResponse(response));
     } catch (error) {
       console.log(error);
     }
   };
 
+  const resolveCategoryPayload = (values: Record<string, any>) => {
+    const rawCategoryId = values.category_id;
+
+    const selectedDefault = defaultCategories.find((category) => category.id === rawCategoryId);
+
+    if (selectedDefault) {
+      const existingCategory = categories.find(
+        (category) => normalizeCategoryName(category.category_description) === normalizeCategoryName(selectedDefault.label)
+      );
+
+      if (existingCategory) {
+        return {
+          category_id: existingCategory.id,
+          category_description: undefined,
+        };
+      }
+
+      return {
+        category_id: 0,
+        category_description: selectedDefault.label,
+      };
+    }
+
+    return {
+      category_id: rawCategoryId,
+      category_description: rawCategoryId === 0 ? values.category_description : undefined,
+    };
+  };
+
   const handleFinish = async () => {
     try {
       const values = await form.validateFields();
-      
-      let categoryId = values.category_id;
-      let categoryDescription = values.category_description;
-
-      const selectedDefault = defaultCategories.find(c => c.id === values.category_id);
-      if (selectedDefault) {
-        categoryId = 0;
-        categoryDescription = selectedDefault.label;
-      }
+      const categoryPayload = resolveCategoryPayload(values);
 
       await request({
         method: "POST",
         endpoint: "transaction/store",
         data: {
           ...values,
-          category_id: categoryId,
-          category_description: categoryDescription,
+          ...categoryPayload,
           date: dayjs(values.date).format("YYYY-MM-DD"),
           type_id: 2,
           payment_method_id: 4,

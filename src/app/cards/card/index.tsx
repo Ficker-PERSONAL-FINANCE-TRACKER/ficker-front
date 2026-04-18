@@ -2,7 +2,7 @@
 import { CardInformation } from "@/components/CardInformation";
 import { TransactionTab } from "@/components/TransactionTab";
 import { request } from "@/service/api";
-import { Col, Row } from "antd";
+import { Alert, Col, Row } from "antd";
 import { useEffect, useState } from "react";
 import styles from "../../EnterTransaction/entertransaction.module.scss";
 import { CardTransactionModal } from "./mcardtransaction";
@@ -19,6 +19,7 @@ interface Card {
   updated_at: Date;
   user_id: number;
   invoice_pay_day?: string | null;
+  archived_at?: string | null;
 }
 
 interface CardProps {
@@ -32,6 +33,7 @@ function CardPage({ card }: CardProps) {
   const [cardTranscations, setCardTransactions] = useState<ITransaction[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [invoicePayDay, setInvoicePayDay] = useState<string | null>(card.invoice_pay_day ?? null);
+  const isArchived = Boolean(card.archived_at);
 
   const getCardTotalValue = async () => {
     try {
@@ -95,14 +97,29 @@ function CardPage({ card }: CardProps) {
         </Col>
         <Col xl={10} lg={10} md={24} xs={24}>
           <div style={{ padding: 0, width: "100%" }}>
-            <CardInformation card={{ ...card, invoice_pay_day: invoicePayDay }} totalValue={totalValue} />
+            <CardInformation
+              card={{ ...card, invoice_pay_day: invoicePayDay }}
+              totalValue={totalValue}
+              archived={isArchived}
+            />
+            {isArchived && (
+              <Alert
+                type="info"
+                showIcon
+                style={{ marginTop: 16, borderRadius: 12 }}
+                message="Cartão arquivado"
+                description="Este cartão está fora da lista principal para novas compras. Aqui você ainda pode consultar o histórico e liquidar eventuais faturas em aberto."
+              />
+            )}
             <Row gutter={[12, 12]} style={{ marginTop: 20 }}>
-              <Col span={12}>
-                <button className={styles.button} onClick={openModal} style={{ width: "100%", marginTop: 0, padding: "10px 0" }}>
-                  Nova transação
-                </button>
-              </Col>
-              <Col span={12}>
+              {!isArchived && (
+                <Col span={12}>
+                  <button className={styles.button} onClick={openModal} style={{ width: "100%", marginTop: 0, padding: "10px 0" }}>
+                    Nova transação
+                  </button>
+                </Col>
+              )}
+              <Col span={isArchived ? 24 : 12}>
                 <button className={styles.button} onClick={openOutputModal} style={{ width: "100%", marginTop: 0, padding: "10px 0" }}>
                   Pagar Fatura
                 </button>

@@ -43,6 +43,11 @@ const CARD_STATUS_LABELS: Record<string, string> = {
   no_invoice: "Sem fatura aberta",
 };
 
+const CARD_LIFECYCLE_LABELS = {
+  active: "Ativo",
+  archived: "Arquivado",
+} as const;
+
 type AnalysisSummary = {
   income_total: number;
   real_spending_total: number;
@@ -57,6 +62,7 @@ type AnalysisCard = {
   card_id: number;
   card_description: string;
   flag_description?: string | null;
+  archived_at?: string | null;
   current_invoice_pay_day?: string | null;
   current_invoice_closure_date?: string | null;
   current_invoice_original_total?: number;
@@ -150,6 +156,11 @@ type AnalysisInvoice = {
   is_paid: boolean;
   paid_at?: string | null;
   status: string;
+};
+
+type CardLifecycleItem = {
+  id: number;
+  archived_at?: string | null;
 };
 
 type CardCategoryCharts = Record<number, ChartSlice[]>;
@@ -328,6 +339,7 @@ const Analysis = () => {
         const [
           summaryResponse,
           cardsResponse,
+          allCardsResponse,
           topExpensesResponse,
           timelineResponse,
           balanceTimelineResponse,
@@ -338,6 +350,7 @@ const Analysis = () => {
         ] = await Promise.all([
           request({ method: "GET", endpoint: `analysis/summary?${queryString}` }),
           request({ method: "GET", endpoint: `analysis/cards?${queryString}` }),
+          request({ method: "GET", endpoint: "cards", params: { status: "all" } }),
           request({ method: "GET", endpoint: `analysis/top-expenses?${queryString}&limit=5` }),
           request({ method: "GET", endpoint: `analysis/timeline?${queryString}&group_by=${timelineGroupBy}` }),
           request({ method: "GET", endpoint: `analysis/timeline?${queryString}&group_by=${balanceTimelineGroupBy}` }),
@@ -348,6 +361,14 @@ const Analysis = () => {
         ]);
 
         const fetchedCards = (cardsResponse.data?.data?.cards ?? []) as AnalysisCard[];
+        const allCards = (allCardsResponse.data?.data?.cards ?? []) as CardLifecycleItem[];
+        const lifecycleByCardId = new Map(
+          allCards.map((card) => [Number(card.id), card.archived_at ?? null] as const)
+        );
+        const cardsWithLifecycle = fetchedCards.map((card) => ({
+          ...card,
+          archived_at: lifecycleByCardId.get(Number(card.card_id)) ?? null,
+        }));
         const transactions = (transactionsResponse.data?.data?.transactions ?? []) as TransactionTimelineSource[];
         const calculatedOpeningBalance = transactions.reduce((acc, transaction) => {
           const txDate = dayjs(transaction.date);
@@ -369,7 +390,7 @@ const Analysis = () => {
           return acc;
         }, 0);
         const cardCategoryEntries = await Promise.all(
-          fetchedCards.map(async (card) => {
+          cardsWithLifecycle.map(async (card) => {
             const cardCategoriesResponse = await request({
               method: "GET",
               endpoint: `analysis/categories?${queryString}&card_id=${card.card_id}`,
@@ -381,7 +402,7 @@ const Analysis = () => {
         );
 
         setSummary(summaryResponse.data?.data ?? null);
-        setCards(fetchedCards);
+        setCards(cardsWithLifecycle);
         setTopExpenses((topExpensesResponse.data?.data ?? { transactions: [] }) as TopExpensesPayload);
         setTimelineSeries((timelineResponse.data?.data?.series ?? []) as AnalysisTimelinePoint[]);
         setBalanceTimelineSeries((balanceTimelineResponse.data?.data?.series ?? []) as AnalysisTimelinePoint[]);
@@ -558,6 +579,10 @@ const Analysis = () => {
 
   const getCardStatusLabel = (status: string) => {
     return CARD_STATUS_LABELS[status] ?? "Sem fatura aberta";
+  };
+
+  const getCardLifecycleLabel = (archivedAt?: string | null) => {
+    return archivedAt ? CARD_LIFECYCLE_LABELS.archived : CARD_LIFECYCLE_LABELS.active;
   };
 
   const getCardStatusClass = (status: string) => {
@@ -920,9 +945,14 @@ const Analysis = () => {
                               <h5 className={styles.cardInsightTitle}>{card.card_description}</h5>
                               <span className={styles.cardInsightFlag}>{card.flag_description || "Cartão"}</span>
                             </div>
-                            <span className={`${styles.statusPill} ${getCardStatusClass(displayInvoiceStatus)}`}>
-                              {getCardStatusLabel(displayInvoiceStatus)}
-                            </span>
+                            <div className={styles.statusPillGroup}>
+                              <span className={`${styles.statusPill} ${card.archived_at ? styles.statusArchive : styles.statusActive}`}>
+                                {getCardLifecycleLabel(card.archived_at)}
+                              </span>
+                              <span className={`${styles.statusPill} ${getCardStatusClass(displayInvoiceStatus)}`}>
+                                {getCardStatusLabel(displayInvoiceStatus)}
+                              </span>
+                            </div>
                           </div>
 
                           <div className={styles.cardInsightMetrics}>
