@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { IAnalysesByMonthChartContainer } from "../AnalysesByMonthChartContainer";
 
@@ -136,10 +136,10 @@ const AnalysesByMonthChart = ({ data }: AnalysesByMonthChartProps) => {
             dataKey="mes"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#808191", fontSize: 10 }}
+            tick={{ fill: "#808191", fontSize: 11 }}
             interval="preserveStartEnd"
           />
-          <YAxis hide domain={["auto", "auto"]} />
+          <YAxis hide />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"

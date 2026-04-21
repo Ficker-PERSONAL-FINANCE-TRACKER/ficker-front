@@ -74,7 +74,7 @@ const items: MenuItem[] = [
   getItem(
     "Objetivos",
     "8",
-    <Image src="/icons/icon-analysis.svg" alt="Objetivos" width={22} height={22} style={{ filter: 'hue-rotate(45deg)' }} />
+    <Image src="/icons/icon-home.svg" alt="Objetivos" width={22} height={22} style={{ filter: 'hue-rotate(45deg)' }} />
   ),
    getItem(
     "Análises",

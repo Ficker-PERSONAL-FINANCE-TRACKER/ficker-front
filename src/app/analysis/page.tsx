@@ -6,11 +6,22 @@ import ExpensesByCategoryChartContainer from "@/components/ExpensesByCategoryCha
 import PaymentMethodUsageChartContainer from "@/components/PaymentMethodUsageChartContainer";
 import PlannedSpendingByRealSpendingChartContainer from "@/components/PlannedSpendingByRealSppendingChartContainer";
 import { request } from "@/service/api";
-import { Button, DatePicker, Form, Modal, Row, Segmented, Select, Spin } from "antd";
+import { Button, DatePicker, Form, Modal, Row, Segmented, Select, Spin, Tabs } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styles from "./analysis.module.scss";
+import {
+  BarChartOutlined,
+  CalendarOutlined,
+  CreditCardOutlined,
+  InfoCircleOutlined,
+  LineChartOutlined,
+  PayCircleOutlined,
+  RiseOutlined,
+  WalletOutlined,
+} from "@ant-design/icons";
 
 const { RangePicker } = DatePicker;
 
@@ -658,6 +669,43 @@ const Analysis = () => {
   };
 
   const selectedMode = Form.useWatch("mode", form) ?? filters.mode;
+  
+  const renderIndicator = (label: string, value: any, percentage: number = 0, color: string = "#6C5DD3", hint?: string) => {
+    const data = [
+      { name: "Value", value: Math.min(percentage, 100) },
+      { name: "Remaining", value: Math.max(100 - percentage, 0) },
+    ];
+
+    return (
+      <div className={styles.metricIndicator} title={hint}>
+        <div className={styles.indicatorContent}>
+          <p className={styles.indicatorLabel}>{label}</p>
+          <h3 className={styles.indicatorValue}>{typeof value === 'number' ? currency(value) : value}</h3>
+        </div>
+        <div className={styles.indicatorChart}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={18}
+                outerRadius={26}
+                paddingAngle={0}
+                dataKey="value"
+                startAngle={90}
+                endAngle={-270}
+                stroke="none"
+              >
+                <Cell fill={color} />
+                <Cell fill="#F0F1F5" />
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "row", minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
@@ -678,352 +726,270 @@ const Analysis = () => {
             <Spin />
           </Row>
         ) : (
-          <>
-            <div className={styles.metricsGrid}>
-              <div className={styles.metricCard}>
-                <p className={styles.metricLabel}>Entradas no período</p>
-                <h3 className={styles.metricValue}>{currency(summary?.income_total)}</h3>
-                <span className={styles.metricHint}>Tudo o que entrou no caixa no período filtrado.</span>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricLabel}>Gasto real no período</p>
-                <h3 className={styles.metricValue}>{currency(summary?.real_spending_total)}</h3>
-                <span className={styles.metricHint}>Saídas que realmente afetaram o saldo.</span>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricLabel}>Planejado no período</p>
-                <h3 className={styles.metricValue}>{currency(summary?.planned_spending_total)}</h3>
-                <span className={styles.metricHint}>Meta de gasto considerada para o recorte atual.</span>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricLabel}>Saldo líquido do período</p>
-                <h3 className={`${styles.metricValue} ${Number(summary?.balance_delta || 0) >= 0 ? styles.metricSuccess : styles.metricDanger}`}>
-                  {currency(summary?.balance_delta)}
-                </h3>
-                <span className={styles.metricHint}>Entradas do período menos o gasto real do mesmo recorte.</span>
-              </div>
-            </div>
+          <Tabs
+            defaultActiveKey="general"
+            className={styles.mainAnalysisTabs}
+            items={[
+              {
+                key: "general",
+                label: "Resumo Geral",
+                children: (
+                  <div className={styles.tabContentFade}>
+                    <div className={styles.metricsGrid}>
+                      {renderIndicator(
+                        "Entradas no período",
+                        summary?.income_total,
+                        100,
+                        "#16a34a",
+                        "Tudo o que entrou no caixa no período filtrado."
+                      )}
+                      {renderIndicator(
+                        "Gasto real no período",
+                        summary?.real_spending_total,
+                        Number(summary?.planned_spending_total || 0) > 0 ? (Number(summary?.real_spending_total || 0) / Number(summary?.planned_spending_total)) * 100 : 0,
+                        "#dc2626",
+                        "Saídas que realmente afetaram o saldo."
+                      )}
+                      {renderIndicator(
+                        "Planejado no período",
+                        summary?.planned_spending_total,
+                        100,
+                        "#6C5DD3",
+                        "Meta de gasto considerada para o recorte atual."
+                      )}
+                      {renderIndicator(
+                        "Saldo líquido",
+                        summary?.balance_delta,
+                        Number(summary?.income_total || 0) > 0 ? (Number(summary?.balance_delta || 0) / Number(summary?.income_total)) * 100 : 0,
+                        Number(summary?.balance_delta || 0) >= 0 ? "#16a34a" : "#dc2626",
+                        "Entradas do período menos o gasto real do mesmo recorte."
+                      )}
+                    </div>
 
-            <div className={styles.metricsGridCompact}>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Compras no crédito no período</p>
-                <h3 className={`${styles.metricValueSecondary} ${styles.metricWarning}`}>{currency(summary?.credit_card_purchase_total)}</h3>
-                <span className={styles.metricHint}>Consumo no cartão que ainda não virou gasto real.</span>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Pagamentos de fatura no período</p>
-                <h3 className={`${styles.metricValueSecondary} ${styles.metricDanger}`}>{currency(summary?.invoice_payment_total)}</h3>
-                <span className={styles.metricHint}>
-                  {Number(summary?.invoice_payment_total || 0) > 0
-                    ? `Pago no período${invoicePaymentsKpiSummary.length > 0 ? ` · ${invoicePaymentsKpiSummary.join(" · ")}` : ""}`
-                    : invoicePaymentsKpiSummary.length > 0
-                      ? `Sem pagamento no período · ${invoicePaymentsKpiSummary.join(" · ")}`
-                      : "Quanto do período foi usado para quitar faturas."}
-                </span>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>Quitação das faturas do período</p>
-                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.invoicesSettledTotalInPeriod)}</h3>
-                <span className={styles.metricHint}>
-                  {hasPayableInvoicesInSelectedPeriod && Number(cardMetrics.invoicesDueTotalInPeriod || 0) > 0
-                    ? `${invoiceSettlementPercentageInPeriod.toFixed(1)}% do valor das faturas com vencimento no período já foi quitado.`
-                    : hasInvoicesInSelectedPeriod
-                      ? hasPayableInvoicesInSelectedPeriod
-                        ? "Nenhuma quitação registrada para as faturas com vencimento no período."
-                        : "Nenhuma fatura disponível para pagamento no momento."
-                      : "Nenhuma fatura com vencimento no período selecionado."}
-                </span>
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <p className={styles.metricLabel}>{`Quitação do aberto atual (${currentReferenceLabel})`}</p>
-                <h3 className={styles.metricValueSecondary}>{currency(cardMetrics.referenceInvoicePaidTotal)}</h3>
-                <span className={styles.metricHint}>
-                  {Number(cardMetrics.referenceInvoiceOriginalTotal || 0) > 0
-                    ? `${currentOpenSettlementPercentage.toFixed(1)}% da fatura atual já foi quitada.`
-                    : hasReferenceInvoice
-                      ? hasReferenceInvoiceAwaitingClosure
-                        ? "Nenhuma fatura disponível para pagamento no momento."
-                        : "Nenhuma quitação registrada para o aberto atual."
-                      : "Nenhuma fatura em aberto no momento."}
-                </span>
-              </div>
-            </div>
-
-            <div className={styles.analysisGridCompact}>
-              <div className={styles.metricCardSecondary}>
-                <PlannedSpendingByRealSpendingChartContainer data={plannedVsRealChartData} />
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <AnalysesByMonthChartContainer
-                  title="Evolução financeira no período"
-                  data={accumulatedBalanceChartData}
-                />
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <h4 className={styles.sectionTitle}>Categorias no período</h4>
-                    <p className={styles.sectionSubtitle}>Uma visão por vez para facilitar a leitura do período.</p>
-                  </div>
-                  <Segmented
-                    className={styles.segmentedControl}
-                    value={categoryLens}
-                    onChange={(value) => setCategoryLens(value as "purchases" | "real" | "credit")}
-                    options={[
-                      { label: "Total", value: "purchases" },
-                      { label: "Real", value: "real" },
-                      { label: "Crédito", value: "credit" },
-                    ]}
-                  />
-                </div>
-                <ExpensesByCategoryChartContainer
-                  title=""
-                  emptyMessage={
-                    categoryLens === "real"
-                      ? "Nenhum gasto real encontrado no período."
-                      : categoryLens === "credit"
-                        ? "Nenhum consumo no crédito encontrado no período."
-                        : "Nenhuma compra encontrada no período."
-                  }
-                  data={categoryChartData[categoryLens]}
-                />
-              </div>
-              <div className={styles.metricCardSecondary}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <h4 className={styles.sectionTitle}>Métodos de pagamento no período, em relação ao total</h4>
-                  </div>
-                </div>
-                <PaymentMethodUsageChartContainer
-                  title=""
-                  emptyMessage="Nenhum gasto encontrado para os métodos de pagamento no período."
-                  data={paymentMethodChartData}
-                />
-              </div>
-            </div>
-
-            <details className={styles.detailPanel}>
-              <summary className={styles.detailSummary}>Detalhes por cartão no período</summary>
-              <div className={styles.detailContent}>
-                <div className={styles.cardInsightsList}>
-                  {cards.length > 0 ? (
-                    cards.map((card) => {
-                      const invoiceStatusSummaryItems = getInvoiceStatusSummaryItems(card.card_id);
-                      const previousPaidInvoicesCount = Number(card.previous_paid_invoices_count_in_period || 0);
-                      const previousPartialInvoicesCount = Number(card.previous_partial_invoices_count_in_period || 0);
-                      const previousInvoiceSummaryItems = [
-                        previousPaidInvoicesCount > 0
-                          ? `${previousPaidInvoicesCount} paga${previousPaidInvoicesCount > 1 ? "s" : ""} de fatura anterior`
-                          : null,
-                        previousPartialInvoicesCount > 0
-                          ? `${previousPartialInvoicesCount} parcial${previousPartialInvoicesCount > 1 ? "is" : ""} de fatura anterior`
-                          : null,
-                      ].filter((item): item is string => Boolean(item));
-                      const invoicePaymentSummaryItems = [
-                        ...invoiceStatusSummaryItems,
-                        ...previousInvoiceSummaryItems,
-                      ].filter((item): item is string => Boolean(item));
-                      const invoicePaymentSummary = invoicePaymentSummaryItems.length > 0
-                        ? invoicePaymentSummaryItems.join(" · ")
-                        : "Nenhuma fatura disponível no período";
-                      const invoicePaymentContext = Number(card.invoice_payments_total_in_period || 0) > 0
-                        ? "Pago no período"
-                        : "Sem pagamento no período";
-
-                      return (
-                        <div key={`filtered-card-${card.card_id}`} className={styles.cardInsightItem}>
-                          <div className={styles.cardInsightTop}>
-                            <div>
-                              <h5 className={styles.cardInsightTitle}>{card.card_description}</h5>
-                              <span className={styles.cardInsightFlag}>{card.flag_description || "Cartão"}</span>
-                            </div>
-                          </div>
-
-                          <div className={styles.cardInsightMetrics}>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Compras no período</span>
-                              <strong>{currency(card.purchases_total_in_period)}</strong>
-                              <span className={styles.cardInsightSubtext}>{Number(card.purchases_count_in_period || 0)} lançamento(s)</span>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Ticket médio</span>
-                              <strong>{currency(card.average_purchase_in_period)}</strong>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Maior compra</span>
-                              <strong>{currency(card.largest_purchase_in_period)}</strong>
-                              <span className={styles.cardInsightSubtext}>{card.largest_purchase_description_in_period || "-"}</span>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Última compra</span>
-                              <strong>{currency(card.latest_purchase_in_period)}</strong>
-                              <span className={styles.cardInsightSubtext}>{formatDate(card.latest_purchase_date_in_period)}</span>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Pagamentos de fatura no período</span>
-                              <strong>{currency(card.invoice_payments_total_in_period)}</strong>
-                              <span className={styles.cardInsightSubtext}>
-                                {invoicePaymentContext}
-                                {` · ${invoicePaymentSummary}`}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className={styles.emptyState}>Nenhum cartão encontrado para o período.</div>
-                  )}
-                </div>
-              </div>
-            </details>
-
-            <details className={styles.detailPanel}>
-              <summary className={styles.detailSummary}>Compras no crédito no período por categoria e cartão</summary>
-              <div className={styles.detailContent}>
-                {cards.length > 0 ? (
-                  <div className={styles.cardCategoryChartsGrid}>
-                    {cards.map((card) => (
-                      <div key={`card-category-${card.card_id}`} className={styles.metricCardSecondary}>
+                    <div className={styles.analysisGridCompact}>
+                      <div className={styles.metricCardSecondary}>
+                        <PlannedSpendingByRealSpendingChartContainer data={plannedVsRealChartData} />
+                      </div>
+                      <div className={styles.metricCardSecondary}>
+                        <AnalysesByMonthChartContainer
+                          title="Evolução financeira no período"
+                          data={accumulatedBalanceChartData}
+                        />
+                      </div>
+                      <div className={styles.metricCardSecondary}>
                         <div className={styles.sectionHeader}>
                           <div>
-                            <h4 className={styles.sectionTitle}>{card.card_description}</h4>
-                            <p className={styles.sectionSubtitle}>{card.flag_description || "Cartão"}</p>
+                            <h4 className={styles.sectionTitle}>Categorias no período</h4>
+                            <p className={styles.sectionSubtitle}>Uma visão por vez para facilitar a leitura do período.</p>
                           </div>
+                          <Segmented
+                            className={styles.segmentedControl}
+                            value={categoryLens}
+                            onChange={(value) => setCategoryLens(value as "purchases" | "real" | "credit")}
+                            options={[
+                              { label: "Total", value: "purchases" },
+                              { label: "Real", value: "real" },
+                              { label: "Crédito", value: "credit" },
+                            ]}
+                          />
                         </div>
                         <ExpensesByCategoryChartContainer
                           title=""
-                          metric="credit_card_purchase_total"
-                          emptyMessage="Nenhuma compra no crédito encontrada para este cartão no período."
-                          data={cardCategoryCharts[card.card_id] ?? []}
+                          emptyMessage={
+                            categoryLens === "real"
+                              ? "Nenhum gasto real encontrado no período."
+                              : categoryLens === "credit"
+                                ? "Nenhum consumo no crédito encontrado no período."
+                                : "Nenhuma compra encontrada no período."
+                          }
+                          data={categoryChartData[categoryLens]}
                         />
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={styles.emptyState}>Nenhum cartão encontrado para o período.</div>
-                )}
-              </div>
-            </details>
-
-            <div className={styles.singleAnalysisRow}>
-              <div className={styles.metricCardSecondary}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <h4 className={styles.sectionTitle}>{`Cartões e crédito atuais (${currentReferenceLabel})`}</h4>
-                    <p className={styles.sectionSubtitle}>Situação atual dos cartões, independente do período filtrado.</p>
-                  </div>
-                </div>
-
-                <div className={styles.cardInsightsList}>
-                  {cards.length > 0 ? (
-                    cards.map((card) => {
-                      const hasReferenceInvoice = !(
-                        card.reference_invoice_pay_day == null
-                        && Number(card.reference_invoice_original_total || 0) <= 0
-                      );
-                      const displayInvoiceStatus = hasReferenceInvoice
-                        ? (card.reference_invoice_status ?? card.current_invoice_status)
-                        : card.current_invoice_status;
-                      const displayInvoiceTotal = hasReferenceInvoice
-                        ? Number(card.reference_invoice_original_total || 0)
-                        : Number(card.current_invoice_total || 0);
-                      const displayInvoicePaid = hasReferenceInvoice
-                        ? Number(card.reference_invoice_paid_total || 0)
-                        : Number(card.current_invoice_paid_total || 0);
-                      const displayClosureDate = hasReferenceInvoice
-                        ? (card.reference_invoice_closure_date ?? card.current_invoice_closure_date)
-                        : card.current_invoice_closure_date;
-                      const displayPayDay = hasReferenceInvoice
-                        ? (card.reference_invoice_pay_day ?? card.current_invoice_pay_day)
-                        : card.current_invoice_pay_day;
-
-                      return (
-                        <div key={card.card_id} className={styles.cardInsightItem}>
-                          <div className={styles.cardInsightTop}>
-                            <div>
-                              <h5 className={styles.cardInsightTitle}>{card.card_description}</h5>
-                              <span className={styles.cardInsightFlag}>{card.flag_description || "Cartão"}</span>
-                            </div>
-                            <div className={styles.statusPillGroup}>
-                              <span className={`${styles.statusPill} ${card.archived_at ? styles.statusArchive : styles.statusActive}`}>
-                                {getCardLifecycleLabel(card.archived_at)}
-                              </span>
-                              <span className={`${styles.statusPill} ${getCardStatusClass(displayInvoiceStatus)}`}>
-                                {getCardStatusLabel(displayInvoiceStatus)}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className={styles.cardInsightMetrics}>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Fatura atual</span>
-                              <strong>{currency(displayInvoiceTotal)}</strong>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Pago até agora</span>
-                              <strong>{currency(displayInvoicePaid)}</strong>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Total em aberto</span>
-                              <strong>{currency(card.open_invoice_total)}</strong>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Comprometimento futuro</span>
-                              <strong>{currency(card.future_commitment_total)}</strong>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Fechamento</span>
-                              <strong>{formatDate(displayClosureDate)}</strong>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Vencimento</span>
-                              <strong>{formatDate(displayPayDay)}</strong>
-                            </div>
-                            <div>
-                              <span className={styles.cardInsightLabel}>Próxima fatura</span>
-                              <strong>{currency(card.next_invoice_total)}</strong>
-                              <span className={styles.cardInsightSubtext}>{formatDate(card.next_invoice_pay_day)}</span>
-                            </div>
+                      <div className={styles.metricCardSecondary}>
+                        <div className={styles.sectionHeader}>
+                          <div>
+                            <h4 className={styles.sectionTitle}>Métodos de pagamento</h4>
+                            <p className={styles.sectionSubtitle}>Em relação ao total de saídas.</p>
                           </div>
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div className={styles.emptyState}>Nenhum cartão encontrado para o período.</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.singleAnalysisRow}>
-              <div className={styles.metricCardSecondary}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <h4 className={styles.sectionTitle}>Maior gasto no período</h4>
-                    <p className={styles.sectionSubtitle}>O lançamento que mais pesou no período atual.</p>
+                        <PaymentMethodUsageChartContainer
+                          title=""
+                          emptyMessage="Nenhum gasto encontrado para os métodos de pagamento no período."
+                          data={paymentMethodChartData}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ),
+              },
+              {
+                key: "cards",
+                label: "Cartões e Crédito",
+                children: (
+                  <div className={styles.tabContentFade}>
+                    <div className={styles.metricsGrid}>
+                      {renderIndicator(
+                        "Compras no crédito",
+                        summary?.credit_card_purchase_total,
+                        Number(summary?.real_spending_total || 0) > 0 ? (Number(summary?.credit_card_purchase_total || 0) / Number(summary?.real_spending_total || 0)) * 100 : 0,
+                        "#f59e0b",
+                        "Consumo no cartão que ainda não virou gasto real."
+                      )}
+                      {renderIndicator(
+                        "Pagamentos de fatura",
+                        summary?.invoice_payment_total,
+                        (Number(summary?.invoice_payment_total || 0) / Math.max(Number(summary?.real_spending_total || 0), 1)) * 100,
+                        "#dc2626",
+                        "Quanto do período foi usado para quitar faturas."
+                      )}
+                      {renderIndicator(
+                        "Quitação de faturas",
+                        invoiceSettlementPercentageInPeriod.toFixed(1) + "%",
+                        invoiceSettlementPercentageInPeriod,
+                        "#16a34a",
+                        "Percentual do valor das faturas com vencimento no período já quitado."
+                      )}
+                      {renderIndicator(
+                        "Transação Mais Cara",
+                        topExpense?.transaction_value || 0,
+                        100,
+                        "#6C5DD3",
+                        topExpense?.transaction_description || "Nenhuma transação encontrada"
+                      )}
+                    </div>
 
-                {topExpense ? (
-                  <div className={styles.topExpenseCard}>
-                    <span className={styles.topExpenseCategory}>{topExpense.category_description || "Sem categoria"}</span>
-                    <h3 className={styles.topExpenseValue}>{currency(topExpense.transaction_value)}</h3>
-                    <p className={styles.topExpenseDescription}>{topExpense.transaction_description}</p>
-                    <span className={styles.topExpenseMeta}>
-                      {topExpense.is_invoice_payment
-                        ? "Pagamento de fatura"
-                        : topExpense.is_credit_card_purchase
-                          ? "Compra no cartão"
-                          : "Saída real"}
-                    </span>
+                    <div className={styles.cardInsightsList}>
+                      {cards.length > 0 ? (
+                        cards.map((card) => {
+                          const hasReferenceInvoice = !(
+                            card.reference_invoice_pay_day == null && Number(card.reference_invoice_original_total || 0) <= 0
+                          );
+                          const displayInvoiceStatus = hasReferenceInvoice
+                            ? card.reference_invoice_status ?? card.current_invoice_status
+                            : card.current_invoice_status;
+                          const displayInvoiceTotal = Number(
+                            (hasReferenceInvoice ? card.reference_invoice_original_total : card.current_invoice_total) || 0
+                          );
+                          const displayInvoicePaid = Number(
+                            (hasReferenceInvoice ? card.reference_invoice_paid_total : card.current_invoice_paid_total) || 0
+                          );
+                          const displayClosureDate = hasReferenceInvoice
+                            ? card.reference_invoice_closure_date ?? card.current_invoice_closure_date
+                            : card.current_invoice_closure_date;
+                          const displayPayDay = hasReferenceInvoice
+                            ? card.reference_invoice_pay_day ?? card.current_invoice_pay_day
+                            : card.current_invoice_pay_day;
+
+                          const paymentPercent = displayInvoiceTotal > 0 
+                            ? Math.min((displayInvoicePaid / displayInvoiceTotal) * 100, 100) 
+                            : 0;
+
+                          return (
+                            <div key={card.card_id} className={styles.cardInsightItem}>
+                              <div className={styles.cardInsightTop}>
+                                <div>
+                                  <h5 className={styles.cardInsightTitle}>{card.card_description}</h5>
+                                  <span className={styles.cardInsightFlag}>
+                                    {card.flag_description || "Cartão"} • {Number(card.purchases_count_in_period || 0)} compras
+                                  </span>
+                                  <div style={{ marginTop: '4px', color: '#808191', fontSize: '12px' }}>
+                                    Ped: <strong>{formatDate(displayClosureDate)}</strong> • Venc: <strong>{formatDate(displayPayDay)}</strong>
+                                  </div>
+                                </div>
+                                <div className={styles.statusPillGroup}>
+                                  <span className={`${styles.statusPill} ${getCardStatusClass(displayInvoiceStatus)}`}>
+                                    {getCardStatusLabel(displayInvoiceStatus)}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className={styles.cardInsightMetrics}>
+                                <div className={styles.cardMetricBox}>
+                                  <div className={styles.cardMetricHeader}>
+                                    <div className={styles.cardMetricIcon}><WalletOutlined /></div>
+                                    <span className={styles.cardInsightLabel}>Fatura</span>
+                                  </div>
+                                  <strong className={styles.cardInsightValue}>{currency(displayInvoiceTotal)}</strong>
+                                </div>
+                                <div className={styles.cardMetricBox}>
+                                  <div className={styles.cardMetricHeader}>
+                                    <div className={styles.cardMetricIcon}><CreditCardOutlined /></div>
+                                    <span className={styles.cardInsightLabel}>Aberto</span>
+                                  </div>
+                                  <strong className={styles.cardInsightValue}>{currency(card.open_invoice_total)}</strong>
+                                </div>
+                                <div className={styles.cardMetricBox}>
+                                  <div className={styles.cardMetricHeader}>
+                                    <div className={styles.cardMetricIcon}><RiseOutlined /></div>
+                                    <span className={styles.cardInsightLabel}>Máx Cpra</span>
+                                  </div>
+                                  <strong className={styles.cardInsightValue}>{currency(card.largest_purchase_in_period)}</strong>
+                                </div>
+                                <div className={styles.cardMetricBox}>
+                                  <div className={styles.cardMetricHeader}>
+                                    <div className={styles.cardMetricIcon}><LineChartOutlined /></div>
+                                    <span className={styles.cardInsightLabel}>Tk Médio</span>
+                                  </div>
+                                  <strong className={styles.cardInsightValue}>{currency(card.average_purchase_in_period)}</strong>
+                                </div>
+                              </div>
+
+                              <div className={styles.cardProgressWrapper}>
+                                <div className={styles.progressLabelGroup}>
+                                  <span>Status de Quitação</span>
+                                  <span>{paymentPercent.toFixed(0)}%</span>
+                                </div>
+                                <div className={styles.progressBarContainer}>
+                                  <div 
+                                    className={styles.progressBar} 
+                                    style={{ 
+                                      width: `${paymentPercent}%`, 
+                                      backgroundColor: paymentPercent >= 100 ? '#16a34a' : '#6C5DD3' 
+                                    }} 
+                                  />
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                                  <span className={styles.cardInsightSubtext}>Pago: {currency(displayInvoicePaid)} de {currency(displayInvoiceTotal)}</span>
+                                  <span className={styles.cardInsightSubtext}>UT: {formatDate(card.latest_purchase_date_in_period)}</span>
+                                </div>
+                              </div>
+
+                              <div className={styles.cardBottomGrid}>
+                                <div className={styles.cardSectionContainer}>
+                                  <h6 className={styles.cardSectionTitle}><CalendarOutlined /> Prazos</h6>
+                                  <div className={styles.cardProjectionRow}>
+                                    <span className={styles.rowLabel}>Próxima</span>
+                                    <span className={styles.rowValue}>{currency(card.next_invoice_total)} <small style={{ color: '#808191', fontWeight: 400 }}>({formatDate(card.next_invoice_pay_day)})</small></span>
+                                  </div>
+                                  <div className={styles.cardProjectionRow}>
+                                    <span className={styles.rowLabel}>Futuro</span>
+                                    <span className={styles.rowValue}>{currency(card.future_commitment_total)}</span>
+                                  </div>
+                                </div>
+                                <div className={styles.cardSectionContainer}>
+                                  <h6 className={styles.cardSectionTitle}><BarChartOutlined /> Categorias</h6>
+                                  <div className={styles.cardCategoryBox}>
+                                    <ExpensesByCategoryChartContainer
+                                      title=""
+                                      metric="credit_card_purchase_total"
+                                      emptyMessage="Nenhuma compra."
+                                      data={cardCategoryCharts[card.card_id] ?? []}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className={styles.emptyState}>Nenhum cartão encontrado.</div>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div className={styles.emptyState}>Nenhum gasto encontrado para o período.</div>
-                )}
-              </div>
-            </div>
-          </>
+                ),
+              },
+            ]}
+          />
         )}
 
         <Modal

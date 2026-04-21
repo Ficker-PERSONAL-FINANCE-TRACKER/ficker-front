@@ -80,7 +80,7 @@ const ExpensesByCategoryChartContainer = ({
   }, [providedData, metric, queryString]);
 
   return (
-    <div className="card">
+    <div className={title ? "card" : ""}>
       {title ? <h4>{title}</h4> : null}
       <ExpensesByCategoryChart data={data} emptyMessage={emptyMessage} />
     </div>

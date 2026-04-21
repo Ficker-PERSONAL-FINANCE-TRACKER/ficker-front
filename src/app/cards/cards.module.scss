@@ -62,10 +62,8 @@
 }
 
 .cardColumn {
-  padding: 12px 12px 12px 0;
-  flex: 0 0 25%;
-  max-width: 25%;
   margin-bottom: 25px;
+  cursor: pointer;
 }
 
 .cardWrap {
@@ -76,7 +74,8 @@
 }
 
 .cardShell {
-  height: 130px;
+  width: 100%;
+  aspect-ratio: 8/4;
   border-radius: 12px;
   padding: 12px;
   color: #7b74b8;
@@ -285,15 +284,13 @@
 
 @media (max-width: 1199px) {
   .cardColumn {
-    flex: 0 0 33.3333%;
-    max-width: 33.3333%;
+    margin-bottom: 20px;
   }
 }
 
 @media (max-width: 991px) {
   .cardColumn {
-    flex: 0 0 50%;
-    max-width: 50%;
+    margin-bottom: 20px;
   }
 }
 
@@ -316,10 +313,7 @@
   }
 
   .cardColumn {
-    flex: 0 0 100%;
-    max-width: 100%;
-    padding-left: 0;
-    padding-right: 0;
+    margin-bottom: 16px;
   }
 
   .button {

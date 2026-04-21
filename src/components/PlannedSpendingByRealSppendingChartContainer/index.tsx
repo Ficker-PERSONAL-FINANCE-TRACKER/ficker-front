@@ -4,22 +4,23 @@ import "./styles.scss";
 import PlannedSpendingByRealSpendingChart from "../PlannedSpendingByRealSpendingChart";
 import dayjs from "dayjs";
 
-export interface PlannedByMonth {
+export interface FinanceDataPoint {
   name: string;
-  planejado: number;
-  real: number;
+  entrada: number;
+  saida: number;
+  saldo: number;
 }
 
 interface TimelinePoint {
   period_start: string;
-  planned_spending_total: number | null;
+  income_total: number;
   real_spending_total: number;
 }
 
 interface PlannedSpendingByRealSpendingChartContainerProps {
   queryString?: string;
   groupBy?: "day" | "month";
-  data?: PlannedByMonth[];
+  data?: FinanceDataPoint[];
 }
 
 const PlannedSpendingByRealSpendingChartContainer = ({
@@ -28,7 +29,7 @@ const PlannedSpendingByRealSpendingChartContainer = ({
   data: providedData,
 }: PlannedSpendingByRealSpendingChartContainerProps) => {
   const requestIdRef = useRef(0);
-  const [data, setData] = useState<PlannedByMonth[]>(providedData ?? []);
+  const [data, setData] = useState<FinanceDataPoint[]>(providedData ?? []);
 
   const getPeriodLabel = (dateString: string) => {
     return groupBy === "day" ? dayjs(dateString).format("DD/MM") : dayjs(dateString).format("MMM");
@@ -39,11 +40,16 @@ const PlannedSpendingByRealSpendingChartContainer = ({
       const endpoint = queryString ? `analysis/timeline?${queryString}&group_by=${groupBy}` : `analysis/timeline?group_by=${groupBy}`;
       const { data } = await request({ method: "GET", endpoint });
       const series = (data?.data?.series ?? []) as TimelinePoint[];
-      const transformedData = series.map((item) => ({
-        name: getPeriodLabel(item.period_start),
-        planejado: Number(item.planned_spending_total || 0),
-        real: Number(item.real_spending_total || 0),
-      }));
+      const transformedData = series.map((item) => {
+        const entrada = Number(item.income_total || 0);
+        const saida = Number(item.real_spending_total || 0);
+        return {
+          name: getPeriodLabel(item.period_start),
+          entrada,
+          saida,
+          saldo: entrada - saida,
+        };
+      });
 
       if (requestIdRef.current === currentRequestId) {
         setData(transformedData);
@@ -69,10 +75,10 @@ const PlannedSpendingByRealSpendingChartContainer = ({
 
   return (
     <div className="card-chart">
-      <h4>Planejado x Real</h4>
+      <h4>Visão Geral de Fluxo</h4>
       <PlannedSpendingByRealSpendingChart data={data} />
     </div>
   );
 };
 
-export default PlannedSpendingByRealSpendingChartContainer;
+export default PlannedSpendingByRealSpendingChartContainer;

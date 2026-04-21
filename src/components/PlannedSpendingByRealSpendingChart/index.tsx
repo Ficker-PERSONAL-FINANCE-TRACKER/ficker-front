@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
   ComposedChart,
   Line,
@@ -10,11 +10,17 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { PlannedByMonth } from "../PlannedSpendingByRealSppendingChartContainer";
+import { FinanceDataPoint } from "../PlannedSpendingByRealSppendingChartContainer";
 
 interface PlannedSpendingByRealSpendingChartProps {
-  data: PlannedByMonth[];
+  data: FinanceDataPoint[];
 }
+
+const currency = (value: number) =>
+  Number(value || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 
 const PlannedSpendingByRealSpendingChart = ({ data }: PlannedSpendingByRealSpendingChartProps) => {
   return (
@@ -25,23 +31,57 @@ const PlannedSpendingByRealSpendingChart = ({ data }: PlannedSpendingByRealSpend
           top: 20,
           right: 24,
           bottom: 20,
-          left: 28,
+          left: 0,
         }}
       >
-        <CartesianGrid stroke="#f5f5f5" />
+        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis
           dataKey="name"
-          padding={{ left: 12, right: 12 }}
-          label={{ value: "Mês", position: "insideBottomRight", offset: -4 }}
+          axisLine={false}
+          tickLine={false}
+          tick={{ fill: "#808191", fontSize: 11 }}
         />
-        <YAxis
-          width={72}
-          label={{ value: "Valor", angle: -90, position: "insideLeft", offset: -6 }}
+        <YAxis hide />
+        <Tooltip
+          formatter={(value: number) => [currency(value), ""]}
+          contentStyle={{ 
+            borderRadius: "16px", 
+            border: "1px solid #f3f4f8", 
+            boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+            padding: "12px"
+          }}
+          labelStyle={{ fontWeight: 800, color: "#11142d", marginBottom: "8px" }}
         />
-        <Tooltip />
-        <Legend />
-        <Bar dataKey="planejado" barSize={28} fill="#6C5DD3" />
-        <Line type="monotone" dataKey="real" stroke="#87E344" />
+        <Legend 
+          verticalAlign="top" 
+          align="right" 
+          iconType="circle" 
+          wrapperStyle={{ paddingBottom: "20px" }}
+          formatter={(value) => <span style={{ color: "#808191", fontSize: "12px", fontWeight: 600 }}>{value}</span>}
+        />
+        <Bar 
+          dataKey="entrada" 
+          name="Entrada" 
+          barSize={12} 
+          fill="#16a34a" 
+          radius={[4, 4, 0, 0]} 
+        />
+        <Bar 
+          dataKey="saida" 
+          name="Saída" 
+          barSize={12} 
+          fill="#dc2626" 
+          radius={[4, 4, 0, 0]} 
+        />
+        <Line 
+          type="monotone" 
+          dataKey="saldo" 
+          name="Saldo" 
+          stroke="#6C5DD3" 
+          strokeWidth={4} 
+          dot={{ r: 4, strokeWidth: 0, fill: "#6C5DD3" }} 
+          activeDot={{ r: 6, strokeWidth: 0, fill: "#6C5DD3" }} 
+        />
       </ComposedChart>
     </ResponsiveContainer>
   );

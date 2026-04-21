@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;600&display=swap');
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   background-color: #f7f7f7;
   margin: 0;
@@ -40,6 +44,10 @@ body {
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 10px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb {

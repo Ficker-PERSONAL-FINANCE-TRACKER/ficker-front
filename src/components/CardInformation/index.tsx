@@ -1,4 +1,4 @@
-﻿import Typography from "antd/es/typography";
+import Typography from "antd/es/typography";
 import dayjs from "dayjs";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -82,7 +82,7 @@ export const CardInformation = ({ card, totalValue, archived = false }: CardProp
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          aspectRatio: "8/3.5",
+          aspectRatio: "8/4",
           background: getFlagColor(card.flag_id),
           borderRadius: 12,
           padding: "24px",

@@ -739,7 +739,7 @@ const Resume = () => {
       {/* The Alert Banner has been moved to the sidebar */}
 
       <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 30px 30px" }}>
-        <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
+        <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column", zIndex: 10 }}>
           <div ref={refSaldo} className={styles.balance} style={{ flex: 1, padding: '24px 32px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
@@ -778,10 +778,10 @@ const Resume = () => {
                   showAnimatedChart ? (
                     <motion.div
                       key={chartRevealKey}
-                      initial={{ clipPath: "inset(0 100% 0 0)" }}
-                      animate={{ clipPath: "inset(0 0% 0 0)" }}
+                      initial={{ clipPath: "inset(-100px 100% -200px -100px)" }}
+                      animate={{ clipPath: "inset(-200px -1000px -200px -200px)" }}
                       transition={{ duration: 0.9, ease: "easeOut" }}
-                      style={{ width: "100%", height: 70 }}
+                      style={{ width: "100%", height: 70, position: "relative", zIndex: 100 }}
                     >
                       <ResponsiveContainer width="100%" height={70}>
                         <AreaChart
@@ -796,7 +796,13 @@ const Resume = () => {
                             </linearGradient>
                           </defs>
                           <YAxis hide />
-                          <Tooltip content={() => null} cursor={false} />
+                          <Tooltip 
+                            content={<CustomTooltip />} 
+                            cursor={false} 
+                            isAnimationActive={false} 
+                            allowEscapeViewBox={{ x: true, y: true }}
+                            wrapperStyle={{ zIndex: 9999 }}
+                          />
                           <Area
                             type="monotone"
                             dataKey="total"
@@ -821,19 +827,6 @@ const Resume = () => {
                   </div>
                 )}
               </div>
-              {hoveredChartPoint ? (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 80,
-                    left: hoveredTooltipLeft,
-                    pointerEvents: 'none',
-                    zIndex: 2,
-                  }}
-                >
-                  {renderChartTooltipCard(hoveredChartPoint)}
-                </div>
-              ) : null}
             </div>
 
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #F4F5F7' }}>
@@ -932,7 +925,7 @@ const Resume = () => {
           </div>
         </Col>
 
-        <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
+        <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column", zIndex: 2 }}>
           <div ref={refPlanejado} className={styles.balance} style={{ flex: 1, padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
@@ -1018,13 +1011,13 @@ const Resume = () => {
           </div>
         </Col>
 
-        <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column" }}>
+        <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column", zIndex: 2 }}>
           <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '16px 24px', position: 'relative', overflow: 'visible' }}>
             <p className={styles.balance_description} style={{ marginBottom: 12 }}>Meus Cartões (total de gastos)</p>
             <p className={styles.balance_title} style={{ marginBottom: 24 }}><AnimatedNumber value={totalCardsInvoice} duration={1500} format={formatCurrency} /></p>
 
             {/* Card Slider / Stack Simulation */}
-            <div style={{ position: 'relative', height: 180, marginBottom: 24, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+            <div style={{ position: 'relative', height: 220, marginBottom: 24, display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
               {cards.length > 0 ? (
                 cards.map((card, idx) => {
                   const n = cards.length;
@@ -1060,8 +1053,8 @@ const Resume = () => {
                       }}
                       style={{
                         position: 'absolute',
-                        width: '80%',
-                        height: '130px',
+                        width: '85%',
+                        aspectRatio: '1.58 / 1',
                         background: getFlagColor(card.flag_id),
                         borderRadius: 12,
                         padding: '18px 24px',

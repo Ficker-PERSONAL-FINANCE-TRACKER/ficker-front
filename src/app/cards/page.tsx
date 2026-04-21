@@ -360,6 +360,10 @@ const Cards = () => {
     return (
       <Col
         key={card.id}
+        xl={6}
+        lg={8}
+        md={12}
+        xs={24}
         className={styles.cardColumn}
         onClick={() => router.push(`/cards/${card.id}`)}
       >
@@ -402,7 +406,7 @@ const Cards = () => {
                 <span>{showArchived ? "Ocultar cartões arquivados" : "Mostrar cartões ocultos"}</span>
               </button>
             </div>
-            <Row justify={"start"} className={styles.gridArea}>
+            <Row gutter={[24, 24]} justify={"start"} className={styles.gridArea}>
               {cards.length > 0 || (showArchived && archivedCards.length > 0) ? (
                 <>
                   {cards.map((card) => renderCard(card))}
