@@ -9,9 +9,35 @@
 }
 
 .buttonsArea {
-  display: block;
-  width: 400px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  width: auto;
 }
+
+.toggleArchivedBtn {
+  background: transparent;
+  border: 1px solid rgba(108, 93, 211, 0.2);
+  border-radius: 8px;
+  color: #6c5dd3;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 10px;
+
+  &:hover {
+    background: rgba(108, 93, 211, 0.05);
+    border-color: #6c5dd3;
+  }
+}
+
+
 
 .button {
   padding: 10px 15px;
@@ -32,31 +58,33 @@
 }
 
 .gridArea {
-  padding: 20px 30px;
+  padding: 10px 30px 20px;
 }
 
 .cardColumn {
-  padding: 12px;
+  padding: 12px 12px 12px 0;
   flex: 0 0 25%;
   max-width: 25%;
+  margin-bottom: 25px;
 }
 
 .cardWrap {
   position: relative;
-  padding-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .cardShell {
   height: 130px;
   border-radius: 12px;
-  padding: 20px;
+  padding: 12px;
   color: #7b74b8;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  overflow: hidden;
 }
 
 .cardInteractive {
@@ -66,6 +94,18 @@
 .cardArchived {
   opacity: 0.7;
   filter: saturate(0.85);
+}
+
+.cardBgOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .cardCircleTop {
@@ -164,94 +204,59 @@
   font-weight: 500;
 }
 
-.cardActionButton {
-  position: absolute;
-  top: -14px;
-  right: 0;
-  z-index: 4;
-  width: 25px;
-  height: 25px;
-  border: 3px solid rgba(121, 102, 246, 0.18);
-  border-radius: 999px;
-  background: rgba(231, 228, 249, 0.22);
-  box-shadow: 0 10px 20px rgba(108, 93, 211, 0.14);
+.cardHoverActions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  transform: translateY(-5px);
+}
+
+.cardWrap:hover .cardHoverActions {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.hoverActionBtn {
+  width: auto;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(121, 102, 246, 0.2);
+  background: white;
   color: #4c4585;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   cursor: pointer;
-  backdrop-filter: blur(10px);
-  font-size: 18px;
-  line-height: 1;
-  transition:
-    background 0.20s ease,
-    box-shadow 0.20s ease,
-    transform 0.20s ease,
-    opacity 0.20s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s;
+  font-size: 13px;
+  font-weight: 500;
 
   &:hover {
-    opacity: 0.82;
-    transform: translateY(-3px) scale(1.28);
+    transform: scale(1.05);
+    background: #f0ebff;
   }
 }
 
-.cardActionIcon {
-  color: #968cf3;
-  font-size: 18px;
-  line-height: 1;
-  font-weight: 700;
-
+.dangerHover {
+  color: #d14343;
+  border-color: rgba(209, 67, 67, 0.2);
   &:hover {
-    color: #968cf3;
+    background: #ffeded;
+    color: #a42c2c;
   }
 }
 
-.archivedSection {
-  margin: 8px 30px 30px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(108, 93, 211, 0.12);
-}
 
-.archivedToggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border: none;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  color: #1f2937;
-}
-
-.archivedTitle {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.archivedCount {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(108, 93, 211, 0.12);
-  color: #6c5dd3;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.archivedHint {
-  margin-top: 6px;
-  color: #7b8194;
-  font-size: 13px;
-}
-
-.archivedContent {
-  margin-top: 12px;
-}
 
 .modalList {
   margin: 10px 0 0;

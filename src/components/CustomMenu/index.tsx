@@ -67,11 +67,6 @@ const items: MenuItem[] = [
     <Image src="/icons/icon-card.svg" alt="Meus cartões" width={22} height={22} />
   ),
   getItem(
-    "Análises",
-    "5",
-    <Image src="/icons/icon-analysis.svg" alt="Análises" width={22} height={22} />
-  ),
-  getItem(
     "Meta de Gastos",
     "7",
     <TagOutlined style={{ fontSize: 22 }} />
@@ -80,6 +75,11 @@ const items: MenuItem[] = [
     "Objetivos",
     "8",
     <Image src="/icons/icon-analysis.svg" alt="Objetivos" width={22} height={22} style={{ filter: 'hue-rotate(45deg)' }} />
+  ),
+   getItem(
+    "Análises",
+    "5",
+    <Image src="/icons/icon-analysis.svg" alt="Análises" width={22} height={22} />
   ),
   getItem("Integrações", "9", <ApiOutlined style={{ fontSize: 22 }} />),
   getItem(

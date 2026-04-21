@@ -58,12 +58,16 @@
 
 .counterTag {
   margin: 0;
-  padding: 6px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
-  border: 1px solid #e7e9f4;
-  background: #ffffff;
+  border: 1px solid rgba(108, 93, 211, 0.15);
+  background: rgba(108, 93, 211, 0.08);
   color: #6c5dd3;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .objectiveCard {

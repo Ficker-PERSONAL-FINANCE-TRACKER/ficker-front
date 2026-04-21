@@ -187,6 +187,7 @@ const ObjectivesPage = () => {
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTypesModalOpen, setIsTypesModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<ObjectiveType | null>(null);
   const [editingObjective, setEditingObjective] = useState<Objective | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -339,13 +340,12 @@ const ObjectivesPage = () => {
             <h2 className={styles.pageTitle}>Objetivos</h2>
             <p className={styles.pageSubtitle}>Crie, acompanhe e edite os objetivos que voce quer tirar do papel.</p>
           </div>
+          <div style={{ alignSelf: "center" }}>
+            <span className={styles.counterTag}>{objectives.length} planos em andamento</span>
+          </div>
         </div>
 
         <section className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <Tag className={styles.counterTag}>{objectives.length} objetivo(s)</Tag>
-          </div>
-
           {loading ? (
             <div className={styles.loadingArea}>
               <Spin size="large" />
@@ -468,31 +468,55 @@ const ObjectivesPage = () => {
                   </Col>
                 );
               })}
+              <Col xs={24} lg={12} xl={8}>
+                <Card 
+                  hoverable 
+                  onClick={() => setIsTypesModalOpen(true)} 
+                  style={{ 
+                    height: "100%", 
+                    display: "flex", 
+                    justifyContent: "center", 
+                    alignItems: "center", 
+                    border: "2px dashed #e6e2ff", 
+                    cursor: "pointer", 
+                    background: "transparent",
+                    minHeight: "250px",
+                    borderRadius: "20px"
+                  }}
+                >
+                  <div style={{ textAlign: "center", color: "#6c5dd3", fontSize: "16px", fontWeight: "600" }}>
+                    <div style={{ fontSize: "40px", marginBottom: "8px", fontWeight: "300" }}>+</div>
+                    Novo objetivo
+                  </div>
+                </Card>
+              </Col>
             </Row>
           )}
         </section>
 
-<section className={styles.sectionBlock}>
-          <div className={styles.sectionHeader}>
-            <div>
-              <h3 className={styles.sectionTitle}>Criar novo objetivo</h3>
-              <p className={styles.sectionDescription}>Escolha o tipo de objetivo e preencha os dados para começar.</p>
+        {objectives.length === 0 && (
+          <section className={styles.sectionBlock}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h3 className={styles.sectionTitle}>Criar novo objetivo</h3>
+                <p className={styles.sectionDescription}>Escolha o tipo de objetivo e preencha os dados para começar.</p>
+              </div>
             </div>
-          </div>
 
-          <Row gutter={[24, 24]}>
-            {objectiveTypes.map((type) => (
-              <Col xs={24} sm={12} lg={8} xl={6} key={type.id}>
-                <Card hoverable className={styles.objectiveCard} onClick={() => handleOpenCreateModal(type)}>
-                  <div className={styles.cardContent}>
-                    <div className={styles.iconWrapper}>{type.icon}</div>
-                    <span className={styles.cardTitle}>{type.title}</span>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </section>        <Modal
+            <Row gutter={[24, 24]}>
+              {objectiveTypes.map((type) => (
+                <Col xs={24} sm={12} lg={8} xl={6} key={type.id}>
+                  <Card hoverable className={styles.objectiveCard} onClick={() => handleOpenCreateModal(type)}>
+                    <div className={styles.cardContent}>
+                      <div className={styles.iconWrapper}>{type.icon}</div>
+                      <span className={styles.cardTitle}>{type.title}</span>
+                    </div>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </section>
+        )}        <Modal
           title={editingObjective ? "Editar objetivo" : "Defina seu objetivo"}
           open={isModalOpen}
           onOk={handleSave}
@@ -588,6 +612,36 @@ const ObjectivesPage = () => {
               </>
             )}
           </Form>
+        </Modal>
+
+        <Modal
+          title="Escolha o tipo de objetivo"
+          open={isTypesModalOpen}
+          onCancel={() => setIsTypesModalOpen(false)}
+          footer={null}
+          width={600}
+          centered
+        >
+          <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+            {objectiveTypes.map((type) => (
+              <Col xs={24} sm={12} md={8} key={type.id}>
+                <Card 
+                  hoverable 
+                  className={styles.objectiveCard} 
+                  onClick={() => {
+                    setIsTypesModalOpen(false);
+                    handleOpenCreateModal(type);
+                  }}
+                  styles={{ body: { padding: "16px 0" } }}
+                >
+                  <div className={styles.cardContent}>
+                    <div className={styles.iconWrapper} style={{ width: 48, height: 48, fontSize: 20 }}>{type.icon}</div>
+                    <span className={styles.cardTitle} style={{ fontSize: 13 }}>{type.title}</span>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
         </Modal>
       </div>
     </div>

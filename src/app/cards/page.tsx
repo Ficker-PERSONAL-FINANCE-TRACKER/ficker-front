@@ -1,10 +1,8 @@
-﻿"use client";
+"use client";
 
 import {
   Col,
-  Dropdown,
   Empty,
-  MenuProps,
   Modal,
   Row,
   Spin,
@@ -14,14 +12,15 @@ import {
 import Image from "next/image";
 import { NewCardModal } from "./modal";
 import { useEffect, useMemo, useState } from "react";
+import { EyeOutlined, EyeInvisibleOutlined, DeleteOutlined } from "@ant-design/icons";
 import { request } from "@/service/api";
 import dayjs from "dayjs";
-import CardPage from "./card";
-import SearchField from "@/components/SearchField";
 import CustomMenu from "@/components/CustomMenu";
+import SearchField from "@/components/SearchField";
 import { motion } from "framer-motion";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import styles from "./cards.module.scss";
+import { useRouter } from "next/navigation";
 
 interface Card {
   best_day: number;
@@ -46,6 +45,7 @@ interface ActionModalState {
 }
 
 const Cards = () => {
+  const router = useRouter();
   const { Text } = Typography;
   const [, contextHolder] = Modal.useModal();
   const [messageApi, messageContextHolder] = message.useMessage();
@@ -54,7 +54,6 @@ const Cards = () => {
   const [archivedCards, setArchivedCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<Card>({} as Card);
   const [showArchived, setShowArchived] = useState(false);
   const [actionModal, setActionModal] = useState<ActionModalState>({
     open: false,
@@ -117,15 +116,6 @@ const Cards = () => {
 
       setCards(activeCards);
       setArchivedCards(archivedCardsResult);
-
-      if (Object.keys(selectedCard).length > 0) {
-        const refreshedSelectedCard = activeCards.find((card) => card.id === selectedCard.id);
-        if (refreshedSelectedCard) {
-          setSelectedCard(refreshedSelectedCard);
-        } else {
-          setSelectedCard({} as Card);
-        }
-      }
     } catch (error) {
       console.log(error);
       messageApi.error("Nao foi possivel carregar os cartoes.");
@@ -300,70 +290,45 @@ const Cards = () => {
     }
   };
 
-  const buildMenuItems = (card: Card): MenuProps["items"] => {
-    if (card.archived_at) {
-      return [
-        {
-          key: "unarchive",
-          label: "Restaurar cartao",
-        },
-        {
-          key: "delete",
-          label: <span className={styles.deleteAction}>Excluir permanentemente</span>,
-        },
-      ];
-    }
-
-    return [
-      {
-        key: "archive",
-        label: "Arquivar cartao",
-      },
-      {
-        key: "delete",
-        label: <span className={styles.deleteAction}>Excluir permanentemente</span>,
-      },
-    ];
-  };
-
-  const handleMenuClick = (card: Card, key: string) => {
-    if (key === "archive" || key === "unarchive" || key === "delete") {
-      openActionModal(key, card);
-    }
-  };
+  const renderCardActions = (card: Card, archived: boolean) => (
+    <div className={styles.cardHoverActions}>
+      <button
+        type="button"
+        className={styles.hoverActionBtn}
+        onClick={(event) => {
+          event.stopPropagation();
+          openActionModal(archived ? "unarchive" : "archive", card);
+        }}
+      >
+        {archived ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+        <span>{archived ? "Restaurar" : "Arquivar"}</span>
+      </button>
+      <button
+        type="button"
+        className={`${styles.hoverActionBtn} ${styles.dangerHover}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          openActionModal("delete", card);
+        }}
+      >
+        <DeleteOutlined />
+        <span>Excluir</span>
+      </button>
+    </div>
+  );
 
   const renderCard = (card: Card, archived = false) => {
     const cardNode = (
       <div className={styles.cardWrap}>
-        <Dropdown
-          trigger={["click"]}
-          menu={{
-            items: buildMenuItems(card),
-            onClick: ({ key, domEvent }) => {
-              domEvent.stopPropagation();
-              handleMenuClick(card, key);
-            },
-          }}
-          placement="bottomRight"
-        >
-          <button
-            type="button"
-            className={styles.cardActionButton}
-            onClick={(event) => {
-              event.stopPropagation();
-            }}
-          >
-            <span className={styles.cardActionIcon}>⋯</span>
-          </button>
-        </Dropdown>
-
         <motion.div
           whileHover={{ scale: 1.02, translateY: -5 }}
           className={`${styles.cardShell} ${styles.cardInteractive} ${archived ? styles.cardArchived : ""}`}
           style={{ background: getFlagColor(card.flag_id) }}
         >
-          <div className={styles.cardCircleTop} />
-          <div className={styles.cardCircleBottom} />
+          <div className={styles.cardBgOverlay}>
+            <div className={styles.cardCircleTop} />
+            <div className={styles.cardCircleBottom} />
+          </div>
 
           <div className={styles.cardTopRow}>
             <div className={styles.cardInfo}>
@@ -379,22 +344,24 @@ const Cards = () => {
             </div>
           </div>
 
-          <div className={styles.cardBottomRow}>
-            <div className={styles.cardMask}>**** **** ****</div>
-            <div>
-              <div className={styles.cardDueLabel}>Vencimento</div>
-              <div className={styles.cardDueValue}>{getDisplayedDueDate(card)}</div>
+            <div className={styles.cardBottomRow}>
+              <div className={styles.cardMask}>**** **** ****</div>
+              <div>
+                <div className={styles.cardDueLabel}>Vencimento</div>
+                <div className={styles.cardDueValue}>{getDisplayedDueDate(card)}</div>
+              </div>
             </div>
-          </div>
-        </motion.div>
-      </div>
-    );
+          </motion.div>
+
+          {renderCardActions(card, archived)}
+        </div>
+      );
 
     return (
       <Col
         key={card.id}
         className={styles.cardColumn}
-        onClick={() => setSelectedCard(card)}
+        onClick={() => router.push(`/cards/${card.id}`)}
       >
         {cardNode}
       </Col>
@@ -414,9 +381,9 @@ const Cards = () => {
       <div className={styles.pageShell}>
         <div className={styles.titleArea}>
           <div>
-            <h2>{`Meus cartões ${Object.keys(selectedCard).length > 0 ? "> " + selectedCard.card_description : ""}`}</h2>
+            <h2>Meus cartões</h2>
           </div>
-          <div className={styles.buttonsArea}>
+          <div className={styles.buttonsArea} style={{ width: "auto", display: "flex", alignItems: "center", gap: 12 }}>
             <SearchField />
             <button className={styles.button} onClick={openModal}>
               Novo Cartão
@@ -429,45 +396,24 @@ const Cards = () => {
           </Row>
         ) : (
           <>
+            <div style={{ display: "flex", justifyContent: "flex-start", padding: "0 30px" }}>
+              <button className={styles.toggleArchivedBtn} onClick={() => setShowArchived((current) => !current)}>
+                {showArchived ? <EyeInvisibleOutlined style={{ fontSize: 18 }} /> : <EyeOutlined style={{ fontSize: 18 }} />}
+                <span>{showArchived ? "Ocultar cartões arquivados" : "Mostrar cartões ocultos"}</span>
+              </button>
+            </div>
             <Row justify={"start"} className={styles.gridArea}>
-              {Object.keys(selectedCard).length > 0 ? (
-                <CardPage card={selectedCard} />
-              ) : cards.length > 0 ? (
-                cards.map((card) => renderCard(card))
+              {cards.length > 0 || (showArchived && archivedCards.length > 0) ? (
+                <>
+                  {cards.map((card) => renderCard(card))}
+                  {showArchived && archivedCards.map((card) => renderCard(card, true))}
+                </>
               ) : (
                 <Col span={24}>
-                  <Empty description="Nenhum cartao ativo encontrado." />
+                  <Empty description="Nenhum cartao encontrado." />
                 </Col>
               )}
             </Row>
-
-            {Object.keys(selectedCard).length === 0 && (
-              <div className={styles.archivedSection}>
-                <button
-                  type="button"
-                  className={styles.archivedToggle}
-                  onClick={() => setShowArchived((current) => !current)}
-                >
-                  <span className={styles.archivedTitle}>Arquivados</span>
-                  <span className={styles.archivedCount}>{archivedCards.length}</span>
-                </button>
-                <div className={styles.archivedHint}>
-                  Cartoes fora da lista principal continuam disponiveis aqui para restauracao ou exclusao definitiva.
-                </div>
-
-                {showArchived && (
-                  <Row justify={"start"} className={styles.archivedContent}>
-                    {archivedCards.length > 0 ? (
-                      archivedCards.map((card) => renderCard(card, true))
-                    ) : (
-                      <Col span={24}>
-                        <Text type="secondary">Nenhum cartao arquivado no momento.</Text>
-                      </Col>
-                    )}
-                  </Row>
-                )}
-              </div>
-            )}
           </>
         )}
 

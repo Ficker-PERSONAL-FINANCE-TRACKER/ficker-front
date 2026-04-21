@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { CardInformation } from "@/components/CardInformation";
 import { TransactionTab } from "@/components/TransactionTab";
 import { request } from "@/service/api";
@@ -87,7 +87,7 @@ function CardPage({ card }: CardProps) {
         }}
       />
       <Row gutter={[24, 24]} style={{ padding: "0 18px", paddingLeft: 0 }}>
-        <Col xl={14} lg={14} md={24} xs={24} style={{ paddingLeft: 0 }}>
+        <Col xl={18} lg={16} md={24} xs={24} style={{ paddingLeft: 0 }}>
           <TransactionTab
             data={cardTranscations}
             typeId={3}
@@ -95,8 +95,8 @@ function CardPage({ card }: CardProps) {
             setEditModal={setIsEditModalOpen}
           />
         </Col>
-        <Col xl={10} lg={10} md={24} xs={24}>
-          <div style={{ padding: 0, width: "100%" }}>
+        <Col xl={6} lg={8} md={24} xs={24}>
+          <div style={{ padding: 0, width: "100%", marginTop: "12px" }}>
             <CardInformation
               card={{ ...card, invoice_pay_day: invoicePayDay }}
               totalValue={totalValue}
@@ -114,13 +114,13 @@ function CardPage({ card }: CardProps) {
             <Row gutter={[12, 12]} style={{ marginTop: 20 }}>
               {!isArchived && (
                 <Col span={12}>
-                  <button className={styles.button} onClick={openModal} style={{ width: "100%", marginTop: 0, padding: "10px 0" }}>
+                  <button className={styles.button} onClick={openModal} style={{ width: "100%", marginTop: 0, padding: "8px 0", fontSize: "12px", height: "36px" }}>
                     Nova transação
                   </button>
                 </Col>
               )}
               <Col span={isArchived ? 24 : 12}>
-                <button className={styles.button} onClick={openOutputModal} style={{ width: "100%", marginTop: 0, padding: "10px 0" }}>
+                <button className={styles.button} onClick={openOutputModal} style={{ width: "100%", marginTop: 0, padding: "8px 0", fontSize: "12px", height: "36px" }}>
                   Pagar Fatura
                 </button>
               </Col>
