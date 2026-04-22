@@ -33,7 +33,8 @@ export default function Home() {
         method: "GET",
         endpoint: "onboarding/status",
       });
-      if (response?.data?.data?.onboarding_completed === false) {
+      const onboardingCompleted = response?.data?.data?.onboarding_completed ?? response?.data?.onboarding_completed;
+      if (onboardingCompleted === false) {
         setShowOnboarding(true);
       }
     } catch (error) {
