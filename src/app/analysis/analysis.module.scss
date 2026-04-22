@@ -576,9 +576,9 @@
 .cardInsightItem {
   background: #fff;
   border: 1px solid #f3f4f8;
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 24px;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 
@@ -592,100 +592,117 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .cardInsightTitle {
   margin: 0 0 2px;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: #11142d;
 }
 
 .cardInsightFlag {
   color: #808191;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .cardInsightMetrics {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .cardMetricBox {
-  padding: 14px;
+  padding: 10px;
   background: #fafbff;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #f3f4f8;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 70px;
 }
 
 .cardMetricHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 6px;
+  margin-bottom: 4px;
 }
 
 .cardMetricIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: #fff;
-  border-radius: 6px;
-  color: #6C5DD3;
+  width: auto;
+  height: auto;
+  background: transparent;
+  color: #808191;
   font-size: 12px;
-  box-shadow: 0 2px 6px rgba(108, 93, 211, 0.1);
+  box-shadow: none;
 }
 
 .cardInsightLabel {
   color: #808191;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .cardInsightValue {
   display: block;
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: #11142d;
 }
 
-.cardProgressWrapper {
-  background: #fff;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #f3f4f8;
-  margin-bottom: 24px;
+.cardMetricSmall {
+  font-size: 8px;
+  color: #808191;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.cardProgressMini {
+  width: 100%;
+  height: 3px;
+  background: #eef0f6;
+  border-radius: 2px;
+  margin-top: 4px;
+  overflow: hidden;
+
+  .progressInner {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
 }
 
 .cardBottomGrid {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 24px;
-  padding-top: 24px;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 16px;
+  padding-top: 16px;
   border-top: 2px dashed #f3f4f8;
 }
 
 .cardSectionContainer {
   background: #fafbff;
-  padding: 18px;
-  border-radius: 16px;
+  padding: 12px;
+  border-radius: 12px;
   height: min-content;
 }
 
 .cardSectionTitle {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 0 0 16px;
-  font-size: 14px;
+  gap: 6px;
+  margin: 0 0 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #11142d;
 }
@@ -694,7 +711,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px solid #eef0f6;
 
   &:last-child {
@@ -703,13 +720,13 @@
   }
 
   .rowLabel {
-    font-size: 12px;
+    font-size: 11px;
     color: #808191;
     font-weight: 500;
   }
 
   .rowValue {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: #11142d;
     text-align: right;

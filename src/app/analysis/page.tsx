@@ -932,25 +932,24 @@ const Analysis = () => {
                                   </div>
                                   <strong className={styles.cardInsightValue}>{currency(card.average_purchase_in_period)}</strong>
                                 </div>
-                              </div>
-
-                              <div className={styles.cardProgressWrapper}>
-                                <div className={styles.progressLabelGroup}>
-                                  <span>Status de Quitação</span>
-                                  <span>{paymentPercent.toFixed(0)}%</span>
-                                </div>
-                                <div className={styles.progressBarContainer}>
-                                  <div 
-                                    className={styles.progressBar} 
-                                    style={{ 
-                                      width: `${paymentPercent}%`, 
-                                      backgroundColor: paymentPercent >= 100 ? '#16a34a' : '#6C5DD3' 
-                                    }} 
-                                  />
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-                                  <span className={styles.cardInsightSubtext}>Pago: {currency(displayInvoicePaid)} de {currency(displayInvoiceTotal)}</span>
-                                  <span className={styles.cardInsightSubtext}>UT: {formatDate(card.latest_purchase_date_in_period)}</span>
+                                <div className={styles.cardMetricBox}>
+                                  <div className={styles.cardMetricHeader}>
+                                    <div className={styles.cardMetricIcon}><InfoCircleOutlined /></div>
+                                    <span className={styles.cardInsightLabel}>Quitação</span>
+                                  </div>
+                                  <strong className={styles.cardInsightValue}>{paymentPercent.toFixed(0)}%</strong>
+                                  <div className={styles.cardMetricSmall}>
+                                    {currency(displayInvoicePaid)} de {currency(displayInvoiceTotal)}
+                                  </div>
+                                  <div className={styles.cardProgressMini}>
+                                    <div 
+                                      className={styles.progressInner} 
+                                      style={{ 
+                                        width: `${paymentPercent}%`, 
+                                        backgroundColor: paymentPercent >= 100 ? '#16a34a' : '#6C5DD3' 
+                                      }}
+                                    />
+                                  </div>
                                 </div>
                               </div>
 
@@ -972,7 +971,7 @@ const Analysis = () => {
                                     <ExpensesByCategoryChartContainer
                                       title=""
                                       metric="credit_card_purchase_total"
-                                      emptyMessage="Nenhuma compra."
+                                      emptyMessage="Sem compras."
                                       data={cardCategoryCharts[card.card_id] ?? []}
                                     />
                                   </div>
