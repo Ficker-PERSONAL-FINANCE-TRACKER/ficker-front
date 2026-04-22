@@ -632,7 +632,7 @@ const ObjectivesPage = () => {
                     setIsTypesModalOpen(false);
                     handleOpenCreateModal(type);
                   }}
-                  styles={{ body: { padding: "16px 0" } }}
+                  bodyStyle={{ padding: "16px 0" }}
                 >
                   <div className={styles.cardContent}>
                     <div className={styles.iconWrapper} style={{ width: 48, height: 48, fontSize: 20 }}>{type.icon}</div>

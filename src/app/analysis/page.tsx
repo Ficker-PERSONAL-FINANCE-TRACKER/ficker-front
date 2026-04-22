@@ -4,7 +4,7 @@ import CustomMenu from "@/components/CustomMenu";
 import AnalysesByMonthChartContainer from "@/components/AnalysesByMonthChartContainer";
 import ExpensesByCategoryChartContainer from "@/components/ExpensesByCategoryChartContainer";
 import PaymentMethodUsageChartContainer from "@/components/PaymentMethodUsageChartContainer";
-import PlannedSpendingByRealSpendingChartContainer from "@/components/PlannedSpendingByRealSppendingChartContainer";
+import PlannedSpendingByRealSpendingChartContainer, { FinanceDataPoint } from "@/components/PlannedSpendingByRealSppendingChartContainer";
 import { request } from "@/service/api";
 import { Button, DatePicker, Form, Modal, Row, Segmented, Select, Spin, Tabs } from "antd";
 import type { Dayjs } from "dayjs";
@@ -183,11 +183,7 @@ type ChartSlice = {
   fill: string;
 };
 
-type PlannedVsRealChartPoint = {
-  name: string;
-  planejado: number;
-  real: number;
-};
+// Removed PlannedVsRealChartPoint in favor of FinanceDataPoint
 
 type AnalysisFilterMode = "month" | "custom";
 
@@ -466,13 +462,18 @@ const Analysis = () => {
     };
   }, [cards]);
 
-  const plannedVsRealChartData = useMemo<PlannedVsRealChartPoint[]>(
+  const plannedVsRealChartData = useMemo<FinanceDataPoint[]>(
     () =>
-      timelineSeries.map((item) => ({
-        name: timelineGroupBy === "day" ? dayjs(item.period_start).format("DD/MM") : dayjs(item.period_start).format("MMM"),
-        planejado: Number(item.planned_spending_total || 0),
-        real: Number(item.real_spending_total || 0),
-      })),
+      timelineSeries.map((item) => {
+        const entrada = Number(item.income_total || 0);
+        const saida = Number(item.real_spending_total || 0);
+        return {
+          name: timelineGroupBy === "day" ? dayjs(item.period_start).format("DD/MM") : dayjs(item.period_start).format("MMM"),
+          entrada,
+          saida,
+          saldo: entrada - saida,
+        };
+      }),
     [timelineSeries, timelineGroupBy]
   );
 
