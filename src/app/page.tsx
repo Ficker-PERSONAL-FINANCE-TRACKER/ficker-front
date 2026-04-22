@@ -16,8 +16,9 @@ export default function Home() {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (token) {
       setAuth(true);
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -37,6 +38,8 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Erro ao verificar status do onboarding:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,6 +55,7 @@ export default function Home() {
           justifyContent: "center",
           alignItems: "center",
           height: "100vh",
+          background: "#f0f2f5"
         }}
       >
         <Spin size="large" />
@@ -59,10 +63,17 @@ export default function Home() {
     );
 
   if (auth) {
+    if (showOnboarding) {
+      return (
+        <div style={{ height: "100vh", width: "100vw", background: "#f0f2f5" }}>
+          <OnboardingStepModal open={showOnboarding} onComplete={handleOnboardingComplete} />
+        </div>
+      );
+    }
+
     return (
       <>
         <Resume />
-        <OnboardingStepModal open={showOnboarding} onComplete={handleOnboardingComplete} />
       </>
     );
   }
