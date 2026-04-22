@@ -494,7 +494,7 @@ const ObjectivesPage = () => {
           )}
         </section>
 
-        {objectives.length === 0 && (
+        {!loading && objectives.length === 0 && (
           <section className={styles.sectionBlock}>
             <div className={styles.sectionHeader}>
               <div>
