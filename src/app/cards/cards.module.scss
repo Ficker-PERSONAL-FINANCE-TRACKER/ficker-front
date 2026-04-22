@@ -5,7 +5,7 @@
 }
 
 .titleArea {
-  padding: 20px 30px;
+  padding: 20px 30px 10px;
 }
 
 .buttonsArea {
@@ -29,7 +29,8 @@
   transition: 0.3s;
   font-size: 13px;
   font-weight: 500;
-  margin-top: 10px;
+  margin-top: 0;
+  margin-bottom: 24px;
 
   &:hover {
     background: rgba(108, 93, 211, 0.05);
