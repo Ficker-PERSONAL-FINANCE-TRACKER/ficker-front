@@ -84,7 +84,7 @@ const MyCategoriesList = ({ categories, loading = false, onRefresh }: MyCategori
   return (
     <div className="card">
       <div className="title-area">
-        <h4>Top Categorias de Gastos</h4>
+        <h4>Top categorias de gastos</h4>
         <div className="title-area__actions">
           {sortedCategories.length > 0 && (
             <Button

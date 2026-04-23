@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
@@ -27,6 +27,7 @@ interface OutputModalProps {
   isModalOpen: boolean;
   setIsModalOpen: (value: boolean) => void;
   initialValues?: Record<string, any>;
+  onSuccess?: () => void;
 }
 
 interface Category {
@@ -81,7 +82,7 @@ const extractCategoriesFromResponse = (response: any): Category[] => {
   return [];
 };
 
-export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: OutputModalProps) => {
+export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSuccess }: OutputModalProps) => {
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -174,6 +175,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
       });
       message.success("Transação adicionada com sucesso!");
       handleCancel();
+      if (onSuccess) onSuccess();
     } catch (errorInfo) {
       message.error("Erro ao adicionar transação!");
     }
@@ -202,7 +204,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
 
   return (
     <Modal
-      title="Nova Saída"
+      title="Nova saída"
       open={isModalOpen}
       onCancel={handleCancel}
       okButtonProps={{
@@ -267,7 +269,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
         </Col>
         <Row>
           <Col>
-            <label>Forma de Pagamento</label>
+            <label>Forma de pagamento</label>
             <Form.Item
               name="payment_method_id"
               rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
@@ -340,7 +342,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
                 <Select.Option value={0}>
                   <Space>
                     <PlusOutlined style={{ color: '#6C5DD3' }} />
-                    <span>Nova Categoria</span>
+                    <span>Nova categoria</span>
                   </Space>
                 </Select.Option>
 
@@ -356,7 +358,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
                 </Select.OptGroup>
 
                 {categories.length > 0 && (
-                  <Select.OptGroup label="Minhas Categorias">
+                  <Select.OptGroup label="Minhas categorias">
                     {categories.map((category) => (
                       <Select.Option key={category.id} value={category.id}>
                         {category.category_description}
@@ -369,7 +371,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
           </Col>
           {showDescriptionCategory ? (
             <Col>
-              <label>Descrição da Categoria</label>
+              <label>Descrição da categoria</label>
               <Form.Item
                 name="category_description"
                 rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}

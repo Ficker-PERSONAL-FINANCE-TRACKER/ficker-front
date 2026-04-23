@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 interface CardModalProps {
   isModalOpen: boolean;
   setIsModalOpen: (value: boolean) => void;
+  onSuccess?: () => void;
 }
 
 interface Flag {
@@ -16,7 +17,7 @@ interface Flag {
   updated_at: Date;
 }
 
-export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) => {
+export const NewCardModal = ({ isModalOpen, setIsModalOpen, onSuccess }: CardModalProps) => {
   const [flags, setFlags] = useState<Flag[]>([]);
   const [form] = Form.useForm();
 
@@ -49,6 +50,7 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
       });
       message.success("Cartão cadastrado com sucesso!");
       handleCancel();
+      if (onSuccess) onSuccess();
     } catch (errorInfo) {
       message.error("Erro ao cadastrar cartão!");
     }
@@ -61,7 +63,7 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
 
   return (
     <Modal
-      title="Novo Cartão de Crédito"
+      title="Novo cartão de crédito"
       open={isModalOpen}
       onCancel={handleCancel}
       okButtonProps={{
@@ -111,7 +113,7 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
           </Form.Item>
         </Col>
         <Col style={{ marginTop: 20 }}>
-          <label>Dia de Vencimento da Fatura</label>
+          <label>Dia de vencimento da fatura</label>
           <Form.Item
             name="expiration"
             rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
@@ -127,7 +129,7 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
           </Form.Item>
         </Col>
         <Col style={{ marginTop: 20 }}>
-          <label>Dia de Fechamento da Fatura</label>
+          <label>Dia de fechamento da fatura</label>
           <Form.Item
             name="closure"
             rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}

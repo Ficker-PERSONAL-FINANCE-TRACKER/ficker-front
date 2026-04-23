@@ -96,7 +96,7 @@ const objectiveTypes: ObjectiveType[] = [
   { id: "travel", title: "Planejar viagem", icon: <GlobalOutlined /> },
   { id: "item", title: "Comprar um bem", icon: <ShoppingOutlined /> },
   { id: "investment", title: "Fazer um aporte", icon: <ThunderboltOutlined /> },
-  { id: "succession", title: "Planejar sucessao", icon: <SafetyCertificateOutlined /> },
+  { id: "succession", title: "Planejar sucessão", icon: <SafetyCertificateOutlined /> },
   { id: "other", title: "Outros", icon: <EllipsisOutlined /> },
 ];
 
@@ -281,7 +281,7 @@ const ObjectivesPage = () => {
       setSubmitting(true);
 
       if (!selectedType.isRetirement && Number(values.target_year) === currentYear && Number(values.target_month) < currentMonth) {
-        message.error("Nao escolha um mes anterior ao atual para objetivos no ano corrente.");
+        message.error("Não escolha um mês anterior ao atual para objetivos no ano corrente.");
         return;
       }
 
@@ -311,7 +311,7 @@ const ObjectivesPage = () => {
         return;
       }
 
-      message.error(getApiErrorMessage(error, "Nao foi possivel salvar o objetivo."));
+      message.error(getApiErrorMessage(error, "Não foi possível salvar o objetivo."));
     } finally {
       setSubmitting(false);
     }
@@ -325,7 +325,7 @@ const ObjectivesPage = () => {
       message.success("Objetivo removido com sucesso!");
       await loadObjectives();
     } catch (error: any) {
-      message.error(getApiErrorMessage(error, "Nao foi possivel remover o objetivo."));
+      message.error(getApiErrorMessage(error, "Não foi possível remover o objetivo."));
     } finally {
       setDeletingId(null);
     }
@@ -338,7 +338,7 @@ const ObjectivesPage = () => {
         <div className={styles.pageHeader}>
           <div>
             <h2 className={styles.pageTitle}>Objetivos</h2>
-            <p className={styles.pageSubtitle}>Crie, acompanhe e edite os objetivos que voce quer tirar do papel.</p>
+            <p className={styles.pageSubtitle}>Crie, acompanhe e edite os objetivos que você quer tirar do papel.</p>
           </div>
           <div style={{ alignSelf: "center" }}>
             <span className={styles.counterTag}>{objectives.length} planos em andamento</span>
@@ -352,7 +352,7 @@ const ObjectivesPage = () => {
             </div>
           ) : objectives.length === 0 ? (
             <div className={styles.emptyState}>
-              <Empty description="Nenhum objetivo salvo ate o momento" />
+              <Empty description="Nenhum objetivo salvo até o momento" />
             </div>
           ) : (
             <Row gutter={[24, 24]}>
@@ -377,7 +377,7 @@ const ObjectivesPage = () => {
                           <Button type="text" icon={<EditOutlined />} onClick={() => handleOpenEditModal(objective)} />
                           <Popconfirm
                             title="Remover objetivo"
-                            description="Essa acao nao pode ser desfeita."
+                            description="Essa ação não pode ser desfeita."
                             okText="Remover"
                             cancelText="Cancelar"
                             onConfirm={() => handleDeleteObjective(objective.id)}
@@ -395,22 +395,22 @@ const ObjectivesPage = () => {
                               <strong>{formatCurrency(objective.monthly_income)}</strong>
                             </div>
                             <div className={styles.metricRow}>
-                              <span>Valor ja guardado</span>
+                              <span>Valor já guardado</span>
                               <strong>{formatCurrency(objective.current_saved)}</strong>
                             </div>
                             <div className={styles.metricRow}>
                               <span>Meta de aposentadoria</span>
-                              <strong>{objective.retirement_age ? `${objective.retirement_age} anos` : "Nao definida"}</strong>
+                              <strong>{objective.retirement_age ? `${objective.retirement_age} anos` : "Não definida"}</strong>
                             </div>
                             <div className={styles.metricRow}>
                               <span>Data de nascimento</span>
-                              <strong>{objective.birth_date ? dayjs(objective.birth_date).format("DD/MM/YYYY") : "Nao informada"}</strong>
+                              <strong>{objective.birth_date ? dayjs(objective.birth_date).format("DD/YYYY") : "Não informada"}</strong>
                             </div>
                             <div className={styles.metricRow}>
                               <span>Prazo estimado</span>
                               <strong>
                                 {retirementTimeLeft === null
-                                  ? "Nao disponivel"
+                                  ? "Não disponível"
                                   : formatTimeLeft(retirementTimeLeft.years, retirementTimeLeft.months)}
                               </strong>
                             </div>
@@ -418,7 +418,7 @@ const ObjectivesPage = () => {
                         ) : (
                           <>
                             <div className={styles.metricRow}>
-                              <span>Guardado ate agora</span>
+                              <span>Guardado até agora</span>
                               <strong>{formatCurrency(objective.current_saved)}</strong>
                             </div>
                             <div className={styles.metricRow}>
@@ -430,7 +430,7 @@ const ObjectivesPage = () => {
                               <strong>
                                 {objective.target_month && objective.target_year
                                   ? `${getMonthLabel(objective.target_month)} de ${objective.target_year}`
-                                  : "Nao definido"}
+                                  : "Não definido"}
                               </strong>
                             </div>
                             <Progress
@@ -442,7 +442,7 @@ const ObjectivesPage = () => {
                             />
                             <div className={styles.progressFooter}>
                               <span>{formatCurrency(objective.current_saved)} acumulados</span>
-                              <strong>{progress.toFixed(1)}% concluido</strong>
+                              <strong>{progress.toFixed(1)}% concluído</strong>
                             </div>
                             {recommendation ? (
                               <div className={styles.recommendationBox}>
@@ -450,15 +450,15 @@ const ObjectivesPage = () => {
                                 <span>Faltam {formatCurrency(recommendation.remainingAmount)} para chegar ao valor final.</span>
                                 <span>
                                   {recommendation.monthsLeft === 1
-                                    ? `Junte ${formatCurrency(recommendation.monthlyAmount)} ate o final deste mes.`
-                                    : `Junte ${formatCurrency(recommendation.monthlyAmount)} por mes ate o prazo final.`}
+                                    ? `Junte ${formatCurrency(recommendation.monthlyAmount)} até o final deste mês.`
+                                    : `Junte ${formatCurrency(recommendation.monthlyAmount)} por mês até o prazo final.`}
                                 </span>
                                 {recommendation.annualAmount !== null ? (
                                   <span>
-                                    Ou, se preferir uma visao anual, reserve cerca de {formatCurrency(recommendation.annualAmount)} por ano ate o prazo final.
+                                    Ou, se preferir uma visão anual, reserve cerca de {formatCurrency(recommendation.annualAmount)} por ano até o prazo final.
                                   </span>
                                 ) : null}
-                                <span>O calculo considera meses fechados e so muda na virada do mes.</span>
+                                <span>O cálculo considera meses fechados e só muda na virada do mês.</span>
                               </div>
                             ) : null}
                           </>

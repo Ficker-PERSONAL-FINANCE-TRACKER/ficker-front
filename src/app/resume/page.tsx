@@ -22,6 +22,9 @@ import "dayjs/locale/pt-br";
 import { motion } from "framer-motion";
 import CustomMenu from "@/components/CustomMenu";
 import CustomTour from "@/components/CustomTour";
+import { EnterTransactionModal } from "../EnterTransaction/modal";
+import { OutputModal } from "../Outputs/modal";
+import { NewCardModal } from "../cards/modal";
 
 dayjs.locale("pt-br");
 
@@ -153,7 +156,7 @@ const Resume = () => {
     return `${currentMonthLabel} de ${filters.year}`;
   }, [currentMonthLabel, filters]);
   const chartLabelPrefix = filters.mode === "month" ? "Dia" : "Data";
-  const goalCardTitle = filters.mode === "month" ? "Meta do Mês" : "Meta do Período";
+  const goalCardTitle = filters.mode === "month" ? "Meta de gastos" : "Meta do período";
   const periodPlannedSpending = Number(periodBudgetSummary.planned_spending_total || 0);
   const periodRealSpending = Number(periodBudgetSummary.real_spending_total || 0);
   const spentPercentage = periodPlannedSpending > 0 ? (periodRealSpending / periodPlannedSpending) * 100 : 0;
@@ -188,6 +191,18 @@ const Resume = () => {
   const [openTour, setOpenTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [gastoPlanejado, setGastoPlanejado] = useState("");
+
+  const [isEnterModalOpen, setIsEnterModalOpen] = useState(false);
+  const [isOutputModalOpen, setIsOutputModalOpen] = useState(false);
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+
+  const handleRefreshData = () => {
+    getBalance();
+    getCardsData();
+    getTransactionsData();
+    getPeriodBudgetSummary();
+    getCategorySummaries();
+  };
 
   const handleFinishEditGoal = async (values: any) => {
     try {
@@ -639,35 +654,35 @@ const Resume = () => {
       offset: 12,
     },
     {
-      title: "Gestao de Orcamento",
+      title: "Gestão de orçamento",
       description:
-        "Aqui voce acompanha quanto planejou gastar versus seu gasto real.",
+        "Aqui você acompanha quanto planejou gastar versus seu gasto real.",
       target: () => refPlanejado.current,
       placement: "bottom" as const,
       offset: 12,
     },
     {
-      title: "Meus Cartoes",
+      title: "Meus cartões",
       description:
-        "Visualize faturas e limites disponiveis de forma intuitiva.",
+        "Visualize faturas e limites disponíveis de forma intuitiva.",
       target: () => refReal.current,
       placement: "left" as const,
       offset: 12,
       offsetX: -40,
     },
     {
-      title: "Categorias de Gastos",
+      title: "Categorias de gastos",
       description:
-        "Entenda exatamente para onde seu dinheiro esta indo.",
+        "Entenda exatamente para onde seu dinheiro está indo.",
       target: () => refCategorias.current,
       placement: "top" as const,
       offset: 12,
       offsetY: 2,
     },
     {
-      title: "Ultimas Transacoes",
+      title: "Últimas transações",
       description:
-        "Acesse rapidamente seu historico recente.",
+        "Acesse rapidamente seu histórico recente.",
       target: () => refTransacoes.current,
       placement: "top" as const,
       offset: 12,
@@ -740,6 +755,25 @@ const Resume = () => {
 
       <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 30px 30px" }}>
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column", zIndex: 10 }}>
+          {/* Quick Actions area */}
+          <div className={styles.quickActions} style={{ marginBottom: 20 }}>
+            <p className={styles.balance_description} style={{ fontSize: 13, color: '#808191', marginBottom: 8, marginTop: 0 }}>Ações rápidas</p>
+            <div className={styles.buttonsContainer} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+              <div className={styles.actionButton} style={{ background: '#E6F7EF' }} onClick={() => setIsEnterModalOpen(true)}>
+                <PlusCircleOutlined style={{ fontSize: 24, color: '#00875A' }} />
+                <span style={{ color: '#00875A' }}>Entrada</span>
+              </div>
+              <div className={styles.actionButton} style={{ background: '#FFEBE6' }} onClick={() => setIsOutputModalOpen(true)}>
+                <MinusCircleOutlined style={{ fontSize: 24, color: '#DE350B' }} />
+                <span style={{ color: '#DE350B' }}>Saída</span>
+              </div>
+              <div className={styles.actionButton} style={{ background: '#E2E2FB' }} onClick={() => setIsCardModalOpen(true)}>
+                <CreditCardOutlined style={{ fontSize: 24, color: '#6C5DD3' }} />
+                <span style={{ color: '#6C5DD3' }}>Cartões</span>
+              </div>
+            </div>
+          </div>
+
           <div ref={refSaldo} className={styles.balance} style={{ flex: 1, padding: '24px 32px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
@@ -764,7 +798,7 @@ const Resume = () => {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3 className={styles.balance_description} style={{ margin: 0 }}>Visão Geral</h3>
+              <h3 className={styles.balance_description} style={{ margin: 0 }}>Visão geral</h3>
             </div>
 
             <div style={{ width: '100%', marginTop: 10, position: 'relative' }}>
@@ -828,100 +862,6 @@ const Resume = () => {
                 )}
               </div>
             </div>
-
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #F4F5F7' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h3 className={styles.balance_description} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
-                  <RocketOutlined style={{ marginRight: 6, fontSize: 12, color: "#6C5DD3" }} />
-                  Objetivos
-                </h3>
-                <Button type="link" size="small" onClick={() => router.push('/objectives')} style={{ color: '#6C5DD3', padding: 0 }}>
-                  Ver todos
-                </Button>
-              </div>
-
-              {objectives.length > 0 ? (
-                <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 18 }}>
-                  {objectives.slice(0, 3).map((obj) => {
-                    const percent = Math.round(obj.progress_percentage || 0);
-                    const circumference = 2 * Math.PI * 32;
-                    const strokeDashoffset = circumference - (percent / 100) * circumference;
-                    const colors = ['#6C5DD3', '#00875A', '#FF754C', '#FAAD14'];
-                    const color = colors[objectives.indexOf(obj) % colors.length];
-
-                    return (
-                        <div key={obj.id} style={{ textAlign: 'center' }}>
-                        <div style={{ position: 'relative', width: 72, height: 72 }}>
-                          <svg width="72" height="72" viewBox="0 0 72 72">
-                            <circle
-                              cx="36"
-                              cy="36"
-                              r="32"
-                              fill="none"
-                              stroke="#F4F5F7"
-                              strokeWidth="6"
-                            />
-                            <circle
-                              cx="36"
-                              cy="36"
-                              r="32"
-                              fill="none"
-                              stroke={color}
-                              strokeWidth="6"
-                              strokeLinecap="round"
-                              strokeDasharray={circumference}
-                              strokeDashoffset={strokeDashoffset}
-                              transform="rotate(-90 36 36)"
-                              style={{ transition: 'stroke-dashoffset 0.5s ease' }}
-                            />
-                          </svg>
-                          <div style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            fontSize: 14,
-                            fontWeight: 700,
-                            color: '#11142D'
-                          }}>
-                            {percent}%
-                          </div>
-                        </div>
-                        <AntTooltip placement="bottom" title={<span style={{ fontSize: 12 }}>{obj.name}</span>}>
-                          <span style={{
-                            display: 'block',
-                            marginTop: 8,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: '#11142D',
-                            maxWidth: 80,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            cursor: 'default'
-                          }}>
-                            {obj.name}
-                          </span>
-                        </AntTooltip>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                  <p style={{ fontSize: 13, color: '#808191', marginBottom: 12 }}>Voce ainda nao definiu objetivos.</p>
-                  <Button
-                    type="dashed"
-                    size="small"
-                    icon={<PlusOutlined />}
-                    onClick={() => router.push('/objectives')}
-                    style={{ borderRadius: 8, color: '#808191' }}
-                  >
-                    Criar objetivo
-                  </Button>
-                </div>
-              )}
-            </div>
           </div>
         </Col>
 
@@ -945,7 +885,7 @@ const Resume = () => {
             <div style={{ marginTop: 8 }}>
                 <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
                   <LineChartOutlined style={{ marginRight: 6, fontSize: 12, color: "#6C5DD3" }} />
-                  Gasto Real
+                  Gasto real
                 </p>
                 <p className={styles.balance_title} style={{ fontSize: 28, marginBottom: 16 }}>
                   <AnimatedNumber value={periodRealSpending} duration={1500} format={formatCurrency} />
@@ -991,29 +931,105 @@ const Resume = () => {
             </div>
           </div>
 
-          {/* Quick Actions area */}
-          <div className={styles.quickActions} style={{ marginTop: 20 }}>
-            <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 16, color: '#808191' }}>Ações rápidas</p>
-            <div className={styles.buttonsContainer} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-              <div className={styles.actionButton} style={{ background: '#E6F7EF' }} onClick={() => router.push('/EnterTransaction')}>
-                <PlusCircleOutlined style={{ fontSize: 24, color: '#00875A' }} />
-                <span style={{ color: '#00875A' }}>Entrada</span>
-              </div>
-              <div className={styles.actionButton} style={{ background: '#FFEBE6' }} onClick={() => router.push('/Outputs')}>
-                <MinusCircleOutlined style={{ fontSize: 24, color: '#DE350B' }} />
-                <span style={{ color: '#DE350B' }}>Saída</span>
-              </div>
-              <div className={styles.actionButton} style={{ background: '#E2E2FB' }} onClick={() => router.push('/cards')}>
-                <CreditCardOutlined style={{ fontSize: 24, color: '#6C5DD3' }} />
-                <span style={{ color: '#6C5DD3' }}>Cartões</span>
-              </div>
+          {/* Objectives section moved here */}
+          <div className={styles.balance} style={{ marginTop: 20, padding: '24px 32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 className={styles.balance_description} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+                <RocketOutlined style={{ marginRight: 6, fontSize: 12, color: "#6C5DD3" }} />
+                Objetivos
+              </h3>
+              <Button type="link" size="small" onClick={() => router.push('/objectives')} style={{ color: '#6C5DD3', padding: 0 }}>
+                Ver todos
+              </Button>
             </div>
+
+            {objectives.length > 0 ? (
+              <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 18 }}>
+                {objectives.slice(0, 3).map((obj) => {
+                  const percent = Math.round(obj.progress_percentage || 0);
+                  const circumference = 2 * Math.PI * 32;
+                  const strokeDashoffset = circumference - (percent / 100) * circumference;
+                  const colors = ['#6C5DD3', '#00875A', '#FF754C', '#FAAD14'];
+                  const color = colors[objectives.indexOf(obj) % colors.length];
+
+                  return (
+                      <div key={obj.id} style={{ textAlign: 'center' }}>
+                      <div style={{ position: 'relative', width: 72, height: 72 }}>
+                        <svg width="72" height="72" viewBox="0 0 72 72">
+                          <circle
+                            cx="36"
+                            cy="36"
+                            r="32"
+                            fill="none"
+                            stroke="#F4F5F7"
+                            strokeWidth="6"
+                          />
+                          <circle
+                            cx="36"
+                            cy="36"
+                            r="32"
+                            fill="none"
+                            stroke={color}
+                            strokeWidth="6"
+                            strokeLinecap="round"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={strokeDashoffset}
+                            transform="rotate(-90 36 36)"
+                            style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                          />
+                        </svg>
+                        <div style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: '#11142D'
+                        }}>
+                          {percent}%
+                        </div>
+                      </div>
+                      <AntTooltip placement="bottom" title={<span style={{ fontSize: 12 }}>{obj.name}</span>}>
+                        <span style={{
+                          display: 'block',
+                          marginTop: 8,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: '#11142D',
+                          maxWidth: 80,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          cursor: 'default'
+                        }}>
+                          {obj.name}
+                        </span>
+                      </AntTooltip>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                <p style={{ fontSize: 13, color: '#808191', marginBottom: 12 }}>Você ainda não definiu objetivos.</p>
+                <Button
+                  type="dashed"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={() => router.push('/objectives')}
+                  style={{ borderRadius: 8, color: '#808191' }}
+                >
+                  Criar objetivo
+                </Button>
+              </div>
+            )}
           </div>
         </Col>
 
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column", zIndex: 2 }}>
           <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '16px 24px', position: 'relative', overflow: 'visible' }}>
-            <p className={styles.balance_description} style={{ marginBottom: 12 }}>Meus Cartões (total de gastos)</p>
+            <p className={styles.balance_description} style={{ marginBottom: 12 }}>Meus cartões (total de gastos)</p>
             <p className={styles.balance_title} style={{ marginBottom: 24 }}><AnimatedNumber value={totalCardsInvoice} duration={1500} format={formatCurrency} /></p>
 
             {/* Card Slider / Stack Simulation */}
@@ -1158,7 +1174,7 @@ const Resume = () => {
         onClose={handleCloseTour}
       />
       <Modal
-        title="Editar Meta do Mês"
+        title="Editar meta do mês"
         open={isEditMode}
         onCancel={() => setIsEditMode(false)}
         footer={null}
@@ -1170,7 +1186,7 @@ const Resume = () => {
           initialValues={{ planned_spending: periodPlannedSpending }}
         >
           <Form.Item
-            label="Valor da Meta"
+            label="Valor da meta"
             name="planned_spending"
             rules={[{ required: true, message: "Por favor, insira o valor da meta!" }]}
           >
@@ -1186,12 +1202,28 @@ const Resume = () => {
             <Space>
               <Button onClick={() => setIsEditMode(false)}>Cancelar</Button>
               <Button type="primary" htmlType="submit" style={{ background: '#6C5DD3', borderColor: '#6C5DD3' }}>
-                Salvar Meta
+                Salvar meta
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
+
+      <EnterTransactionModal
+        isModalOpen={isEnterModalOpen}
+        setIsModalOpen={setIsEnterModalOpen}
+        onSuccess={handleRefreshData}
+      />
+      <OutputModal
+        isModalOpen={isOutputModalOpen}
+        setIsModalOpen={setIsOutputModalOpen}
+        onSuccess={handleRefreshData}
+      />
+      <NewCardModal
+        isModalOpen={isCardModalOpen}
+        setIsModalOpen={setIsCardModalOpen}
+        onSuccess={handleRefreshData}
+      />
     </div>
     </div>
   );

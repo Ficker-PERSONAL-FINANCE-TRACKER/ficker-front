@@ -285,9 +285,11 @@ const CategoriesPage = () => {
         },
       });
 
-      message.success(`Meta para ${selectedCategory.category_description} atualizada para ${currentMonthLabel.toLowerCase()}!`);
+      message.success(
+        `Meta para ${selectedCategory.category_description} atualizada para ${currentMonthLabel.toLowerCase()} de ${filters.year}!`
+      );
       setIsModalOpen(false);
-      fetchData();
+      await fetchData();
     } catch (error) {
       message.error("Erro ao salvar meta");
     }
@@ -359,7 +361,7 @@ const CategoriesPage = () => {
       <div className={styles.pageContent}>
         <div className={styles.pageHeader}>
           <div>
-            <h2 className={styles.pageTitle}>Meta de Gastos</h2>
+            <h2 className={styles.pageTitle}>Meta de gastos</h2>
             <p className={styles.pageSubtitle}>
               A meta total por categoria soma as metas mensais existentes nos meses cobertos pelo filtro.
             </p>
@@ -411,7 +413,7 @@ const CategoriesPage = () => {
                           <div>
                             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{category.category_description}</h3>
                             <span style={{ fontSize: 12, color: "#808191" }}>
-                              {limit > 0 ? `Meta acumulada: ${formatCurrency(limit)}` : "Meta acumulada: nao definida"}
+                              {limit > 0 ? `Meta acumulada: ${formatCurrency(limit)}` : "Meta acumulada: não definida"}
                             </span>
                           </div>
                         </div>
@@ -449,24 +451,24 @@ const CategoriesPage = () => {
         </div>
 
         <Modal
-          title={`Definir Meta para ${selectedCategory?.category_description}`}
+          title={`Definir meta para ${selectedCategory?.category_description}`}
           open={isModalOpen}
           onOk={handleSaveLimit}
           onCancel={() => setIsModalOpen(false)}
-          okText="Salvar Meta"
+          okText="Salvar meta"
           cancelText="Cancelar"
           centered
           okButtonProps={{ style: { background: "#6C5DD3" } }}
         >
           <div style={{ marginBottom: 20 }}>
             <p style={{ color: "#808191", fontSize: 13 }}>
-              Defina o valor maximo que voce planeja gastar com <strong>{selectedCategory?.category_description}</strong> em {currentMonthLabel.toLowerCase()} de {filters.year}.
+              Defina o valor máximo que você planeja gastar com <strong>{selectedCategory?.category_description}</strong> em {currentMonthLabel.toLowerCase()} de {filters.year}.
             </p>
           </div>
           <Form form={form} layout="vertical">
             <Form.Item
               name="category_limit"
-              label="Valor da Meta para este mês"
+              label="Valor da meta para este mês"
               rules={[{ required: true, message: "Por favor, insira um valor" }]}
             >
               <InputNumber
@@ -478,7 +480,7 @@ const CategoriesPage = () => {
             </Form.Item>
 
             <Form.Item name="keep_future" valuePropName="checked">
-              <Checkbox>Manter esta mesma meta para os proximos meses</Checkbox>
+              <Checkbox>Manter esta mesma meta para os próximos meses</Checkbox>
             </Form.Item>
           </Form>
         </Modal>
