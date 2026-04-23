@@ -1,0 +1,111 @@
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  background: #fff;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+
+  .logoWrapper {
+    padding: 10px;
+    
+    img {
+      width: 130px;
+      height: 27px;
+    }
+  }
+}
+
+.contentWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+.formCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  padding: 16px 24px;
+  border: 1px solid #F8FAFC;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+.titleArea {
+  text-align: center;
+  margin-bottom: 12px;
+
+  h3 {
+    margin-bottom: 4px;
+  }
+}
+
+.stepContent {
+  padding: 10px 0;
+  
+  .stepTitle {
+    margin-top: 4px;
+    margin-bottom: 8px;
+  }
+  
+  .stepDescription {
+    display: block;
+    margin-bottom: 20px;
+  }
+}
+
+.inputField {
+  background-color: #F8FAFC !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 5px !important;
+  height: 40px !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05) !important;
+  
+  &.numberField {
+    padding-top: 4px;
+  }
+}
+
+.primaryButton {
+  height: 45px;
+  border-radius: 8px;
+  background: #6C5DD3;
+  border-color: #6C5DD3;
+  color: #fff;
+  font-weight: 500;
+  padding: 0 24px;
+
+  &:hover {
+    background: #5b4eb8 !important;
+    border-color: #5b4eb8 !important;
+    color: #fff !important;
+  }
+}
+
+.secondaryButton {
+  height: 45px;
+  border-radius: 8px;
+  padding: 0 24px;
+}
+
+.footerActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.listCard {
+  margin-bottom: 8px;
+  background: #f5f5f5;
+  border: none;
+}
