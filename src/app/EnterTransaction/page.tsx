@@ -95,9 +95,11 @@ const EnterTransaction = () => {
 
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
+    const isDefaultMonth = filters.mode === "month" && filters.month === (now.getMonth() + 1) && filters.year === now.getFullYear();
+
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
       labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
-    } else {
+    } else if (!isDefaultMonth) {
       labels.push(`Mês: ${monthNames[filters.month - 1]}`);
       labels.push(`Ano: ${filters.year}`);
     }
@@ -108,7 +110,7 @@ const EnterTransaction = () => {
     if (filters.flag_id) labels.push("Bandeira selecionada");
 
     return labels;
-  }, [filters, monthNames]);
+  }, [filters, monthNames, now]);
 
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
@@ -128,9 +130,11 @@ const EnterTransaction = () => {
           </div>
         </div>
 
-        <div style={{ padding: "0 30px" }}>
-          <AppliedFiltersBar filters={appliedFiltersLabels} />
-        </div>
+        {appliedFiltersLabels.length > 0 && (
+          <div style={{ padding: "0 30px" }}>
+            <AppliedFiltersBar filters={appliedFiltersLabels} />
+          </div>
+        )}
 
         <div style={{ padding: "0 30px" }}>
           <TransactionTab

@@ -392,6 +392,8 @@ const Cards = () => {
     return labels;
   }, [showArchived, filters]);
 
+  const hasAppliedFilters = appliedFiltersLabels.length > 0;
+
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
       <CustomMenu />
@@ -408,13 +410,17 @@ const Cards = () => {
             <button className={styles.button} onClick={openModal}>
               Novo Cartão
             </button>
-            <CardFilter filters={filters} onChange={setFilters} />
+            <div style={{ marginTop: "10px" }}>
+              <CardFilter  filters={filters} onChange={setFilters} />
+            </div>
           </div>
         </div>
 
-        <div style={{ padding: "0 30px" }}>
-          <AppliedFiltersBar filters={appliedFiltersLabels} />
-        </div>
+        {hasAppliedFilters && (
+          <div style={{ padding: "0 30px" }}>
+            <AppliedFiltersBar filters={appliedFiltersLabels} />
+          </div>
+        )}
 
         {loading ? (
           <Row justify={"center"}>
