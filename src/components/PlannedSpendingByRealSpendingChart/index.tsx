@@ -1,14 +1,16 @@
 import React from "react";
 import {
-  ComposedChart,
-  Line,
+  BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
+  Cell,
+  LabelList,
+  Legend,
+  Customized
 } from "recharts";
 import { FinanceDataPoint } from "../PlannedSpendingByRealSppendingChartContainer";
 
@@ -22,17 +24,71 @@ const currency = (value: number) =>
     currency: "BRL",
   });
 
+const ConnectingArrows = (props: any) => {
+  const { formattedGraphicalItems } = props;
+  const realItems = formattedGraphicalItems.find((i: any) => i.props.dataKey === "real")?.props.data;
+  const plannedItems = formattedGraphicalItems.find((i: any) => i.props.dataKey === "planejado")?.props.data;
+
+  if (!realItems || !plannedItems) return null;
+
+  return (
+    <g>
+      {realItems.map((real: any, index: number) => {
+        const planned = plannedItems[index];
+        if (!real || !planned) return null;
+
+        const isOver = real.payload.real > real.payload.planejado;
+        const color = isOver ? "#FF0000" : "#00D084";
+        
+        // real.y is the top of the real bar
+        // planned.y is the top of the planned bar
+        const x = real.x + real.width / 2 + real.width / 2 + 2; // Offset to the right of narrow bar
+        const yStart = real.y;
+        const yEnd = planned.y;
+
+        if (Math.abs(yStart - yEnd) < 2) return null;
+
+        return (
+          <g key={`arrow-${index}`}>
+            <line
+              x1={x}
+              y1={yStart}
+              x2={x}
+              y2={yEnd}
+              stroke={color}
+              strokeWidth={2}
+            />
+            {/* Arrowhead */}
+            <path
+              d={isOver 
+                ? `M${x-3},${yStart + 5} L${x},${yStart} L${x+3},${yStart + 5}` // Arrow pointing down (starting at top of real)
+                : `M${x-3},${yEnd + 5} L${x},${yEnd} L${x+3},${yEnd + 5}`   // Arrow pointing up (ending at top of planned)
+              }
+              fill="none"
+              stroke={color}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        );
+      })}
+    </g>
+  );
+};
+
 const PlannedSpendingByRealSpendingChart = ({ data }: PlannedSpendingByRealSpendingChartProps) => {
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <ComposedChart
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart
         data={data}
         margin={{
-          top: 20,
-          right: 24,
+          top: 40,
+          right: 32,
           bottom: 20,
           left: 0,
         }}
+        barGap={-32}
       >
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis
@@ -53,36 +109,37 @@ const PlannedSpendingByRealSpendingChart = ({ data }: PlannedSpendingByRealSpend
           labelStyle={{ fontWeight: 800, color: "#11142d", marginBottom: "8px" }}
         />
         <Legend 
-          verticalAlign="top" 
-          align="right" 
+          verticalAlign="bottom" 
+          align="center" 
           iconType="circle" 
-          wrapperStyle={{ paddingBottom: "20px" }}
-          formatter={(value) => <span style={{ color: "#808191", fontSize: "12px", fontWeight: 600 }}>{value}</span>}
+          iconSize={8}
+          wrapperStyle={{ paddingTop: "20px" }}
+          formatter={(value) => <span style={{ color: "#808191", fontSize: "11px", fontWeight: 600 }}>{value}</span>}
         />
+        
         <Bar 
-          dataKey="entrada" 
-          name="Entrada" 
-          barSize={12} 
-          fill="#16a34a" 
-          radius={[4, 4, 0, 0]} 
+          dataKey="planejado" 
+          name="Planejado" 
+          barSize={32} 
+          fill="#A197F0" 
+          radius={[6, 6, 0, 0]} 
+          isAnimationActive={false}
         />
+
         <Bar 
-          dataKey="saida" 
-          name="Saída" 
+          dataKey="real" 
+          name="Real" 
           barSize={12} 
-          fill="#dc2626" 
-          radius={[4, 4, 0, 0]} 
-        />
-        <Line 
-          type="monotone" 
-          dataKey="saldo" 
-          name="Saldo" 
-          stroke="#6C5DD3" 
-          strokeWidth={4} 
-          dot={{ r: 4, strokeWidth: 0, fill: "#6C5DD3" }} 
-          activeDot={{ r: 6, strokeWidth: 0, fill: "#6C5DD3" }} 
-        />
-      </ComposedChart>
+          radius={[4, 4, 0, 0]}
+          isAnimationActive={false}
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill="#3D3799" />
+          ))}
+        </Bar>
+        
+        <Customized component={ConnectingArrows} />
+      </BarChart>
     </ResponsiveContainer>
   );
 };

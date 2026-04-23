@@ -163,9 +163,9 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
 
   return (
     <div className="sidebar-container">
-      <div className="burger-area">
+      {/* <div className="burger-area">
         <BarsOutlined onClick={toggleMenu} className="burger-icon" />
-      </div>
+      </div> */}
       {showMenu && (
         <div className={`menu-sidebar ${showMenu ? "show" : ""}`}>
           <div>

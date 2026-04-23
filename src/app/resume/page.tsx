@@ -832,7 +832,7 @@ const Resume = () => {
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid #F4F5F7' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h3 className={styles.balance_description} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
-                  <RocketOutlined style={{ marginRight: 6, fontSize: 12 }} />
+                  <RocketOutlined style={{ marginRight: 6, fontSize: 12, color: "#6C5DD3" }} />
                   Objetivos
                 </h3>
                 <Button type="link" size="small" onClick={() => router.push('/objectives')} style={{ color: '#6C5DD3', padding: 0 }}>
@@ -930,7 +930,7 @@ const Resume = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
-                    <TagOutlined style={{ marginRight: 6, fontSize: 12 }} />
+                    <TagOutlined style={{ marginRight: 6, fontSize: 12, color: "#6C5DD3" }} />
                     {goalCardTitle}
                   </p>
                   <p className={styles.balance_title} style={{ fontSize: 28, marginBottom: 16 }}>
@@ -944,7 +944,7 @@ const Resume = () => {
 
             <div style={{ marginTop: 8 }}>
                 <p className={styles.balance_description} style={{ fontSize: 13, marginBottom: 4, display: 'flex', alignItems: 'center' }}>
-                  <LineChartOutlined style={{ marginRight: 6, fontSize: 12 }} />
+                  <LineChartOutlined style={{ marginRight: 6, fontSize: 12, color: "#6C5DD3" }} />
                   Gasto Real
                 </p>
                 <p className={styles.balance_title} style={{ fontSize: 28, marginBottom: 16 }}>

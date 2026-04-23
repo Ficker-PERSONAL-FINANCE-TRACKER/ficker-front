@@ -6,14 +6,14 @@ import dayjs from "dayjs";
 
 export interface FinanceDataPoint {
   name: string;
-  entrada: number;
-  saida: number;
+  planejado: number;
+  real: number;
   saldo: number;
 }
 
 interface TimelinePoint {
   period_start: string;
-  income_total: number;
+  planned_spending_total: number;
   real_spending_total: number;
 }
 
@@ -41,13 +41,13 @@ const PlannedSpendingByRealSpendingChartContainer = ({
       const { data } = await request({ method: "GET", endpoint });
       const series = (data?.data?.series ?? []) as TimelinePoint[];
       const transformedData = series.map((item) => {
-        const entrada = Number(item.income_total || 0);
-        const saida = Number(item.real_spending_total || 0);
+        const planejado = Number(item.planned_spending_total || 0);
+        const real = Number(item.real_spending_total || 0);
         return {
           name: getPeriodLabel(item.period_start),
-          entrada,
-          saida,
-          saldo: entrada - saida,
+          planejado,
+          real,
+          saldo: planejado - real,
         };
       });
 
@@ -75,7 +75,7 @@ const PlannedSpendingByRealSpendingChartContainer = ({
 
   return (
     <div className="card-chart">
-      <h4>Visão Geral de Fluxo</h4>
+      <h4>Planejado e Real</h4>
       <PlannedSpendingByRealSpendingChart data={data} />
     </div>
   );

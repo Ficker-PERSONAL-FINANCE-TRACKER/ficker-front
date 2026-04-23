@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Button, DatePicker, Form, Modal, Select } from "antd";
+import { Button, DatePicker, Form, Modal, Select, Segmented, Input } from "antd";
 import dayjs, { Dayjs } from "dayjs";
+import { CalendarOutlined } from "@ant-design/icons";
 import styles from "./resume.module.scss";
 
 const { RangePicker } = DatePicker;
@@ -105,7 +106,12 @@ export const ResumeTemporalFilter = ({ filters, onChange }: ResumeTemporalFilter
 
   return (
     <>
-      <Button className={styles.filterButton} onClick={openModal} ref={triggerRef}>
+      <Button 
+        className={styles.filterButton} 
+        onClick={openModal} 
+        ref={triggerRef}
+        icon={<CalendarOutlined />}
+      >
         Filtrar
       </Button>
 
@@ -120,30 +126,38 @@ export const ResumeTemporalFilter = ({ filters, onChange }: ResumeTemporalFilter
         centered
       >
         <Form form={form} layout="vertical" initialValues={{ mode: filters.mode }}>
-          <Form.Item name="mode" label="Modo de filtro" rules={[{ required: true, message: "Selecione um modo" }]}>
-            <Select
+          <div style={{ marginBottom: 20 }}>
+            <Segmented
+              block
+              value={selectedMode}
+              onChange={(value) => form.setFieldValue("mode", value)}
               options={[
-                { value: "month", label: "Mês específico" },
-                { value: "custom", label: "Intervalo personalizado" },
+                { value: "month", label: "Mês" },
+                { value: "custom", label: "Período" },
               ]}
+              style={{ background: "#F8FAFC", borderRadius: 10, padding: 4 }}
             />
+          </div>
+
+          <Form.Item name="mode" hidden>
+            <Input />
           </Form.Item>
 
           {selectedMode === "custom" ? (
             <Form.Item
               name="range"
-              label="Período"
+              label="Intervalo de Datas"
               rules={[{ required: true, message: "Selecione um intervalo" }]}
             >
-              <RangePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+              <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
             </Form.Item>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
               <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
-                <Select options={MONTH_OPTIONS} />
+                <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
               </Form.Item>
               <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
-                <Select options={yearOptions} />
+                <Select options={yearOptions} placeholder="Ano" style={{ height: 45 }} />
               </Form.Item>
             </div>
           )}
