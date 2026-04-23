@@ -43,9 +43,9 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
       case 1:
         return <GoalStep form={actions.formGoal} />;
       case 2:
-        return <CardStep form={actions.formCard} cardsData={actions.cardsData} />;
+        return <CardStep form={actions.formCard} cardsData={actions.cardsData} onSkip={actions.handleSkipCard} />;
       case 3:
-        return <ObjectiveStep form={actions.formObjective} objectivesData={actions.objectivesData} />;
+        return <ObjectiveStep form={actions.formObjective} objectivesData={actions.objectivesData} onSkip={actions.handleSkipObjective} />;
       default:
         return null;
     }

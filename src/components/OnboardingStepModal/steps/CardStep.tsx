@@ -6,7 +6,8 @@ const { Title, Text } = Typography;
 
 interface CardStepProps {
   form: any;
-  onSkip: () => void;
+  cardsData?: any[];
+  onSkip?: () => void;
 }
 
 const FLAGS = [

@@ -6,7 +6,8 @@ const { Title, Text } = Typography;
 
 interface ObjectiveStepProps {
   form: any;
-  onSkip: () => void;
+  objectivesData?: any[];
+  onSkip?: () => void;
 }
 
 const MONTH_OPTIONS = [
