@@ -15,7 +15,7 @@ const EnterTransaction = () => {
   const monthNames = [
     "Janeiro",
     "Fevereiro",
-    "Marco",
+    "Março",
     "Abril",
     "Maio",
     "Junho",
@@ -95,7 +95,7 @@ const EnterTransaction = () => {
           <div className={styles.buttonsArea} style={{ width: "auto", display: "flex", alignItems: "center", gap: 12 }}>
             <SearchField style={{ width: 300, marginRight: 0, flex: "0 0 auto" }} />
             <button className={styles.button} onClick={showModal} style={{ whiteSpace: "nowrap" }}>
-              Nova Transacao
+              Nova entrada
             </button>
             <EnterTemporalFilter filters={filters} onChange={setFilters} />
           </div>

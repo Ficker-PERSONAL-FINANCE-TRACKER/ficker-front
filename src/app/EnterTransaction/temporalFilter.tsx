@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, DatePicker, Form, Modal, Select, Segmented, Input } from "antd";
+import { Button, DatePicker, Form, Modal, Select, Segmented, Input, ConfigProvider } from "antd";
+import ptBR from "antd/locale/pt_BR";
 import dayjs, { Dayjs } from "dayjs";
 import { CalendarOutlined } from "@ant-design/icons";
 import styles from "./entertransaction.module.scss";
@@ -11,7 +12,7 @@ const { RangePicker } = DatePicker;
 const MONTH_OPTIONS = [
   { value: 1, label: "Janeiro" },
   { value: 2, label: "Fevereiro" },
-  { value: 3, label: "Marco" },
+  { value: 3, label: "Março" },
   { value: 4, label: "Abril" },
   { value: 5, label: "Maio" },
   { value: 6, label: "Junho" },
@@ -50,15 +51,24 @@ export const EnterTemporalFilter = ({ filters, onChange }: EnterTemporalFilterPr
   const [form] = Form.useForm<FilterFormValues>();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const yearOptions = useMemo(
-    () => Array.from({ length: 7 }, (_, index) => now.getFullYear() - 3 + index).map((year) => ({
-      value: year,
-      label: String(year),
-    })),
-    [now]
-  );
+  const [availableYears, setYearOptions] = useState<{ value: number; label: string }[]>([]);
+
+  const fetchAvailableYears = async () => {
+    try {
+      const response = await request({
+        method: "GET",
+        endpoint: "transaction/years",
+      });
+      const years = response.data.data.years || [];
+      const options = years.map((y: number) => ({ value: y, label: String(y) }));
+      setYearOptions(options.length > 0 ? options : [{ value: now.getFullYear(), label: String(now.getFullYear()) }]);
+    } catch (error) {
+      setYearOptions([{ value: now.getFullYear(), label: String(now.getFullYear()) }]);
+    }
+  };
 
   const openModal = () => {
+    fetchAvailableYears();
     form.setFieldsValue({
       mode: filters.mode,
       month: filters.month,
@@ -126,43 +136,45 @@ export const EnterTemporalFilter = ({ filters, onChange }: EnterTemporalFilterPr
         cancelText="Cancelar"
         centered
       >
-        <Form form={form} layout="vertical" initialValues={{ mode: filters.mode }}>
-          <div style={{ marginBottom: 20 }}>
-            <Segmented
-              block
-              value={selectedMode}
-              onChange={(value) => form.setFieldValue("mode", value)}
-              options={[
-                { value: "month", label: "Mês" },
-                { value: "custom", label: "Período" },
-              ]}
-              style={{ background: "#F8FAFC", borderRadius: 10, padding: 4 }}
-            />
-          </div>
-
-          <Form.Item name="mode" hidden>
-            <Input />
-          </Form.Item>
-
-          {selectedMode === "custom" ? (
-            <Form.Item
-              name="range"
-              label="Intervalo de Datas"
-              rules={[{ required: true, message: "Selecione um intervalo" }]}
-            >
-              <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
-            </Form.Item>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-              <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
-                <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
-              </Form.Item>
-              <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
-                <Select options={yearOptions} placeholder="Ano" style={{ height: 45 }} />
-              </Form.Item>
+        <ConfigProvider locale={ptBR}>
+          <Form form={form} layout="vertical" initialValues={{ mode: filters.mode }}>
+            <div style={{ marginBottom: 20 }}>
+              <Segmented
+                block
+                value={selectedMode}
+                onChange={(value) => form.setFieldValue("mode", value)}
+                options={[
+                  { value: "month", label: "Mês" },
+                  { value: "custom", label: "Período" },
+                ]}
+                style={{ background: "#F8FAFC", borderRadius: 10, padding: 4 }}
+              />
             </div>
-          )}
-        </Form>
+
+            <Form.Item name="mode" hidden>
+              <Input />
+            </Form.Item>
+
+            {selectedMode === "custom" ? (
+              <Form.Item
+                name="range"
+                label="Intervalo de datas"
+                rules={[{ required: true, message: "Selecione um intervalo" }]}
+              >
+                <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
+              </Form.Item>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
+                <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
+                  <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
+                </Form.Item>
+                <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
+                  <Select options={availableYears} placeholder="Ano" style={{ height: 45 }} />
+                </Form.Item>
+              </div>
+            )}
+          </Form>
+        </ConfigProvider>
       </Modal>
     </>
   );

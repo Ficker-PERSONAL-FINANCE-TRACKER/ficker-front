@@ -292,7 +292,7 @@ export default function CustomTour({
                 borderRadius: 10,
               }}
             >
-              {isLast ? "Concluir" : "Proximo"}
+              {isLast ? "Concluir" : "Próximo"}
             </Button>
           </div>
         </div>

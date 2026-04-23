@@ -494,7 +494,7 @@ const Analysis = () => {
     let runningBalance = openingBalance;
     let runningReal = 0;
     let runningCredit = 0;
-    const chartPoints = balanceTimelineSeries.map((item) => {
+    const chartPoints = (balanceTimelineSeries || []).map((item) => {
       runningBalance += Number(item.income_total || 0) - Number(item.real_spending_total || 0);
       runningReal += Number(item.real_spending_total || 0);
       runningCredit += Number(item.credit_card_purchase_total || 0);
@@ -587,7 +587,7 @@ const Analysis = () => {
   const hasReferenceInvoiceAwaitingClosure = cards.some(
     (card) => card.reference_invoice_status === "aguardando_fechamento" || card.reference_invoice_status === "awaiting_closure"
   );
-  const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "Período";
+  const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "período";
   const currentReferenceLabel = `${MONTH_OPTIONS[now.getMonth()]?.label ?? dayjs().format("MMMM")} de ${now.getFullYear()}`;
   const yearOptions = Array.from({ length: 7 }, (_, index) => now.getFullYear() - 3 + index).map((year) => ({
     value: year,
@@ -685,30 +685,24 @@ const Analysis = () => {
   const selectedMode = Form.useWatch("mode", form) ?? filters.mode;
   
   const renderIndicator = (
-    label: string, 
-    value: any, 
-    percentageOrSubtitle?: number | string, 
-    colorOrClass?: string, 
-    hint?: string,
-    IconComponent?: React.ElementType
+    label: string,
+    value: any,
+    subtitle: string,
+    statusClass?: "statusSuccess" | "statusWarning" | "statusDanger",
+    format: "currency" | "percent" | "raw" = "currency",
+    Icon?: any
   ) => {
-    const isNewStyle = typeof percentageOrSubtitle === 'string';
-    const subtitle = isNewStyle ? percentageOrSubtitle : undefined;
-    const colorClass = isNewStyle ? colorOrClass : undefined;
-
-    const isPlanned = label.toLowerCase().includes("planejado") || 
-                     label.toLowerCase().includes("proxima") || 
-                     label.toLowerCase().includes("futuro");
-
     return (
-      <div className={`${styles.metricIndicator} ${colorClass && styles[colorClass] ? styles[colorClass] : ""}`} title={hint}>
+      <div className={`${styles.metricIndicator} ${statusClass ? styles[statusClass] : ""}`}>
         <div className={styles.indicatorHeader}>
-          {IconComponent && <div className={styles.indicatorIcon}><IconComponent /></div>}
+          {Icon && <div className={styles.indicatorIcon}><Icon /></div>}
           <div className={styles.indicatorLabel}>
             {label}
           </div>
         </div>
-        <h3 className={styles.indicatorValue}>{typeof value === 'number' ? currency(value) : value}</h3>
+        <h3 className={styles.indicatorValue}>
+          {format === "currency" && typeof value === 'number' ? currency(value) : value}
+        </h3>
         {subtitle && <p className={styles.indicatorSubtitle}>{subtitle}</p>}
       </div>
     );
@@ -803,7 +797,7 @@ const Analysis = () => {
             items={[
               {
                 key: "general",
-                label: "Resumo Geral",
+                label: "Resumo geral",
                 children: (
                   <div className={styles.tabContentFade}>
                     <div className={styles.metricsGrid}>
@@ -811,16 +805,16 @@ const Analysis = () => {
                         "Entradas no período",
                         summary?.income_total,
                         "Tudo o que entrou no caixa no período filtrado.",
-                        undefined,
-                        undefined,
+                        "statusSuccess",
+                        "currency",
                         RiseOutlined
                       )}
                       {renderIndicator(
                         "Gasto real no período",
                         summary?.real_spending_total,
                         "Saídas que realmente afetaram o saldo.",
-                        undefined,
-                        undefined,
+                        "statusDanger",
+                        "currency",
                         FallOutlined
                       )}
                       {renderIndicator(
@@ -828,15 +822,15 @@ const Analysis = () => {
                         summary?.planned_spending_total,
                         "Meta de gasto considerada para o recorte atual.",
                         undefined,
-                        undefined,
+                        "currency",
                         CalendarOutlined
                       )}
                       {renderIndicator(
                         "Saldo líquido",
                         summary?.balance_delta,
                         "Entradas do período menos o gasto real do mesmo recorte.",
-                        undefined,
-                        undefined,
+                        (summary?.balance_delta ?? 0) >= 0 ? "statusSuccess" : "statusDanger",
+                        "currency",
                         WalletOutlined
                       )}
                     </div>
@@ -899,7 +893,7 @@ const Analysis = () => {
               },
               {
                 key: "cards",
-                label: "Cartões e Crédito",
+                label: "Cartões de crédito",
                 children: (
                   <div className={styles.tabContentFade}>
                     <div className={styles.metricsGrid}>
@@ -907,32 +901,32 @@ const Analysis = () => {
                         "Compras no crédito no período",
                         summary?.credit_card_purchase_total,
                         "Consumo no cartão que ainda não virou gasto real.",
-                        undefined,
-                        undefined,
+                        "statusWarning",
+                        "currency",
                         ShoppingCartOutlined
                       )}
                       {renderIndicator(
                         "Pagamentos de fatura no período",
                         summary?.invoice_payment_total,
                         invoicePaymentsKpiSummary.join(" - ") || "Sem pagamentos no período.",
-                        undefined,
-                        undefined,
+                        "statusSuccess",
+                        "currency",
                         BankOutlined
                       )}
                       {renderIndicator(
                         "Quitação das faturas do período",
                         invoiceSettlementPercentageInPeriod.toFixed(1) + "%",
                         `${invoiceSettlementPercentageInPeriod.toFixed(1)}% do valor das faturas com vencimento no período já foi quitado.`,
-                        undefined,
-                        undefined,
+                        invoiceSettlementPercentageInPeriod >= 100 ? "statusSuccess" : "statusWarning",
+                        "raw",
                         CheckCircleOutlined
                       )}
                       {renderIndicator(
                         `Quitação do aberto atual (${currentReferenceLabel})`,
                         currentOpenSettlementPercentage.toFixed(1) + "%",
                         `${currentOpenSettlementPercentage.toFixed(1)}% da fatura atual já foi quitada.`,
-                        undefined,
-                        undefined,
+                        currentOpenSettlementPercentage >= 100 ? "statusSuccess" : "statusWarning",
+                        "raw",
                         CheckSquareOutlined
                       )}
                     </div>

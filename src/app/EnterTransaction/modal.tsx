@@ -161,7 +161,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
 
   return (
     <Modal
-      title="Nova Entrada"
+      title="Nova entrada"
       open={isModalOpen}
       onCancel={handleCancel}
       okButtonProps={{

@@ -230,18 +230,25 @@ const Cards = () => {
     }
 
     return {
-      title: "Excluir cartao permanentemente?",
+      title: "Excluir cartão permanentemente?",
       okText: "Excluir permanentemente",
       okType: "primary" as const,
       danger: true,
       content: (
         <>
+          <div style={{ background: '#fff2f0', border: '1px solid #ffccc7', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+            <p style={{ color: '#ff4d4f', fontWeight: 600, margin: 0 }}>Atenção: Efeito cascata</p>
+            <p style={{ color: '#ff4d4f', fontSize: '13px', margin: '4px 0 0 0' }}>
+              Ao excluir este cartão, todos os dados vinculados a ele serão apagados permanentemente.
+            </p>
+          </div>
           <p>
-            O cartao <strong>{cardName}</strong> sera removido definitivamente.
+            O cartão <strong>{cardName}</strong> será removido definitivamente.
           </p>
           <ul className={styles.modalList}>
-            <li>Compras, parcelas e vinculos analiticos desse cartao serao removidos.</li>
-            <li>Pagamentos de fatura relacionados podem ser recalculados ou excluidos.</li>
+            <li>Compras, parcelas e vínculos analíticos desse cartão serão removidos.</li>
+            <li>Pagamentos de fatura relacionados podem ser recalculados ou excluídos.</li>
+            <li>Esta ação não pode ser desfeita.</li>
           </ul>
         </>
       ),
@@ -261,7 +268,7 @@ const Cards = () => {
           method: "PATCH",
           endpoint: `cards/${actionModal.card.id}/archive`,
         });
-        messageApi.success("Cartao arquivado com sucesso.");
+        messageApi.success("Cartão arquivado com sucesso.");
       }
 
       if (actionModal.action === "unarchive") {
@@ -269,7 +276,7 @@ const Cards = () => {
           method: "PATCH",
           endpoint: `cards/${actionModal.card.id}/unarchive`,
         });
-        messageApi.success("Cartao restaurado com sucesso.");
+        messageApi.success("Cartão restaurado com sucesso.");
       }
 
       if (actionModal.action === "delete") {
@@ -277,14 +284,14 @@ const Cards = () => {
           method: "DELETE",
           endpoint: `cards/${actionModal.card.id}`,
         });
-        messageApi.success("Cartao excluido com sucesso.");
+        messageApi.success("Cartão excluído com sucesso.");
       }
 
       closeActionModal();
       await getCards();
     } catch (error: any) {
       const apiMessage = error?.response?.data?.message;
-      messageApi.error(apiMessage || "Nao foi possivel concluir a acao.");
+      messageApi.error(apiMessage || "Não foi possível concluir a ação.");
     } finally {
       setActionLoading(false);
     }

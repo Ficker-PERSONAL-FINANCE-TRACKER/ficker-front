@@ -53,16 +53,27 @@ export const EditTransactionModal = ({
   };
 
   const handleDelete = async () => {
-    try {
-      const response = await request({
-        method: "DELETE",
-        endpoint: `transaction/${transaction.id}`,
-      });
-      message.success("Transação excluída com sucesso!");
-      handleCancel();
-    } catch (error) {
-      console.log(error);
-    }
+    Modal.confirm({
+      title: "Excluir transação?",
+      content: "Esta ação não pode ser desfeita e removerá permanentemente o registro desta transação.",
+      okText: "Excluir",
+      okType: "danger",
+      cancelText: "Cancelar",
+      centered: true,
+      onOk: async () => {
+        try {
+          await request({
+            method: "DELETE",
+            endpoint: `transaction/${transaction.id}`,
+          });
+          message.success("Transação excluída com sucesso!");
+          handleCancel();
+        } catch (error) {
+          message.error("Não foi possível excluir a transação.");
+          console.log(error);
+        }
+      },
+    });
   };
 
   const getCategories = async (typeId: number) => {

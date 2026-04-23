@@ -77,14 +77,14 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
 
     if (transaction.is_credit_card_purchase) {
       return {
-        label: "Compra no cartao",
+        label: "Compra no cartão",
         valueColor: "#eab308",
         signal: "-",
       };
     }
 
     return {
-      label: "Saida",
+      label: "Saída",
       valueColor: "#dc2626",
       signal: "-",
     };

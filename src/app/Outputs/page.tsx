@@ -15,7 +15,7 @@ const Outputs = () => {
   const monthNames = [
     "Janeiro",
     "Fevereiro",
-    "Marco",
+    "Março",
     "Abril",
     "Maio",
     "Junho",
@@ -90,12 +90,12 @@ const Outputs = () => {
       <div style={{ width: "90vw", flex: "1 1 0%", overflowX: "hidden" }}>
         <div className={styles.titleArea}>
           <div>
-            <h2>Saidas</h2>
+            <h2>Saídas</h2>
           </div>
           <div className={styles.buttonsArea} style={{ width: "auto", display: "flex", alignItems: "center", gap: 12 }}>
             <SearchField style={{ width: 300, marginRight: 0, flex: "0 0 auto" }} />
             <button className={styles.button} onClick={showModal} style={{ whiteSpace: "nowrap" }}>
-              Nova Transacao
+              Nova saída
             </button>
             <OutputTemporalFilter filters={filters} onChange={setFilters} />
           </div>
