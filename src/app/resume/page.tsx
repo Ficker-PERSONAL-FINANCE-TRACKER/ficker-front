@@ -1174,7 +1174,7 @@ const Resume = () => {
         onClose={handleCloseTour}
       />
       <Modal
-        title="Editar meta do mês"
+        title="Editar meta de gastos"
         open={isEditMode}
         onCancel={() => setIsEditMode(false)}
         footer={null}
@@ -1186,26 +1186,26 @@ const Resume = () => {
           initialValues={{ planned_spending: periodPlannedSpending }}
         >
           <Form.Item
-            label="Valor da meta"
-            name="planned_spending"
-            rules={[{ required: true, message: "Por favor, insira o valor da meta!" }]}
-          >
-            <Input
-              type="number"
-              placeholder="Ex: 2000"
-              prefix="R$"
-              size="large"
-              style={{ borderRadius: 8 }}
-            />
-          </Form.Item>
-          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
-            <Space>
-              <Button onClick={() => setIsEditMode(false)}>Cancelar</Button>
-              <Button type="primary" htmlType="submit" style={{ background: '#6C5DD3', borderColor: '#6C5DD3' }}>
-                Salvar meta
-              </Button>
-            </Space>
-          </Form.Item>
+              label="Valor da meta"
+              name="planned_spending"
+              rules={[{ required: true, message: "Por favor, insira o valor da meta de gastos!" }]}
+            >
+              <Input
+                type="number"
+                placeholder="Ex: 2000"
+                prefix="R$"
+                size="large"
+                style={{ borderRadius: 8 }}
+              />
+            </Form.Item>
+            <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+              <Space>
+                <Button onClick={() => setIsEditMode(false)}>Cancelar</Button>
+                <Button type="primary" htmlType="submit" style={{ background: '#6C5DD3', borderColor: '#6C5DD3' }}>
+                  Salvar meta de gastos
+                </Button>
+              </Space>
+            </Form.Item>
         </Form>
       </Modal>
 

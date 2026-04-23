@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Button, DatePicker, Form, Modal, Select, Segmented, Input, ConfigProvider } from "antd";
 import ptBR from "antd/locale/pt_BR";
 import dayjs, { Dayjs } from "dayjs";
+import { request } from "@/service/api";
 import { CalendarOutlined } from "@ant-design/icons";
 import styles from "./entertransaction.module.scss";
 
