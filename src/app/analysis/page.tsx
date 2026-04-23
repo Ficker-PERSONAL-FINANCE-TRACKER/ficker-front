@@ -6,12 +6,13 @@ import ExpensesByCategoryChartContainer from "@/components/ExpensesByCategoryCha
 import PaymentMethodUsageChartContainer from "@/components/PaymentMethodUsageChartContainer";
 import PlannedSpendingByRealSpendingChartContainer, { FinanceDataPoint } from "@/components/PlannedSpendingByRealSppendingChartContainer";
 import { request } from "@/service/api";
-import { Button, DatePicker, Form, Popover, Row, Segmented, Select, Spin, Tabs, Input, ConfigProvider } from "antd";
+import { Button, DatePicker, Form, Modal, Row, Segmented, Select, Spin, Tabs, Input, ConfigProvider } from "antd";
 import ptBR from "antd/locale/pt_BR";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import { useEffect, useMemo, useState } from "react";
+import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styles from "./analysis.module.scss";
@@ -602,6 +603,17 @@ const Analysis = () => {
     return `${currentMonthLabel} de ${filters.year}`;
   }, [currentMonthLabel, filters]);
 
+  const appliedFiltersLabels = useMemo(() => {
+    const labels: string[] = [];
+    if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+      labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
+    } else {
+      labels.push(`Mês: ${currentMonthLabel}`);
+      labels.push(`Ano: ${filters.year}`);
+    }
+    return labels;
+  }, [currentMonthLabel, filters]);
+
   const getCardStatusLabel = (status: string) => {
     return CARD_STATUS_LABELS[status] ?? "Sem fatura aberta";
   };
@@ -708,55 +720,6 @@ const Analysis = () => {
     );
   };
 
-  const filterContent = (
-    <div style={{ width: 320, padding: "12px 0" }}>
-      <Form form={form} layout="vertical" initialValues={{ mode: filters.mode }}>
-        <div style={{ marginBottom: 20 }}>
-          <Segmented
-            block
-            value={selectedMode}
-            onChange={(value) => form.setFieldValue("mode", value)}
-            options={[
-              { value: "month", label: "Mês" },
-              { value: "custom", label: "Período" },
-            ]}
-            style={{ background: "#F8FAFC", borderRadius: 10, padding: 4 }}
-          />
-        </div>
-
-        <Form.Item name="mode" hidden>
-          <Input />
-        </Form.Item>
-
-        {selectedMode === "custom" ? (
-          <Form.Item
-            name="range"
-            label="Intervalo de Datas"
-            rules={[{ required: true, message: "Selecione um intervalo" }]}
-          >
-            <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
-          </Form.Item>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-            <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
-              <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
-            </Form.Item>
-            <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
-              <Select options={yearOptions} placeholder="Ano" style={{ height: 45 }} />
-            </Form.Item>
-          </div>
-        )}
-
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
-          <Button onClick={() => setIsFilterModalOpen(false)}>Cancelar</Button>
-          <Button type="primary" onClick={handleApplyFilters} style={{ background: "#6C5DD3", borderColor: "#6C5DD3" }}>
-            Aplicar
-          </Button>
-        </div>
-      </Form>
-    </div>
-  );
-
   return (
     <ConfigProvider locale={ptBR}>
       <div style={{ display: "flex", flexDirection: "row", minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
@@ -768,22 +731,18 @@ const Analysis = () => {
           </div>
           <div className={styles.headerActions}>
             <span className={styles.filterSummary}>{filterSummary}</span>
-            <Popover
-              content={filterContent}
-              title="Filtrar análises"
-              trigger="click"
-              open={isFilterModalOpen}
-              onOpenChange={setIsFilterModalOpen}
-              placement="bottomRight"
+            <Button
+              className={styles.filterButton}
+              icon={<CalendarOutlined />}
+              onClick={openFilterModal}
             >
-              <Button
-                className={styles.filterButton}
-                icon={<CalendarOutlined />}
-              >
-                Filtrar
-              </Button>
-            </Popover>
+              Filtrar
+            </Button>
           </div>
+        </div>
+
+        <div style={{ padding: "0 30px" }}>
+          <AppliedFiltersBar filters={appliedFiltersLabels} />
         </div>
 
         {loading ? (
@@ -1001,6 +960,10 @@ const Analysis = () => {
                                   <strong className={styles.mValue}>{formatDate(displayPayDay)}</strong>
                                 </div>
                                 <div className={styles.metricGroup}>
+                                  <span className={styles.mLabel}><BankOutlined /> {invoicePaymentSubtitle}</span>
+                                  <strong className={styles.mValue}>{currency(card.invoice_payments_total_in_period)}</strong>
+                                </div>
+                                <div className={styles.metricGroup}>
                                   <span className={styles.mLabel}><CreditCardOutlined /> Próxima fatura</span>
                                   <strong className={styles.mValue}>{currency(card.next_invoice_total)}</strong>
                                   <span className={styles.mSub}>{formatDate(card.next_invoice_pay_day)}</span>
@@ -1027,11 +990,6 @@ const Analysis = () => {
                                   <strong className={styles.mValue}>{currency(card.latest_purchase_in_period)}</strong>
                                   <span className={styles.mSub}>{formatDate(card.latest_purchase_date_in_period)}</span>
                                 </div>
-                                <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><BankOutlined /> Pagamentos de fatura no período</span>
-                                  <strong className={styles.mValue}>{currency(card.invoice_payments_total_in_period)}</strong>
-                                  <span className={styles.mSub}>{invoicePaymentSubtitle}</span>
-                                </div>
                               </div>
 
                               <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f3f4f8' }}>
@@ -1047,7 +1005,9 @@ const Analysis = () => {
                           );
                         })
                       ) : (
-                        <div className={styles.emptyState}>Nenhum cartão encontrado.</div>
+                        <div className={styles.emptyState}>
+                          <p>Nenhum cartão com movimentação no período selecionado.</p>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1056,9 +1016,59 @@ const Analysis = () => {
             ]}
           />
         )}
+      </div>
 
-      </div>
-      </div>
+      <Modal
+        title="Filtrar análises"
+        open={isFilterModalOpen}
+        onOk={handleApplyFilters}
+        onCancel={() => setIsFilterModalOpen(false)}
+        okText="Aplicar"
+        cancelText="Cancelar"
+        centered
+        width={400}
+      >
+        <div style={{ padding: "10px 0" }}>
+          <Form form={form} layout="vertical" initialValues={{ mode: filters.mode }}>
+            <div style={{ marginBottom: 20 }}>
+              <Segmented
+                block
+                value={selectedMode}
+                onChange={(value) => form.setFieldValue("mode", value)}
+                options={[
+                  { value: "month", label: "Mês" },
+                  { value: "custom", label: "Período" },
+                ]}
+                style={{ background: "#F8FAFC", borderRadius: 10, padding: 4 }}
+              />
+            </div>
+
+            <Form.Item name="mode" hidden>
+              <Input />
+            </Form.Item>
+
+            {selectedMode === "custom" ? (
+              <Form.Item
+                name="range"
+                label="Intervalo de Datas"
+                rules={[{ required: true, message: "Selecione um intervalo" }]}
+              >
+                <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
+              </Form.Item>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
+                <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
+                  <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
+                </Form.Item>
+                <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
+                  <Select options={yearOptions} placeholder="Ano" style={{ height: 45 }} />
+                </Form.Item>
+              </div>
+            )}
+          </Form>
+        </div>
+      </Modal>
+    </div>
     </ConfigProvider>
   );
 };

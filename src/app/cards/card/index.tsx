@@ -9,6 +9,7 @@ import { CardTransactionModal } from "./mcardtransaction";
 import { PayInvoiceModal } from "./payInvoiceModal";
 import { ITransaction } from "@/interfaces";
 import { CardFilter } from "../cardFilter";
+import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 
 interface Card {
   best_day: number;
@@ -96,9 +97,14 @@ function CardPage({ card }: CardProps) {
       />
       <Row gutter={[24, 24]} style={{ padding: "0 18px", paddingLeft: 0 }}>
         <Col xl={18} lg={16} md={24} xs={24} style={{ paddingLeft: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12, gap: 12, alignItems: 'center' }}>
             <CardFilter filters={filters} onChange={setFilters} />
           </div>
+          {filters.flag_id && (
+            <div style={{ marginBottom: 16 }}>
+              <AppliedFiltersBar filters={["Bandeira selecionada"]} />
+            </div>
+          )}
           <TransactionTab
             data={cardTranscations}
             typeId={3}

@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 import CustomMenu from "@/components/CustomMenu";
 import SearchField from "@/components/SearchField";
 import { CardFilter } from "./cardFilter";
+import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 import { motion } from "framer-motion";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import styles from "./cards.module.scss";
@@ -384,6 +385,13 @@ const Cards = () => {
     getCards();
   }, [isModalOpen, filters]);
 
+  const appliedFiltersLabels = useMemo(() => {
+    const labels: string[] = [];
+    if (showArchived) labels.push("Exibindo arquivados");
+    if (filters.flag_id) labels.push("Bandeira selecionada");
+    return labels;
+  }, [showArchived, filters]);
+
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
       <CustomMenu />
@@ -403,6 +411,11 @@ const Cards = () => {
             <CardFilter filters={filters} onChange={setFilters} />
           </div>
         </div>
+
+        <div style={{ padding: "0 30px" }}>
+          <AppliedFiltersBar filters={appliedFiltersLabels} />
+        </div>
+
         {loading ? (
           <Row justify={"center"}>
             <Spin size="large" />

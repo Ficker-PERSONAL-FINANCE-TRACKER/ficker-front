@@ -223,9 +223,9 @@ const Integrations = () => {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "row" }}>
+    <div style={{ display: "flex", flexDirection: "row", width: "100%", overflow: "hidden" }}>
       <CustomMenu />
-      <div style={{ width: "90vw" }}>
+      <div style={{ flex: "1 1 0%", overflowX: "hidden" }}>
         <div className={styles.titleArea} >
           <h2 >Integrações</h2>
         </div>
@@ -352,21 +352,59 @@ const Integrations = () => {
               </Button>
             </div>
           ) : (
-            <div>
-              <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <Title level={4}>Vincule seu WhatsApp</Title>
-                <Text type="secondary" style={{ display: 'block' }}>
-                  Acesse nossa página de integração para começar.
-                </Text>
+            <div style={{ textAlign: 'center' }}>
+              <Text style={{ display: 'block', marginBottom: 20, fontSize: 15 }}>
+                Para vincular sua conta, escaneie o QR Code abaixo ou clique no botão para abrir o chat diretamente.
+              </Text>
+              
+              <div style={{ 
+                background: '#fff', 
+                padding: 12, 
+                borderRadius: 12, 
+                display: 'inline-block',
+                border: '1px solid #f0f0f0',
+                marginBottom: 20
+              }}>
+                <img 
+                  src="/whatsapp-qr.png" 
+                  alt="WhatsApp QR Code" 
+                  style={{ width: 220, height: 220 }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://wa.me/5582994440333?text=vincular`;
+                  }}
+                />
               </div>
-              <div style={{ textAlign: 'center' }}>
+
+              <div style={{ marginBottom: 24 }}>
                 <Button 
                   type="primary" 
-                  style={{ background: '#25D366', borderColor: '#25D366', borderRadius: 8, height: 48, padding: '0 32px', fontSize: 16 }}
-                  onClick={() => window.open('https://api.whatsapp.com/send?phone=5582994440333&text=vincular', '_blank')}
+                  size="large" 
+                  icon={<WhatsAppOutlined />}
+                  href={`https://wa.me/5582994440333?text=vincular`} 
+                  target="_blank"
+                  style={{ 
+                    borderRadius: 8, 
+                    background: '#25D366', 
+                    borderColor: '#25D366',
+                    padding: '8px 30px',
+                    height: 'auto',
+                    fontWeight: 600
+                  }}
                 >
-                  Ir para o WhatsApp
+                  Abrir no WhatsApp
                 </Button>
+                <Text type="secondary" style={{ display: 'block', marginTop: 8, fontSize: 12 }}>
+                  Caso não queira ler o código QR, clique no botão acima.
+                </Text>
+              </div>
+
+              <div style={{ textAlign: 'left', background: '#f9f9f9', padding: 16, borderRadius: 12 }}>
+                <Title level={5} style={{ marginTop: 0, fontSize: 14 }}>Próximos passos no bot:</Title>
+                <ul style={{ paddingLeft: 20, margin: 0, color: '#595959', fontSize: 13 }}>
+                  <li style={{ marginBottom: 4 }}>Envie a mensagem inicial</li>
+                  <li style={{ marginBottom: 4 }}>Informe seu e-mail cadastrado</li>
+                  <li>Digite o código de verificação recebido</li>
+                </ul>
               </div>
             </div>
           )}

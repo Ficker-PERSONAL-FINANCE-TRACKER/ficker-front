@@ -9,6 +9,7 @@ import SearchField from "@/components/SearchField";
 import { ITransaction } from "@/interfaces";
 import dayjs from "dayjs";
 import { EnterTemporalFilter, type IncomeFilters } from "./temporalFilter";
+import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 
 const EnterTransaction = () => {
   const now = new Date();
@@ -92,6 +93,23 @@ const EnterTransaction = () => {
     return `${monthNames[filters.month - 1]} de ${filters.year}`;
   }, [filters, monthNames]);
 
+  const appliedFiltersLabels = useMemo(() => {
+    const labels: string[] = [];
+    if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+      labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
+    } else {
+      labels.push(`Mês: ${monthNames[filters.month - 1]}`);
+      labels.push(`Ano: ${filters.year}`);
+    }
+
+    if (filters.category_id) labels.push("Categoria selecionada");
+    if (filters.payment_method_id) labels.push("Método de pagamento selecionado");
+    if (filters.card_id) labels.push("Cartão selecionado");
+    if (filters.flag_id) labels.push("Bandeira selecionada");
+
+    return labels;
+  }, [filters, monthNames]);
+
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
       <CustomMenu />
@@ -109,9 +127,11 @@ const EnterTransaction = () => {
             <EnterTemporalFilter filters={filters} onChange={setFilters} />
           </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 30px", marginTop: -4, marginBottom: 10 }}>
-          <span style={{ color: "#808191", fontSize: 13, fontWeight: 600 }}>{filterSummary}</span>
+
+        <div style={{ padding: "0 30px" }}>
+          <AppliedFiltersBar filters={appliedFiltersLabels} />
         </div>
+
         <div style={{ padding: "0 30px" }}>
           <TransactionTab
             data={filteredTransactions}

@@ -1070,6 +1070,7 @@ const Resume = () => {
                       style={{
                         position: 'absolute',
                         width: '85%',
+                        maxWidth: '340px',
                         aspectRatio: '1.58 / 1',
                         background: getFlagColor(card.flag_id),
                         borderRadius: 12,
