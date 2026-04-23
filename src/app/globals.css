@@ -37,31 +37,17 @@ body {
 
 /* Estilização do Scrollbar Global */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-button {
-  display: none;
+  width: 5px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #6C5DD3;
-  border-radius: 10px;
-  border: 2px solid #f1f1f1;
+  background-color: #6C5DD3;
+  outline: #6C5DD3;
+  border-radius: 0px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #5A4DBB;
-}
-
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #6C5DD3 #f1f1f1;
+::-webkit-scrollbar-track {
+  background: #d6d6d6;
+  border-radius: 0px;
 }

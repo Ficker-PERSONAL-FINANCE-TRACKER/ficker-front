@@ -88,9 +88,6 @@ export const ObjectiveStep: React.FC<ObjectiveStepProps> = ({ form, onSkip }) =>
           </Form.Item>
         </div>
       </Form>
-      {/* <div className={styles.skipAction}>
-        <a onClick={onSkip}>Pular esta etapa</a>
-      </div> */}
     </div>
   );
 };

@@ -18,10 +18,10 @@ interface OnboardingStepModalProps {
 }
 
 const stepsConfig = [
-  { title: "Salario", icon: <UserOutlined /> },
-  { title: "Meta", icon: <DollarOutlined /> },
-  { title: "Cartao", icon: <CreditCardOutlined /> },
-  { title: "Objetivos", icon: <RocketOutlined /> },
+  { title: "Salário" },
+  { title: "Metas" },
+  { title: "Cartões" },
+  { title: "Objetivos" },
 ];
 
 const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onComplete }) => {
@@ -53,26 +53,27 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
 
   return (
     <div className={styles.pageWrapper}>
-      <div className={styles.header}>
+      <div className={styles.contentWrapper}>
         <div className={styles.logoWrapper}>
           <img src="/logo.png" alt="Logo" />
         </div>
-      </div>
-
-      <div className={styles.contentWrapper}>
         <div className={styles.formCard}>
           <div className={styles.titleArea}>
             <Title level={3}>Configure sua conta</Title>
-            <Text type="secondary">Precisamos de algumas informacoes para personalizar sua experiencia.</Text>
+            <Text type="secondary">Precisamos de algumas informações para personalizar sua experiência.</Text>
           </div>
 
           <Steps
             current={actions.currentStep}
             items={stepsConfig}
-            style={{ marginBottom: 8 }}
+            style={{ marginBottom: 32 }}
+            size="small"
+            progressDot
           />
 
-          {renderStepContent()}
+          <div className={styles.stepContentWrapper}>
+            {renderStepContent()}
+          </div>
 
           <div className={styles.footerActions}>
             <div>
@@ -84,12 +85,12 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
             </div>
             <Space>
               {actions.currentStep === 2 && (
-                <Button onClick={actions.handleSkipCard} className={styles.secondaryButton}>
+                <Button onClick={actions.handleSkipCard} type="text" className={styles.secondaryButton}>
                   Pular
                 </Button>
               )}
               {actions.currentStep === 3 && (
-                <Button onClick={actions.handleSkipObjective} className={styles.secondaryButton}>
+                <Button onClick={actions.handleSkipObjective} type="text" className={styles.secondaryButton}>
                   Pular
                 </Button>
               )}

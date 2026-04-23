@@ -64,9 +64,6 @@ export const CardStep: React.FC<CardStepProps> = ({ form, onSkip }) => {
           </Form.Item>
         </div>
       </Form>
-      <div className={styles.skipAction}>
-        <a onClick={onSkip}>Pular esta etapa</a>
-      </div>
     </div>
   );
 };
