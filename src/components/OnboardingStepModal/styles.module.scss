@@ -51,6 +51,66 @@
   }
 }
 
+.customSteps {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin: 0 auto 32px auto;
+  width: 100%;
+  max-width: 480px;
+}
+
+.stepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 70px; /* fixed width to keep labels centered under dots */
+  flex-shrink: 0;
+
+  .stepDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #E2E8F0;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    z-index: 2;
+  }
+
+  .stepLabel {
+    font-size: 13px;
+    color: #94A3B8;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+
+  &.active {
+    .stepDot {
+      background-color: #6C5DD3;
+      box-shadow: 0 0 0 4px rgba(108, 93, 211, 0.15);
+    }
+    .stepLabel {
+      color: #272B30;
+      font-weight: 600;
+    }
+  }
+}
+
+.stepLine {
+  height: 2px;
+  flex: 1;
+  background-color: #E2E8F0;
+  margin: 4px 0 0 0; /* aligned vertically to the dot center (10px dot / 2) */
+  transition: all 0.3s ease;
+  z-index: 1;
+
+  &.active {
+    background-color: #6C5DD3;
+  }
+}
+
 .stepContentWrapper {
   min-height: 300px; /* Pre-allocates space so the modal doesn't jump too much */
 }

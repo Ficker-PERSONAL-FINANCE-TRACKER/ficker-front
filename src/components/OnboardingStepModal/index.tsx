@@ -63,13 +63,19 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
             <Text type="secondary">Precisamos de algumas informações para personalizar sua experiência.</Text>
           </div>
 
-          <Steps
-            current={actions.currentStep}
-            items={stepsConfig}
-            style={{ marginBottom: 32 }}
-            size="small"
-            progressDot
-          />
+          <div className={styles.customSteps}>
+            {stepsConfig.map((step, index) => (
+              <React.Fragment key={step.title}>
+                <div className={`${styles.stepItem} ${index <= actions.currentStep ? styles.active : ''}`}>
+                  <div className={styles.stepDot} />
+                  <span className={styles.stepLabel}>{step.title}</span>
+                </div>
+                {index < stepsConfig.length - 1 && (
+                  <div className={`${styles.stepLine} ${index < actions.currentStep ? styles.active : ''}`} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
 
           <div className={styles.stepContentWrapper}>
             {renderStepContent()}
