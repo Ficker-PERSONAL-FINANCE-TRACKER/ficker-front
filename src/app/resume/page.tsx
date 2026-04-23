@@ -147,7 +147,7 @@ const Resume = () => {
     "Dezembro",
   ];
 
-  const currentMonthLabel = monthNames[filters.month - 1] || "Periodo";
+  const currentMonthLabel = monthNames[filters.month - 1] || "Período";
   const filterSummary = useMemo(() => {
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
       return `${dayjs(filters.dateFrom).format("DD/MM/YYYY")} até ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`;

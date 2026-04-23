@@ -117,7 +117,7 @@ const getApiErrorMessage = (error: any, fallback: string) =>
   error?.response?.data?.message ?? error?.response?.data?.data?.message ?? fallback;
 
 const getMonthLabel = (month?: number | null) =>
-  MONTH_OPTIONS.find((option) => option.value === month)?.label ?? "Mês nao definido";
+  MONTH_OPTIONS.find((option) => option.value === month)?.label ?? "Mês não definido";
 
 const getContributionRecommendation = (objective: Objective) => {
   if (objective.type === "retirement" || !objective.target_year || !objective.target_month || !objective.total_value) {
@@ -166,18 +166,18 @@ const getRetirementTimeLeft = (objective: Objective) => {
 
 const formatTimeLeft = (years: number, months: number) => {
   if (years === 0 && months === 0) {
-    return "Prazo ja alcancado";
+    return "Prazo já alcançado";
   }
 
   if (years === 0) {
-    return `Faltam ${months} ${months === 1 ? "mes" : "meses"}`;
+    return `Faltam ${months} ${months === 1 ? "mês" : "meses"}`;
   }
 
   if (months === 0) {
     return `Faltam ${years} ${years === 1 ? "ano" : "anos"}`;
   }
 
-  return `Faltam ${years} ${years === 1 ? "ano" : "anos"} e ${months} ${months === 1 ? "mes" : "meses"}`;
+  return `Faltam ${years} ${years === 1 ? "ano" : "anos"} e ${months} ${months === 1 ? "mês" : "meses"}`;
 };
 
 const ObjectivesPage = () => {
@@ -221,7 +221,7 @@ const ObjectivesPage = () => {
       const response = await request({ method: "GET", endpoint: "objectives" });
       setObjectives(response?.data?.data?.objectives ?? []);
     } catch (error: any) {
-      message.error(getApiErrorMessage(error, "Nao foi possivel carregar os objetivos."));
+      message.error(getApiErrorMessage(error, "Não foi possível carregar os objetivos."));
     } finally {
       setLoading(false);
     }
@@ -521,7 +521,7 @@ const ObjectivesPage = () => {
           open={isModalOpen}
           onOk={handleSave}
           onCancel={closeModal}
-          okText={editingObjective ? "Salvar alteracoes" : "Salvar objetivo"}
+          okText={editingObjective ? "Salvar alterações" : "Salvar objetivo"}
           cancelText="Cancelar"
           centered
           width={460}
@@ -537,7 +537,7 @@ const ObjectivesPage = () => {
             <p className={styles.modalDescription}>
               {selectedType?.isRetirement
                 ? "Preencha os dados da aposentadoria para acompanhar esse plano com mais clareza."
-                : "Informe quanto esse objetivo exige e ate quando voce quer concluir esse plano."}
+                : "Informe quanto esse objetivo exige e até quando você quer concluir esse plano."}
             </p>
           </div>
 
@@ -557,7 +557,7 @@ const ObjectivesPage = () => {
                     parser={currencyParser}
                   />
                 </Form.Item>
-                <Form.Item name="current_saved" label="Valor que voce ja guardou">
+                <Form.Item name="current_saved" label="Valor que você já guardou">
                   <InputNumber
                     style={{ width: "100%" }}
                     placeholder="Exemplo: 10.000,00"
@@ -584,7 +584,7 @@ const ObjectivesPage = () => {
                     parser={currencyParser}
                   />
                 </Form.Item>
-                <Form.Item name="current_saved" label="Valor que voce ja guardou">
+                <Form.Item name="current_saved" label="Valor que você já guardou">
                   <InputNumber
                     style={{ width: "100%" }}
                     placeholder="Exemplo: 10.000,00"
@@ -596,10 +596,10 @@ const ObjectivesPage = () => {
                 <div className={styles.fieldRow}>
                   <Form.Item
                     name="target_month"
-                    label="Mes final do objetivo"
-                    rules={[{ required: true, message: "Informe o mes final do objetivo" }]}
+                    label="Mês final do objetivo"
+                    rules={[{ required: true, message: "Informe o mês final do objetivo" }]}
                   >
-                    <Select options={monthOptions} placeholder="Selecione o mes" />
+                    <Select options={monthOptions} placeholder="Selecione o mês" />
                   </Form.Item>
                   <Form.Item
                     name="target_year"

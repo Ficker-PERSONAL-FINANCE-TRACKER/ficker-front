@@ -11,15 +11,15 @@ interface GoalStepProps {
 export const GoalStep: React.FC<GoalStepProps> = ({ form }) => {
   return (
     <div className={styles.stepContent}>
-      <Title level={4} className={styles.stepTitle}>Qual e sua meta de gasto?</Title>
+      <Title level={4} className={styles.stepTitle}>Qual é sua meta de gastos?</Title>
       <Text type="secondary" className={styles.stepDescription}>
-        Defina quanto voce planeja gastar por mes para manter suas financas sob controle.
+        Defina quanto você planeja gastar por mês para manter suas finanças sob controle.
       </Text>
       <Form form={form} layout="vertical">
         <Form.Item
           name="planned_spending"
-          label="Meta de Gasto Mensal (R$)"
-          rules={[{ required: true, message: "Informe sua meta de gasto" }]}
+          label="Meta de gastos (R$)"
+          rules={[{ required: true, message: "Informe sua meta de gastos" }]}
         >
           <InputNumber
             className={`${styles.inputField} ${styles.numberField}`}

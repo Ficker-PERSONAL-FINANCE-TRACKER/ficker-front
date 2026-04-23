@@ -28,7 +28,7 @@ interface AnalysesByMonthChartContainerProps {
 const AnalysesByMonthChartContainer = ({
   queryString = "",
   groupBy = "month",
-  title = "Evolucao financeira no periodo",
+  title = "Evolução financeira no período",
   data: providedData,
 }: AnalysesByMonthChartContainerProps) => {
   const requestIdRef = useRef(0);

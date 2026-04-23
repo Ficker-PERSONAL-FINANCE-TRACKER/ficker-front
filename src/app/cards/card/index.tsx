@@ -121,7 +121,7 @@ function CardPage({ card }: CardProps) {
               )}
               <Col span={isArchived ? 24 : 12}>
                 <button className={styles.button} onClick={openOutputModal} style={{ width: "100%", marginTop: 0, padding: "8px 0", fontSize: "12px", height: "36px" }}>
-                  Pagar Fatura
+                  Pagar fatura
                 </button>
               </Col>
             </Row>

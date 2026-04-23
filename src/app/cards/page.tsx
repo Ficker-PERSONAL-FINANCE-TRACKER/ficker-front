@@ -118,7 +118,7 @@ const Cards = () => {
       setArchivedCards(archivedCardsResult);
     } catch (error) {
       console.log(error);
-      messageApi.error("Nao foi possivel carregar os cartoes.");
+      messageApi.error("Não foi possível carregar os cartões.");
     } finally {
       setLoading(false);
     }
@@ -193,17 +193,17 @@ const Cards = () => {
 
     if (actionModal.action === "archive") {
       return {
-        title: "Arquivar cartao?",
+        title: "Arquivar cartão?",
         okText: "Arquivar",
         okType: "default" as const,
         content: (
           <>
             <p>
-              O cartao <strong>{cardName}</strong> saira da lista principal e ira para Arquivados.
+              O cartão <strong>{cardName}</strong> sairá da lista principal e irá para Arquivados.
             </p>
             <ul className={styles.modalList}>
-              <li>Compras, faturas e historico continuarao preservados.</li>
-              <li>Novas compras no credito ficarao bloqueadas enquanto ele estiver arquivado.</li>
+              <li>Compras, faturas e histórico continuarão preservados.</li>
+              <li>Novas compras no crédito ficarão bloqueadas enquanto ele estiver arquivado.</li>
             </ul>
           </>
         ),
@@ -212,17 +212,17 @@ const Cards = () => {
 
     if (actionModal.action === "unarchive") {
       return {
-        title: "Restaurar cartao?",
+        title: "Restaurar cartão?",
         okText: "Restaurar",
         okType: "default" as const,
         content: (
           <>
             <p>
-              O cartao <strong>{cardName}</strong> voltara para a lista principal.
+              O cartão <strong>{cardName}</strong> voltará para a lista principal.
             </p>
             <ul className={styles.modalList}>
-              <li>Ele voltara a aparecer entre os cartoes ativos.</li>
-              <li>Novas compras no credito serao permitidas novamente.</li>
+              <li>Ele voltará a aparecer entre os cartões ativos.</li>
+              <li>Novas compras no crédito serão permitidas novamente.</li>
             </ul>
           </>
         ),
@@ -421,7 +421,7 @@ const Cards = () => {
                 </>
               ) : (
                 <Col span={24}>
-                  <Empty description="Nenhum cartao encontrado." />
+                  <Empty description="Nenhum cartão encontrado." />
                 </Col>
               )}
             </Row>

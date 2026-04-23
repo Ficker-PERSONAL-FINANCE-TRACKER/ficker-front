@@ -2,7 +2,7 @@ import React from "react";
 import { Form, Input, InputNumber, Typography, Select } from "antd";
 import styles from "../styles.module.scss";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface ObjectiveStepProps {
   form: any;
@@ -57,7 +57,7 @@ export const ObjectiveStep: React.FC<ObjectiveStepProps> = ({ form, onSkip }) =>
           </Form.Item>
           <Form.Item
             name="current_saved"
-            label="Valor ja guardado"
+            label="Valor já guardado"
             style={{ flex: 1 }}
           >
             <InputNumber
@@ -72,11 +72,11 @@ export const ObjectiveStep: React.FC<ObjectiveStepProps> = ({ form, onSkip }) =>
         <div style={{ display: 'flex', gap: '12px' }}>
           <Form.Item
             name="target_month"
-            label="Mes final do objetivo"
+            label="Mês final do objetivo"
             style={{ flex: 1 }}
-            rules={[{ required: true, message: "Informe o mes final" }]}
+            rules={[{ required: true, message: "Informe o mês final" }]}
           >
-            <Select options={MONTH_OPTIONS} placeholder="Selecione o mes" className={styles.inputField} />
+            <Select options={MONTH_OPTIONS} placeholder="Selecione o mês" className={styles.inputField} />
           </Form.Item>
           <Form.Item
             name="target_year"

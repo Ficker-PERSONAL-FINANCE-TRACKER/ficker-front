@@ -123,14 +123,14 @@ const MyCategoriesList = ({ categories, loading = false, onRefresh }: MyCategori
             description="Nenhuma categoria adicionada."
             style={{ margin: "20px 0" }}
           >
-            <Button type="primary" onClick={showModal}>Adicionar Categoria</Button>
+            <Button type="primary" onClick={showModal}>Adicionar categoria</Button>
           </Empty>
         ) : (
           visibleCategories.map((category, index) => renderCategoryRow(category, index))
         )}
       </div>
       <Modal
-        title="Top Categorias de Gastos"
+        title="Top categorias de gastos"
         open={isListModalOpen && sortedCategories.length > 0}
         onCancel={() => setIsListModalOpen(false)}
         footer={null}

@@ -131,14 +131,14 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
             style={{ margin: "20px 0" }}
           >
             <Link href="/EnterTransaction">
-              <Button type="primary">Registrar Transação</Button>
+              <Button type="primary">Registrar transação</Button>
             </Link>
           </Empty>
         )}
       </div>
 
       <Modal
-        title="Histórico Completo de Transações"
+        title="Histórico completo de transações"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}

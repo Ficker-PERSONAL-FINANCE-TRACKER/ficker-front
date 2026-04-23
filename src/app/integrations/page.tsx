@@ -226,8 +226,8 @@ const Integrations = () => {
     <div style={{ display: "flex", flexDirection: "row" }}>
       <CustomMenu />
       <div style={{ width: "90vw" }}>
-        <div className={styles.titleArea}>
-          <h2>Integrações</h2>
+        <div className={styles.titleArea} >
+          <h2 >Integrações</h2>
         </div>
 
         <Row gutter={[24, 24]} style={{ padding: "20px 30px" }}>
@@ -252,7 +252,7 @@ const Integrations = () => {
                     <SendOutlined style={{ fontSize: 24, color: '#fff' }} />
                   </div>
                   <div>
-                    <Title level={4} style={{ margin: 0 }}>Telegram</Title>
+                    <Title level={4} style={{ margin: 0, fontSize: 16 }}>Telegram</Title>
                   </div>
                 </div>
                 {telegramLinkStatus?.linked && (
@@ -296,7 +296,7 @@ const Integrations = () => {
                     <WhatsAppOutlined style={{ fontSize: 24, color: '#fff' }} />
                   </div>
                   <div>
-                    <Title level={4} style={{ margin: 0 }}>WhatsApp</Title>
+                    <Title level={4} style={{ margin: 0 , fontSize: 16}}>WhatsApp</Title>
                   </div>
                 </div>
                 {whatsappLinkStatus?.linked && (

@@ -223,7 +223,7 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
                 <Select.Option value={0}>
                   <Space>
                     <PlusOutlined style={{ color: '#6C5DD3' }} />
-                    <span>Nova Categoria</span>
+                    <span>Nova categoria</span>
                   </Space>
                 </Select.Option>
                 
@@ -239,7 +239,7 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
                 </Select.OptGroup>
 
                 {categories && categories.length > 0 && (
-                  <Select.OptGroup label="Minhas Categorias">
+                  <Select.OptGroup label="Minhas categorias">
                     {categories.map((category) => (
                       <Select.Option key={category.id} value={category.id}>
                         {category.category_description}
@@ -252,7 +252,7 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
           </Col>
           {showDescriptionCategory ? (
             <Col>
-              <label>Descrição da Categoria</label>
+              <label>Descrição da categoria</label>
               <Form.Item
                 name="category_description"
                 rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}

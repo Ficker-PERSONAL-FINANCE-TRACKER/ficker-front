@@ -127,7 +127,7 @@ export const EditTransactionModal = ({
 
   return (
     <Modal
-      title="Editar Transação"
+      title="Editar transação"
       open={isModalOpen}
       onCancel={handleCancel}
       okButtonProps={{
@@ -202,7 +202,7 @@ export const EditTransactionModal = ({
                 className={styles.input}
                 style={{ width: 200, height: 35 }}
                 options={[
-                  { value: 0, label: "Nova" },
+                  { value: 0, label: "Nova categoria" },
                   ...categories.map((category) => ({
                     value: category.id,
                     label: category.category_description,
@@ -213,7 +213,7 @@ export const EditTransactionModal = ({
           </Col>
           {showDescriptionCategory ? (
             <Col>
-              <label>Descrição da Categoria</label>
+              <label>Descrição da categoria</label>
               <Form.Item
                 name="category_description"
                 rules={[

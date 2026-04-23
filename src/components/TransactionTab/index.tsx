@@ -129,9 +129,9 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
       case 2:
         return { label: "Pix", icon: <ThunderboltOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
       case 3:
-        return { label: "Debito", icon: <CreditCardOutlined />, color: "#FFA940", bg: "#FFF7E6" };
+        return { label: "Débito", icon: <CreditCardOutlined />, color: "#FFA940", bg: "#FFF7E6" };
       default:
-        return { label: "Credito", icon: <FieldTimeOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+        return { label: "Crédito", icon: <FieldTimeOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
     }
   };
 
@@ -147,7 +147,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
           <thead className={styles.thead}>
             <tr>
               <th>Editar</th>
-              <th>Descricao</th>
+              <th>Descrição</th>
               <th>Data</th>
               <th>Categoria</th>
               <th>Valor</th>
