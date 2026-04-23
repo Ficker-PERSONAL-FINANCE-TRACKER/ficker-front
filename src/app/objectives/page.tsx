@@ -61,6 +61,13 @@ type Objective = {
   progress_percentage: number | null;
   created_at?: string | null;
   updated_at?: string | null;
+  recommendations?: {
+    current_age: number;
+    years_until_retirement: number;
+    estimated_required_corpus: number;
+    gap_to_target: number;
+    recommended_monthly_contribution: number;
+  };
 };
 
 type ObjectiveFormValues = {
@@ -403,17 +410,40 @@ const ObjectivesPage = () => {
                               <strong>{objective.retirement_age ? `${objective.retirement_age} anos` : "Não definida"}</strong>
                             </div>
                             <div className={styles.metricRow}>
-                              <span>Data de nascimento</span>
-                              <strong>{objective.birth_date ? dayjs(objective.birth_date).format("DD/YYYY") : "Não informada"}</strong>
+                              <span>Idade atual</span>
+                              <strong>{objective.recommendations?.current_age ? `${objective.recommendations.current_age} anos` : (objective.birth_date ? `${dayjs().diff(dayjs(objective.birth_date), 'year')} anos` : "Não informada")}</strong>
                             </div>
                             <div className={styles.metricRow}>
                               <span>Prazo estimado</span>
                               <strong>
-                                {retirementTimeLeft === null
-                                  ? "Não disponível"
-                                  : formatTimeLeft(retirementTimeLeft.years, retirementTimeLeft.months)}
+                                {objective.recommendations?.years_until_retirement !== undefined
+                                  ? `Faltam ${objective.recommendations.years_until_retirement} anos`
+                                  : (retirementTimeLeft === null
+                                    ? "Não disponível"
+                                    : formatTimeLeft(retirementTimeLeft.years, retirementTimeLeft.months))}
                               </strong>
                             </div>
+
+                            {objective.recommendations && (
+                              <div className={styles.recommendationBox} style={{ marginTop: 16 }}>
+                                <strong>Recomendações para sua aposentadoria</strong>
+                                <div className={styles.metricRow} style={{ padding: "4px 0" }}>
+                                  <span>Patrimônio necessário</span>
+                                  <strong>{formatCurrency(objective.recommendations.estimated_required_corpus)}</strong>
+                                </div>
+                                <div className={styles.metricRow} style={{ padding: "4px 0" }}>
+                                  <span>Falta acumular</span>
+                                  <strong>{formatCurrency(objective.recommendations.gap_to_target)}</strong>
+                                </div>
+                                <div className={styles.metricRow} style={{ padding: "4px 0", borderBottom: "none" }}>
+                                  <span>Aporte mensal sugerido</span>
+                                  <strong style={{ color: "#6C5DD3" }}>{formatCurrency(objective.recommendations.recommended_monthly_contribution)}</strong>
+                                </div>
+                                <span style={{ fontSize: "11px", color: "#666", marginTop: "8px", display: "block" }}>
+                                  * Cálculo baseado na regra dos 4% ao ano.
+                                </span>
+                              </div>
+                            )}
                           </>
                         ) : (
                           <>

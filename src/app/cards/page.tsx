@@ -17,6 +17,7 @@ import { request } from "@/service/api";
 import dayjs from "dayjs";
 import CustomMenu from "@/components/CustomMenu";
 import SearchField from "@/components/SearchField";
+import { CardFilter } from "./cardFilter";
 import { motion } from "framer-motion";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import styles from "./cards.module.scss";
@@ -44,6 +45,10 @@ interface ActionModalState {
   card: Card | null;
 }
 
+interface CardFilters {
+  flag_id?: number;
+}
+
 const Cards = () => {
   const router = useRouter();
   const { Text } = Typography;
@@ -55,6 +60,7 @@ const Cards = () => {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [filters, setFilters] = useState<CardFilters>({});
   const [actionModal, setActionModal] = useState<ActionModalState>({
     open: false,
     action: null,
@@ -94,25 +100,20 @@ const Cards = () => {
     setLoading(true);
 
     try {
-      const [activeResponse, archivedResponse] = await Promise.all([
-        request({
-          method: "GET",
-          endpoint: "cards",
-        }),
-        request({
-          method: "GET",
-          endpoint: "cards",
-          params: { status: "archived" },
-        }),
-      ]);
+      const params: any = { status: "all" };
+      if (filters.flag_id) params.flag_id = filters.flag_id;
 
-      const rawActiveCards = activeResponse?.data?.data?.cards ?? [];
-      const rawArchivedCards = archivedResponse?.data?.data?.cards ?? [];
+      const response = await request({
+        method: "GET",
+        endpoint: "cards",
+        params
+      });
 
-      const [activeCards, archivedCardsResult] = await Promise.all([
-        hydrateCards(rawActiveCards),
-        hydrateCards(rawArchivedCards),
-      ]);
+      const rawCards = response?.data?.data?.cards ?? [];
+      const hydratedCards = await hydrateCards(rawCards);
+
+      const activeCards = hydratedCards.filter(c => !c.archived_at);
+      const archivedCardsResult = hydratedCards.filter(c => c.archived_at);
 
       setCards(activeCards);
       setArchivedCards(archivedCardsResult);
@@ -381,7 +382,7 @@ const Cards = () => {
 
   useEffect(() => {
     getCards();
-  }, [isModalOpen]);
+  }, [isModalOpen, filters]);
 
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
@@ -399,6 +400,7 @@ const Cards = () => {
             <button className={styles.button} onClick={openModal}>
               Novo Cartão
             </button>
+            <CardFilter filters={filters} onChange={setFilters} />
           </div>
         </div>
         {loading ? (

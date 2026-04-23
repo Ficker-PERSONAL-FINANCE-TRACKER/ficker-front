@@ -8,6 +8,7 @@ import styles from "../../EnterTransaction/entertransaction.module.scss";
 import { CardTransactionModal } from "./mcardtransaction";
 import { PayInvoiceModal } from "./payInvoiceModal";
 import { ITransaction } from "@/interfaces";
+import { CardFilter } from "../cardFilter";
 
 interface Card {
   best_day: number;
@@ -33,6 +34,7 @@ function CardPage({ card }: CardProps) {
   const [cardTranscations, setCardTransactions] = useState<ITransaction[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [invoicePayDay, setInvoicePayDay] = useState<string | null>(card.invoice_pay_day ?? null);
+  const [filters, setFilters] = useState<{ flag_id?: number }>({});
   const isArchived = Boolean(card.archived_at);
 
   const getCardTotalValue = async () => {
@@ -48,9 +50,15 @@ function CardPage({ card }: CardProps) {
 
   const getCardData = async () => {
     try {
+      const params = new URLSearchParams();
+      if (filters.flag_id) params.set("flag_id", String(filters.flag_id));
+      
+      const queryString = params.toString();
+      const endpoint = `transaction/card/${card.id}${queryString ? `?${queryString}` : ""}`;
+
       const response = await request({
         method: "GET",
-        endpoint: `transaction/card/${card.id}`,
+        endpoint,
       });
       if (response.data.data.transactions.length > 0) {
         setCardTransactions(response.data.data.transactions);
@@ -71,7 +79,7 @@ function CardPage({ card }: CardProps) {
   useEffect(() => {
     getCardData();
     getCardTotalValue();
-  }, [isModalOpen, isOutputModalOpen]);
+  }, [isModalOpen, isOutputModalOpen, filters]);
 
   return (
     <Col xl={24}>
@@ -88,6 +96,9 @@ function CardPage({ card }: CardProps) {
       />
       <Row gutter={[24, 24]} style={{ padding: "0 18px", paddingLeft: 0 }}>
         <Col xl={18} lg={16} md={24} xs={24} style={{ paddingLeft: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <CardFilter filters={filters} onChange={setFilters} />
+          </div>
           <TransactionTab
             data={cardTranscations}
             typeId={3}

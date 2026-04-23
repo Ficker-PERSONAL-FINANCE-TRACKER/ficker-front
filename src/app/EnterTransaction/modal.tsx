@@ -1,7 +1,7 @@
 "use client";
 import { request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
-import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space } from "antd";
+import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space, Switch } from "antd";
 import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
@@ -18,7 +18,8 @@ import {
   DollarOutlined,
   ToolOutlined,
   CoffeeOutlined,
-  StarOutlined
+  StarOutlined,
+  SyncOutlined
 } from "@ant-design/icons";
 
 interface EnterTransactionModalProps {
@@ -126,6 +127,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
           ...categoryPayload,
           date: dayjs(values.date).format("YYYY-MM-DD"),
           type_id: 1,
+          is_recurring: values.is_recurring || false,
         },
       });
       message.success("Transação adicionada com sucesso!");
@@ -290,6 +292,19 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
             <Input className={styles.input} placeholder="R$" />
           </Form.Item>
         </Col>
+
+        <Col style={{ marginBottom: 20 }}>
+          <Form.Item
+            name="is_recurring"
+            valuePropName="checked"
+          >
+            <Space>
+              <Switch size="small" />
+              <span>Entrada recorrente (mensal)</span>
+            </Space>
+          </Form.Item>
+        </Col>
+
         <Row>
           <Button className={styles.modalButtonWhite} onClick={handleCancel}>
             Cancelar

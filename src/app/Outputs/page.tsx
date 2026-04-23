@@ -43,9 +43,18 @@ const Outputs = () => {
 
   const getTransactions = async () => {
     try {
+      const params = new URLSearchParams();
+      if (filters.category_id) params.set("category_id", String(filters.category_id));
+      if (filters.payment_method_id) params.set("payment_method_id", String(filters.payment_method_id));
+      if (filters.card_id) params.set("card_id", String(filters.card_id));
+      if (filters.flag_id) params.set("flag_id", String(filters.flag_id));
+
+      const queryString = params.toString();
+      const endpoint = `transaction/type/2${queryString ? `?${queryString}` : ""}`;
+
       const response = await request({
         method: "GET",
-        endpoint: "transaction/type/2",
+        endpoint,
       });
       setTransactions(response.data.data.transactions);
     } catch (error) {
@@ -81,7 +90,7 @@ const Outputs = () => {
 
   useEffect(() => {
     getTransactions();
-  }, [isModalOpen, isEditModalOpen]);
+  }, [isModalOpen, isEditModalOpen, filters]);
 
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>

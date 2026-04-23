@@ -128,6 +128,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
           date: formattedDate,
           type_id: 1,
           transaction_value: String(values.transaction_value),
+          is_recurring: values.is_recurring || false,
         },
       });
       message.success("Entrada registrada com sucesso!");
