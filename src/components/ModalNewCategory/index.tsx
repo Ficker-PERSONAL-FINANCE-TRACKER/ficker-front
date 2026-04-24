@@ -45,14 +45,14 @@ export const ModalNewCategory = ({ isModalOpen, setIsModalOpen, onCategoryCreate
       title="Nova Categoria"
       open={isModalOpen}
       onCancel={handleCancel}
+      onOk={() => form.submit()}
+      okText="Adicionar"
+      cancelText="Cancelar"
+      centered
       okButtonProps={{
         style: {
-          display: "none",
-        },
-      }}
-      cancelButtonProps={{
-        style: {
-          display: "none",
+          background: "#6C5DD3",
+          borderColor: "#6C5DD3",
         },
       }}
     >
@@ -96,22 +96,6 @@ export const ModalNewCategory = ({ isModalOpen, setIsModalOpen, onCategoryCreate
             </Select>
           </Form.Item>
         </Col>
-        <Row
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <Button className={styles.modalButtonWhite} onClick={handleCancel}>
-              Cancelar
-            </Button>
-            <Button htmlType="submit" className={styles.modalButtonPurple}>
-              Adicionar
-            </Button>
-          </div>
-        </Row>
       </Form>
     </Modal>
   );

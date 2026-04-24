@@ -67,14 +67,14 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen, onSuccess }: CardMod
       title="Novo cartão de crédito"
       open={isModalOpen}
       onCancel={handleCancel}
+      onOk={() => form.submit()}
+      okText="Adicionar"
+      cancelText="Cancelar"
+      centered
       okButtonProps={{
         style: {
-          display: "none",
-        },
-      }}
-      cancelButtonProps={{
-        style: {
-          display: "none",
+          background: "#6C5DD3",
+          borderColor: "#6C5DD3",
         },
       }}
     >
@@ -143,14 +143,6 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen, onSuccess }: CardMod
             </Select>
           </Form.Item>
         </Col>
-        <Row>
-          <Button className={styles.modalButtonWhite} onClick={handleCancel}>
-            Cancelar
-          </Button>
-          <Button htmlType="submit" className={styles.modalButtonPurple}>
-            Adicionar
-          </Button>
-        </Row>
       </Form>
     </Modal>
   );

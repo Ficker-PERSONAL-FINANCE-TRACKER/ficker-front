@@ -187,14 +187,14 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
       title="Nova entrada"
       open={isModalOpen}
       onCancel={handleCancel}
+      onOk={() => form.submit()}
+      okText="Adicionar"
+      cancelText="Cancelar"
+      centered
       okButtonProps={{
         style: {
-          display: "none",
-        },
-      }}
-      cancelButtonProps={{
-        style: {
-          display: "none",
+          background: "#6C5DD3",
+          borderColor: "#6C5DD3",
         },
       }}
     >
@@ -332,19 +332,10 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
             <Space>
               <Switch size="small" />
               <span>Entrada recorrente (mensal)</span>
-            </Space>
-          </Form.Item>
-        </Col>
-
-        <Row>
-          <Button className={styles.modalButtonWhite} onClick={handleCancel}>
-            Cancelar
-          </Button>
-          <Button htmlType="submit" className={styles.modalButtonPurple}>
-            Adicionar
-          </Button>
-        </Row>
-      </Form>
-    </Modal>
+          </Space>
+        </Form.Item>
+      </Col>
+    </Form>
+  </Modal>
   );
 };

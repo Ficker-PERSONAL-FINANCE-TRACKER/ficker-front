@@ -229,14 +229,14 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
       title="Nova saída"
       open={isModalOpen}
       onCancel={handleCancel}
+      onOk={() => form.submit()}
+      okText="Adicionar"
+      cancelText="Cancelar"
+      centered
       okButtonProps={{
         style: {
-          display: "none",
-        },
-      }}
-      cancelButtonProps={{
-        style: {
-          display: "none",
+          background: "#6C5DD3",
+          borderColor: "#6C5DD3",
         },
       }}
     >
@@ -422,14 +422,6 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
             <Input className={styles.input} placeholder="R$" data-testid="value" />
           </Form.Item>
         </Col>
-        <Row>
-          <Button className={styles.modalButtonWhite} onClick={handleCancel}>
-            Cancelar
-          </Button>
-          <Button htmlType="submit" className={styles.modalButtonPurple}>
-            Adicionar
-          </Button>
-        </Row>
       </Form>
     </Modal>
   );

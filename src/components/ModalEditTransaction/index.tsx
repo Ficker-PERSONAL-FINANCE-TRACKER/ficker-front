@@ -1,6 +1,6 @@
 "use client";
 import { getApiErrorMessage, request } from "@/service/api";
-import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message } from "antd";
+import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
 import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
@@ -130,16 +130,8 @@ export const EditTransactionModal = ({
       title="Editar transação"
       open={isModalOpen}
       onCancel={handleCancel}
-      okButtonProps={{
-        style: {
-          display: "none",
-        },
-      }}
-      cancelButtonProps={{
-        style: {
-          display: "none",
-        },
-      }}
+      footer={null}
+      centered
     >
       <Form
         form={form}
@@ -259,19 +251,24 @@ export const EditTransactionModal = ({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            marginTop: 32,
           }}
         >
-          <div>
-            <Button className={styles.modalButtonWhite} onClick={handleCancel}>
-              Cancelar
-            </Button>
-            <Button htmlType="submit" className={styles.modalButtonPurple}>
-              Salvar
-            </Button>
-          </div>
-          <Button className={styles.secondaryLink} onClick={handleDelete}>
+          <Button className={styles.secondaryLink} onClick={handleDelete} title="Excluir transação">
             <Image src="/icons/icon-delete.svg" alt="Excluir" width={20} height={20} />
           </Button>
+          <Space>
+            <Button onClick={handleCancel}>
+              Cancelar
+            </Button>
+            <Button 
+              type="primary" 
+              onClick={() => form.submit()} 
+              style={{ background: "#6C5DD3", borderColor: "#6C5DD3" }}
+            >
+              Salvar
+            </Button>
+          </Space>
         </Row>
       </Form>
     </Modal>

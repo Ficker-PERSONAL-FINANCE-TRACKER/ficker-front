@@ -102,28 +102,6 @@
   background-color: green;
 }
 
-.modalButtonPurple {
-  background-color: #6C5DD3;
-  color: #fff;
-  border-radius: 5px;
-  margin-left: 10px;
-  height: 40px;
-  width: 100px;
-  border: none;
-  cursor: pointer;
-}
-
-.modalButtonWhite {
-  background: #F8FAFC;
-  border: none;
-  color: #6C5DD3;
-  border-radius: 5px;
-  height: 40px;
-  width: 100px;
-  cursor: pointer;
-  font-family: "Manrope", sans-serif !important;
-}
-
 @media (max-width: 767.9px) {
   .thead {
     display: none;
@@ -166,7 +144,7 @@
 }
 
 .secondaryLink {
-  border: none;
+  border: 0 !important;
   height: 40px;
   width: 40px;
   display: flex;
@@ -175,11 +153,19 @@
   background: transparent !important;
   box-shadow: none !important;
   transition: transform 0.2s ease;
+  padding: 0 !important;
+  outline: none !important;
 
   &:hover {
     background: transparent !important;
     transform: scale(1.2);
     box-shadow: none !important;
+    border: 0 !important;
+    outline: none !important;
+  }
+
+  &::after {
+    display: none !important;
   }
 }
 
