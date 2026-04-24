@@ -11,7 +11,7 @@ import ptBR from "antd/locale/pt_BR";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
@@ -330,6 +330,7 @@ const Analysis = () => {
     dateTo: null,
   });
   const [form] = Form.useForm<FilterFormValues>();
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   const queryString = useMemo(() => buildQueryString(filters), [filters]);
   const timelineGroupBy = useMemo(() => getPlannedVsRealGroupBy(filters), [filters]);
@@ -590,10 +591,18 @@ const Analysis = () => {
   );
   const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "período";
   const currentReferenceLabel = `${MONTH_OPTIONS[now.getMonth()]?.label ?? dayjs().format("MMMM")} de ${now.getFullYear()}`;
-  const yearOptions = Array.from({ length: 7 }, (_, index) => now.getFullYear() - 3 + index).map((year) => ({
-    value: year,
-    label: String(year),
-  }));
+  const yearOptions = useMemo(
+    () => availableYears.map((year) => ({ value: year, label: String(year) })),
+    [availableYears]
+  );
+
+  const disabledDate = useCallback(
+    (current: Dayjs) => {
+      if (!availableYears.length) return false;
+      return !availableYears.includes(current.year());
+    },
+    [availableYears]
+  );
 
   const filterSummary = useMemo(() => {
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
@@ -662,6 +671,9 @@ const Analysis = () => {
   };
 
   const openFilterModal = () => {
+    request({ method: "GET", endpoint: "transaction/years" })
+      .then((res) => setAvailableYears(res?.data?.data?.years ?? []))
+      .catch(() => setAvailableYears([]));
     form.setFieldsValue({
       mode: filters.mode,
       month: filters.month,
@@ -1057,7 +1069,11 @@ const Analysis = () => {
                 label="Intervalo de Datas"
                 rules={[{ required: true, message: "Selecione um intervalo" }]}
               >
-                <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
+                <RangePicker
+                  format="DD/MM/YYYY"
+                  style={{ width: "100%", height: 45 }}
+                  disabledDate={disabledDate}
+                />
               </Form.Item>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>

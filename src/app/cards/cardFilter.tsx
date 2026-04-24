@@ -22,9 +22,10 @@ export const CardFilter = ({ filters, onChange }: CardFilterProps) => {
   const fetchFlags = async () => {
     try {
       const response = await request({ method: "GET", endpoint: "flags" });
-      setFlags(response.data?.data || response.data || []);
+      setFlags(response?.data?.data?.flags ?? []);
     } catch (error) {
       console.error("Error fetching flags", error);
+      setFlags([]);
     }
   };
 

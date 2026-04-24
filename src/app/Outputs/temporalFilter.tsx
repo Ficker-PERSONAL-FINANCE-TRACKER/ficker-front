@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button, DatePicker, Form, Modal, Select, Segmented, Input, ConfigProvider } from "antd";
 import ptBR from "antd/locale/pt_BR";
 import dayjs, { Dayjs } from "dayjs";
@@ -34,9 +34,11 @@ export type OutputFilters = {
   dateFrom: string | null;
   dateTo: string | null;
   category_id?: number;
+  category_name?: string;
   payment_method_id?: number;
+  payment_method_name?: string;
   card_id?: number;
-  flag_id?: number;
+  card_name?: string;
 };
 
 type FilterFormValues = {
@@ -44,10 +46,9 @@ type FilterFormValues = {
   month?: number;
   year?: number;
   range?: [Dayjs, Dayjs];
-  category_id?: number;
-  payment_method_id?: number;
-  card_id?: number;
-  flag_id?: number;
+  category?: { value: number; label: string };
+  payment_method?: { value: number; label: string };
+  card?: { value: number; label: string };
 };
 
 interface OutputTemporalFilterProps {
@@ -62,27 +63,35 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
 
   const [availableYears, setYearOptions] = useState<{ value: number; label: string }[]>([]);
   const [categories, setCategories] = useState<{ id: number; category_description: string }[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<{ id: number; payment_method_description: string }[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<{ id: number; description: string }[]>([]);
   const [cards, setCards] = useState<{ id: number; card_description: string }[]>([]);
-  const [flags, setFlags] = useState<{ id: number; flag_description: string }[]>([]);
+
+  const availableYearNumbers = availableYears.map((y) => y.value);
+
+  const disabledDate = useCallback(
+    (current: Dayjs) => {
+      if (!availableYearNumbers.length) return false;
+      return !availableYearNumbers.includes(current.year());
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [availableYears]
+  );
 
   const fetchFilterData = async () => {
     try {
-      const [yearsRes, catsRes, pmRes, cardsRes, flagsRes] = await Promise.all([
+      const [yearsRes, catsRes, pmRes, cardsRes] = await Promise.all([
         request({ method: "GET", endpoint: "transaction/years" }),
         request({ method: "GET", endpoint: "categories/type/2" }),
-        request({ method: "GET", endpoint: "payment-methods" }),
+        request({ method: "GET", endpoint: "payment/methods" }),
         request({ method: "GET", endpoint: "cards" }),
-        request({ method: "GET", endpoint: "flags" }),
       ]);
 
-      const years = yearsRes.data.data.years || [];
+      const years = yearsRes?.data?.data?.years ?? [];
       setYearOptions(years.map((y: number) => ({ value: y, label: String(y) })));
-      
-      setCategories(catsRes.data?.data?.categories || catsRes.data || []);
-      setPaymentMethods(pmRes.data?.data || pmRes.data || []);
-      setCards(cardsRes.data?.data?.cards || cardsRes.data || []);
-      setFlags(flagsRes.data?.data || flagsRes.data || []);
+
+      setCategories(catsRes?.data?.data?.categories ?? []);
+      setPaymentMethods(pmRes?.data?.data?.payment_methods ?? []);
+      setCards(cardsRes?.data?.data?.cards ?? []);
     } catch (error) {
       console.error("Error fetching filter data", error);
     }
@@ -94,10 +103,18 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
       mode: filters.mode,
       month: filters.month,
       year: filters.year,
-      category_id: filters.category_id,
-      payment_method_id: filters.payment_method_id,
-      card_id: filters.card_id,
-      flag_id: filters.flag_id,
+      category:
+        filters.category_id && filters.category_name
+          ? { value: filters.category_id, label: filters.category_name }
+          : undefined,
+      payment_method:
+        filters.payment_method_id && filters.payment_method_name
+          ? { value: filters.payment_method_id, label: filters.payment_method_name }
+          : undefined,
+      card:
+        filters.card_id && filters.card_name
+          ? { value: filters.card_id, label: filters.card_name }
+          : undefined,
       range:
         filters.mode === "custom" && filters.dateFrom && filters.dateTo
           ? [dayjs(filters.dateFrom), dayjs(filters.dateTo)]
@@ -110,10 +127,12 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
     const values = await form.validateFields();
 
     const commonFilters = {
-      category_id: values.category_id,
-      payment_method_id: values.payment_method_id,
-      card_id: values.card_id,
-      flag_id: values.flag_id,
+      category_id: values.category?.value,
+      category_name: values.category?.label,
+      payment_method_id: values.payment_method?.value,
+      payment_method_name: values.payment_method?.label,
+      card_id: values.card?.value,
+      card_name: values.card?.label,
     };
 
     if (values.mode === "custom" && values.range) {
@@ -155,7 +174,7 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
           color: "#fff",
           border: "none",
           fontWeight: 600,
-          marginTop: 10
+          marginTop: 10,
         }}
       >
         Filtrar
@@ -195,7 +214,11 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
                 label="Intervalo de datas"
                 rules={[{ required: true, message: "Selecione um intervalo" }]}
               >
-                <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
+                <RangePicker
+                  format="DD/MM/YYYY"
+                  style={{ width: "100%", height: 45 }}
+                  disabledDate={disabledDate}
+                />
               </Form.Item>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
@@ -210,36 +233,45 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
 
             <div style={{ marginTop: 24, borderTop: "1px solid #F1F5F9", paddingTop: 24 }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-                <Form.Item name="category_id" label="Categoria">
+                <Form.Item name="category" label="Categoria">
                   <Select
+                    labelInValue
                     placeholder="Todas as categorias"
                     allowClear
+                    showSearch
+                    filterOption={(input, option) =>
+                      String(option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                    }
                     style={{ height: 45 }}
                     options={categories.map((c) => ({ value: c.id, label: c.category_description }))}
                   />
                 </Form.Item>
-                <Form.Item name="payment_method_id" label="Método de pagamento">
+
+                <Form.Item name="payment_method" label="Forma de pagamento">
                   <Select
-                    placeholder="Todos os métodos"
+                    labelInValue
+                    placeholder="Todas as formas"
                     allowClear
+                    showSearch
+                    filterOption={(input, option) =>
+                      String(option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                    }
                     style={{ height: 45 }}
-                    options={paymentMethods.map((pm) => ({ value: pm.id, label: pm.payment_method_description }))}
+                    options={paymentMethods.map((pm) => ({ value: pm.id, label: pm.description }))}
                   />
                 </Form.Item>
-                <Form.Item name="card_id" label="Cartão">
+
+                <Form.Item name="card" label="Cartão" style={{ gridColumn: "1 / -1" }}>
                   <Select
+                    labelInValue
                     placeholder="Todos os cartões"
                     allowClear
+                    showSearch
+                    filterOption={(input, option) =>
+                      String(option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                    }
                     style={{ height: 45 }}
                     options={cards.map((c) => ({ value: c.id, label: c.card_description }))}
-                  />
-                </Form.Item>
-                <Form.Item name="flag_id" label="Bandeira">
-                  <Select
-                    placeholder="Todas as bandeiras"
-                    allowClear
-                    style={{ height: 45 }}
-                    options={flags.map((f) => ({ value: f.id, label: f.flag_description }))}
                   />
                 </Form.Item>
               </div>

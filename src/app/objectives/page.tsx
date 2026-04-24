@@ -352,21 +352,19 @@ const ObjectivesPage = () => {
           </div>
         </div>
 
-        <section className={styles.sectionBlock}>
-          {loading ? (
-            <div className={styles.loadingArea}>
-              <Spin size="large" />
-            </div>
-          ) : objectives.length === 0 ? (
-            <div className={styles.emptyState}>
-              <Empty description="Nenhum objetivo salvo até o momento" />
-            </div>
-          ) : (
-            <Row gutter={[24, 24]}>
-              {objectives.map((objective) => {
-                const type = objectiveTypeMap[objective.type];
-                const progress = Math.max(0, Math.min(Number(objective.progress_percentage ?? 0), 100));
-                const recommendation = getContributionRecommendation(objective);
+        {loading ? (
+            <section className={styles.sectionBlock}>
+              <div className={styles.loadingArea}>
+                <Spin size="large" />
+              </div>
+            </section>
+          ) : objectives.length > 0 ? (
+            <section className={styles.sectionBlock}>
+              <Row gutter={[24, 24]}>
+                {objectives.map((objective) => {
+                  const type = objectiveTypeMap[objective.type];
+                  const progress = Math.max(0, Math.min(Number(objective.progress_percentage ?? 0), 100));
+                  const recommendation = getContributionRecommendation(objective);
                 const retirementTimeLeft = getRetirementTimeLeft(objective);
 
                 return (
@@ -520,18 +518,12 @@ const ObjectivesPage = () => {
                   </div>
                 </Card>
               </Col>
-            </Row>
-          )}
-        </section>
+              </Row>
+           </section>
+        ) : null}
 
         {!loading && objectives.length === 0 && (
           <section className={styles.sectionBlock}>
-            <div className={styles.sectionHeader}>
-              <div>
-                <h3 className={styles.sectionTitle}>Criar novo objetivo</h3>
-                <p className={styles.sectionDescription}>Escolha o tipo de objetivo e preencha os dados para começar.</p>
-              </div>
-            </div>
 
             <Row gutter={[24, 24]}>
               {objectiveTypes.map((type) => (

@@ -48,7 +48,6 @@ const Outputs = () => {
       if (filters.category_id) params.set("category_id", String(filters.category_id));
       if (filters.payment_method_id) params.set("payment_method_id", String(filters.payment_method_id));
       if (filters.card_id) params.set("card_id", String(filters.card_id));
-      if (filters.flag_id) params.set("flag_id", String(filters.flag_id));
 
       const queryString = params.toString();
       const endpoint = `transaction/type/2${queryString ? `?${queryString}` : ""}`;
@@ -105,10 +104,9 @@ const Outputs = () => {
       labels.push(`Ano: ${filters.year}`);
     }
 
-    if (filters.category_id) labels.push("Categoria selecionada");
-    if (filters.payment_method_id) labels.push("Método de pagamento selecionado");
-    if (filters.card_id) labels.push("Cartão selecionado");
-    if (filters.flag_id) labels.push("Bandeira selecionada");
+    if (filters.category_id && filters.category_name) labels.push(`Categoria: ${filters.category_name}`);
+    if (filters.payment_method_id && filters.payment_method_name) labels.push(`Forma de pagamento: ${filters.payment_method_name}`);
+    if (filters.card_id && filters.card_name) labels.push(`Cartão: ${filters.card_name}`);
 
     return labels;
   }, [filters, monthNames, now]);

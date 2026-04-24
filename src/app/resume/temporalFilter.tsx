@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Button, DatePicker, Form, Modal, Select, Segmented, Input } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { CalendarOutlined } from "@ant-design/icons";
+import { request } from "@/service/api";
 import styles from "./resume.module.scss";
 
 const { RangePicker } = DatePicker;
@@ -50,17 +51,32 @@ export const ResumeTemporalFilter = ({ filters, onChange }: ResumeTemporalFilter
   const [form] = Form.useForm<FilterFormValues>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   const yearOptions = useMemo(
-    () =>
-      Array.from({ length: 7 }, (_, index) => now.getFullYear() - 3 + index).map((year) => ({
-        value: year,
-        label: String(year),
-      })),
-    [now]
+    () => availableYears.map((year) => ({ value: year, label: String(year) })),
+    [availableYears]
   );
 
+  const disabledDate = useCallback(
+    (current: Dayjs) => {
+      if (!availableYears.length) return false;
+      return !availableYears.includes(current.year());
+    },
+    [availableYears]
+  );
+
+  const fetchYears = async () => {
+    try {
+      const res = await request({ method: "GET", endpoint: "transaction/years" });
+      setAvailableYears(res?.data?.data?.years ?? []);
+    } catch {
+      setAvailableYears([]);
+    }
+  };
+
   const openModal = () => {
+    fetchYears();
     form.setFieldsValue({
       mode: filters.mode,
       month: filters.month,
@@ -106,9 +122,9 @@ export const ResumeTemporalFilter = ({ filters, onChange }: ResumeTemporalFilter
 
   return (
     <>
-      <Button 
-        className={styles.filterButton} 
-        onClick={openModal} 
+      <Button
+        className={styles.filterButton}
+        onClick={openModal}
         ref={triggerRef}
         icon={<CalendarOutlined />}
       >
@@ -149,7 +165,11 @@ export const ResumeTemporalFilter = ({ filters, onChange }: ResumeTemporalFilter
               label="Intervalo de Datas"
               rules={[{ required: true, message: "Selecione um intervalo" }]}
             >
-              <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
+              <RangePicker
+                format="DD/MM/YYYY"
+                style={{ width: "100%", height: 45 }}
+                disabledDate={disabledDate}
+              />
             </Form.Item>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
