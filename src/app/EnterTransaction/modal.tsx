@@ -43,10 +43,10 @@ interface SuggestedCategory {
 }
 
 const SUGGESTED_INCOME_CATEGORIES: SuggestedCategory[] = [
-  { key: "salary", label: "Salário", icon: <DollarOutlined />, color: "#00875A" },
-  { key: "freelance", label: "Freelance", icon: <RocketOutlined />, color: "#6C5DD3" },
-  { key: "investments", label: "Investimentos", icon: <WalletOutlined />, color: "#FFA940" },
-  { key: "extra", label: "Renda Extra", icon: <StarOutlined />, color: "#00B0FF" },
+  { key: "1", label: "Salário", icon: <DollarOutlined />, color: "#00875A" },
+  { key: "2", label: "Freelance", icon: <RocketOutlined />, color: "#6C5DD3" },
+  { key: "3", label: "Investimentos", icon: <WalletOutlined />, color: "#FFA940" },
+  { key: "4", label: "Renda Extra", icon: <StarOutlined />, color: "#00B0FF" },
 ];
 
 const normalizeCategoryName = (value: string) =>
@@ -90,21 +90,10 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
     const rawCategoryId = values.category_id;
 
     if (typeof rawCategoryId === "string" && rawCategoryId.startsWith("suggestion:")) {
-      const suggestionLabel = rawCategoryId.replace("suggestion:", "");
-      const existingCategory = categories.find(
-        (category) => normalizeCategoryName(category.category_description) === normalizeCategoryName(suggestionLabel)
-      );
-
-      if (existingCategory) {
-        return {
-          category_id: existingCategory.id,
-          category_description: undefined,
-        };
-      }
-
+      const categoryId = Number(rawCategoryId.replace("suggestion:", ""));
       return {
-        category_id: 0,
-        category_description: suggestionLabel,
+        category_id: categoryId,
+        category_description: undefined,
       };
     }
 
@@ -192,7 +181,11 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
             setShowDescriptionCategory(shouldShowDescription);
 
             if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
-              form.setFieldsValue({ category_description: nextValue.replace("suggestion:", "") });
+              const categoryId = nextValue.replace("suggestion:", "");
+              const suggestion = SUGGESTED_INCOME_CATEGORIES.find(cat => cat.key === categoryId);
+              if (suggestion) {
+                form.setFieldsValue({ category_description: suggestion.label });
+              }
             }
 
             if (!shouldShowDescription && nextValue !== 0) {
@@ -250,7 +243,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
 
                 <Select.OptGroup label="Sugestões">
                   {SUGGESTED_INCOME_CATEGORIES.map((cat) => (
-                    <Select.Option key={cat.key} value={`suggestion:${cat.label}`}>
+                    <Select.Option key={cat.key} value={`suggestion:${cat.key}`}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
                         <span>{cat.label}</span>

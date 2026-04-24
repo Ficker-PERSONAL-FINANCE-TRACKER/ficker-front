@@ -14,10 +14,10 @@ interface SalaryStepProps {
 }
 
 const SUGGESTED_INCOME_CATEGORIES = [
-  { key: "salary", label: "Salário", icon: <DollarOutlined />, color: "#00875A" },
-  { key: "freelance", label: "Freelance", icon: <RocketOutlined />, color: "#6C5DD3" },
-  { key: "investments", label: "Investimentos", icon: <WalletOutlined />, color: "#FFA940" },
-  { key: "extra", label: "Renda Extra", icon: <StarOutlined />, color: "#00B0FF" },
+  { key: "1", label: "Salário", icon: <DollarOutlined />, color: "#00875A" },
+  { key: "2", label: "Freelance", icon: <RocketOutlined />, color: "#6C5DD3" },
+  { key: "3", label: "Investimentos", icon: <WalletOutlined />, color: "#FFA940" },
+  { key: "4", label: "Renda Extra", icon: <StarOutlined />, color: "#00B0FF" },
 ];
 
 export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDescriptionCategory, setShowDescriptionCategory }) => {
@@ -35,7 +35,11 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
               setShowDescriptionCategory(shouldShowDescription);
 
               if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
-                form.setFieldsValue({ category_description: nextValue.replace("suggestion:", "") });
+                const categoryId = nextValue.replace("suggestion:", "");
+                const suggestion = SUGGESTED_INCOME_CATEGORIES.find(cat => cat.key === categoryId);
+                if (suggestion) {
+                  form.setFieldsValue({ category_description: suggestion.label });
+                }
               }
 
               if (!shouldShowDescription && nextValue !== 0) {
@@ -86,7 +90,7 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
 
                 <Select.OptGroup label="Sugestões">
                   {SUGGESTED_INCOME_CATEGORIES.map((cat) => (
-                    <Select.Option key={cat.key} value={`suggestion:${cat.label}`}>
+                    <Select.Option key={cat.key} value={`suggestion:${cat.key}`}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
                         <span>{cat.label}</span>

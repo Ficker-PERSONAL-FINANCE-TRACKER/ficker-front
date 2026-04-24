@@ -91,7 +91,8 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
   };
 
   const getCategoryInfo = (transaction: ITransaction) => {
-    const desc = (transaction.category_description || "").toLowerCase();
+    const id = Number(transaction.category_id);
+    const description = (transaction.category_description || "").toLowerCase();
 
     if (transaction.is_invoice_payment) {
       return { icon: <TagsOutlined />, color: "#FF4D4F", bg: "#FFF1F0" };
@@ -101,24 +102,33 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
       return { icon: <ShoppingOutlined />, color: "#D48806", bg: "#FFF7E6" };
     }
 
-    if (transaction.type_id === 2) {
-      return { icon: <TagsOutlined />, color: "#FF4D4F", bg: "#FFF1F0" };
-    }
+    // Map by ID (Highest priority)
+    if (id === 1) return { icon: <DollarOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (id === 2) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (id === 3) return { icon: <WalletOutlined />, color: "#FFA940", bg: "#FFF7E6" };
+    if (id === 4) return { icon: <StarOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
+    if (id === 5) return { icon: <CarOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (id === 6) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (id === 7) return { icon: <CoffeeOutlined />, color: "#FF754C", bg: "#FFEBE6" };
+    if (id === 8) return { icon: <ThunderboltOutlined />, color: "#FFD700", bg: "#FFFBE6" };
+    if (id === 9) return { icon: <WifiOutlined />, color: "#8E82EF", bg: "#F5F3FF" };
+    if (id === 10) return { icon: <ShoppingOutlined />, color: "#FF4D4F", bg: "#FFF1F0" };
+    if (id === 11) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
 
-    if (desc.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A", bg: "#E6F7EF" };
-    if (desc.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
-    if (desc.includes("invest")) return { icon: <WalletOutlined />, color: "#FFA940", bg: "#FFF7E6" };
-    if (desc.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
+    // Fallback by description (for legacy or untracked IDs)
+    if (description.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (description.includes("invest")) return { icon: <WalletOutlined />, color: "#FFA940", bg: "#FFF7E6" };
+    if (description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
+    if (description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C", bg: "#FFEBE6" };
+    if (description.includes("conta")) return { icon: <ThunderboltOutlined />, color: "#FFD700", bg: "#FFFBE6" };
+    if (description.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF", bg: "#F5F3FF" };
+    if (description.includes("compra")) return { icon: <ShoppingOutlined />, color: "#D48806", bg: "#FFF7E6" };
+    if (description.includes("projetos")) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
 
-    if (desc.includes("alimentação")) return { icon: <RestOutlined />, color: "#FFA940", bg: "#FFF7E6" };
-    if (desc.includes("casa")) return { icon: <HomeOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
-    if (desc.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
-    if (desc.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
-    if (desc.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C", bg: "#FFEBE6" };
-    if (desc.includes("conta")) return { icon: <ThunderboltOutlined />, color: "#FFD700", bg: "#FFFBE6" };
-    if (desc.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF", bg: "#F5F3FF" };
-    if (desc.includes("compra")) return { icon: <ShoppingOutlined />, color: "#D48806", bg: "#FFF7E6" };
-
+    // Default icon for custom categories
     return { icon: <TagsOutlined />, color: "#808191", bg: "#F8FAFC" };
   };
 

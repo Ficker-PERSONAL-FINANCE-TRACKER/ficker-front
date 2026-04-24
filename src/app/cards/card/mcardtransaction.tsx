@@ -7,17 +7,14 @@ import dayjs from "dayjs";
 import styles from "../../EnterTransaction/entertransaction.module.scss";
 import { 
   PlusOutlined, 
-  HomeOutlined, 
+  WalletOutlined,
+  DollarOutlined,
   CarOutlined, 
   MedicineBoxOutlined, 
-  SkinOutlined, 
   RocketOutlined, 
   ShoppingOutlined,
-  BookOutlined,
-  ToolOutlined,
   CoffeeOutlined,
   StarOutlined,
-  RestOutlined,
   ThunderboltOutlined,
   WifiOutlined
 } from "@ant-design/icons";
@@ -66,14 +63,17 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
   const [form] = Form.useForm();
 
   const defaultCategories = [
-    { id: 'exp_food', label: 'Alimentação', icon: <RestOutlined />, color: '#FFA940' },
-    { id: 'exp_home', label: 'Casa', icon: <HomeOutlined />, color: '#00B0FF' },
-    { id: 'exp_transp', label: 'Transporte', icon: <CarOutlined />, color: '#6C5DD3' },
-    { id: 'exp_health', label: 'Saúde', icon: <MedicineBoxOutlined />, color: '#00875A' },
-    { id: 'exp_leisure', label: 'Lazer', icon: <CoffeeOutlined />, color: '#FF754C' },
-    { id: 'exp_bills', label: 'Contas', icon: <ThunderboltOutlined />, color: '#FFD700' },
-    { id: 'exp_internet', label: 'Internet', icon: <WifiOutlined />, color: '#8E82EF' },
-    { id: 'exp_shop', label: 'Compras', icon: <ShoppingOutlined />, color: '#FF4D4F' },
+    { id: '1', label: 'Salário', icon: <DollarOutlined />, color: '#00875A' },
+    { id: '2', label: 'Freelance', icon: <RocketOutlined />, color: '#6C5DD3' },
+    { id: '3', label: 'Investimentos', icon: <WalletOutlined />, color: '#FFA940' },
+    { id: '4', label: 'Renda Extra', icon: <StarOutlined />, color: '#00B0FF' },
+    { id: '5', label: 'Transporte', icon: <CarOutlined />, color: '#6C5DD3' },
+    { id: '6', label: 'Saúde', icon: <MedicineBoxOutlined />, color: '#00875A' },
+    { id: '7', label: 'Lazer', icon: <CoffeeOutlined />, color: '#FF754C' },
+    { id: '8', label: 'Contas', icon: <ThunderboltOutlined />, color: '#FFD700' },
+    { id: '9', label: 'Internet', icon: <WifiOutlined />, color: '#8E82EF' },
+    { id: '10', label: 'Compras', icon: <ShoppingOutlined />, color: '#FF4D4F' },
+    { id: '11', label: 'Projetos', icon: <RocketOutlined />, color: '#6C5DD3' },
   ];
 
   const handleCancel = () => {
@@ -97,23 +97,12 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
   const resolveCategoryPayload = (values: Record<string, any>) => {
     const rawCategoryId = values.category_id;
 
-    const selectedDefault = defaultCategories.find((category) => category.id === rawCategoryId);
+    const selectedDefault = defaultCategories.find((category) => category.id === String(rawCategoryId));
 
     if (selectedDefault) {
-      const existingCategory = categories.find(
-        (category) => normalizeCategoryName(category.category_description) === normalizeCategoryName(selectedDefault.label)
-      );
-
-      if (existingCategory) {
-        return {
-          category_id: existingCategory.id,
-          category_description: undefined,
-        };
-      }
-
       return {
-        category_id: 0,
-        category_description: selectedDefault.label,
+        category_id: Number(selectedDefault.id),
+        category_description: undefined,
       };
     }
 

@@ -45,15 +45,13 @@ interface SuggestedCategory {
 }
 
 const SUGGESTED_EXPENSE_CATEGORIES: SuggestedCategory[] = [
-  { key: "food", label: "Alimentação", icon: <RestOutlined />, color: "#FFA940" },
-  { key: "home", label: "Casa", icon: <HomeOutlined />, color: "#00B0FF" },
-  { key: "transport", label: "Transporte", icon: <CarOutlined />, color: "#6C5DD3" },
-  { key: "health", label: "Saúde", icon: <MedicineBoxOutlined />, color: "#00875A" },
-  { key: "leisure", label: "Lazer", icon: <CoffeeOutlined />, color: "#FF754C" },
-  { key: "bills", label: "Contas", icon: <ThunderboltOutlined />, color: "#FFD700" },
-  { key: "internet", label: "Internet", icon: <WifiOutlined />, color: "#8E82EF" },
-  { key: "shopping", label: "Compras", icon: <ShoppingOutlined />, color: "#FF4D4F" },
-  { key: "projects", label: "Projetos", icon: <RocketOutlined />, color: "#6C5DD3" },
+  { key: "5", label: "Transporte", icon: <CarOutlined />, color: "#6C5DD3" },
+  { key: "6", label: "Saúde", icon: <MedicineBoxOutlined />, color: "#00875A" },
+  { key: "7", label: "Lazer", icon: <CoffeeOutlined />, color: "#FF754C" },
+  { key: "8", label: "Contas", icon: <ThunderboltOutlined />, color: "#FFD700" },
+  { key: "9", label: "Internet", icon: <WifiOutlined />, color: "#8E82EF" },
+  { key: "10", label: "Compras", icon: <ShoppingOutlined />, color: "#FF4D4F" },
+  { key: "11", label: "Projetos", icon: <RocketOutlined />, color: "#6C5DD3" },
 ];
 
 const normalizeCategoryName = (value: string) =>
@@ -137,21 +135,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
     const rawCategoryId = values.category_id;
 
     if (typeof rawCategoryId === "string" && rawCategoryId.startsWith("suggestion:")) {
-      const suggestionLabel = rawCategoryId.replace("suggestion:", "");
-      const existingCategory = categories.find(
-        (category) => normalizeCategoryName(category.category_description) === normalizeCategoryName(suggestionLabel)
-      );
-
-      if (existingCategory) {
-        return {
-          category_id: existingCategory.id,
-          category_description: undefined,
-        };
-      }
-
+      const categoryId = Number(rawCategoryId.replace("suggestion:", ""));
       return {
-        category_id: 0,
-        category_description: suggestionLabel,
+        category_id: categoryId,
+        category_description: undefined,
       };
     }
 
@@ -234,7 +221,11 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
             setShowDescriptionCategory(shouldShowDescription);
 
             if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
-              form.setFieldsValue({ category_description: nextValue.replace("suggestion:", "") });
+              const categoryId = nextValue.replace("suggestion:", "");
+              const suggestion = SUGGESTED_EXPENSE_CATEGORIES.find(cat => cat.key === categoryId);
+              if (suggestion) {
+                form.setFieldsValue({ category_description: suggestion.label });
+              }
             }
 
             if (!shouldShowDescription && nextValue !== 0) {
@@ -351,7 +342,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
 
                 <Select.OptGroup label="Sugestões">
                   {SUGGESTED_EXPENSE_CATEGORIES.map((cat) => (
-                    <Select.Option key={cat.key} value={`suggestion:${cat.label}`}>
+                    <Select.Option key={cat.key} value={`suggestion:${cat.key}`}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
                         <span>{cat.label}</span>
