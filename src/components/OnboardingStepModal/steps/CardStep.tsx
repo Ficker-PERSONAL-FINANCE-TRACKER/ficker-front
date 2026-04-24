@@ -13,9 +13,11 @@ interface CardStepProps {
 const FLAGS = [
   { id: 1, name: "Mastercard" },
   { id: 2, name: "Visa" },
-  { id: 3, name: "Elo" },
-  { id: 4, name: "American Express" },
-  { id: 5, name: "Hipercard" },
+  { id: 3, name: "Hipercard" },
+  { id: 4, name: "Elo" },
+  { id: 5, name: "Alelo" },
+  { id: 6, name: "American Express" },
+  { id: 7, name: "Diners Club" },
 ];
 
 const DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => ({ value: i + 1, label: String(i + 1) }));

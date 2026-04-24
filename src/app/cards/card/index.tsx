@@ -36,6 +36,7 @@ function CardPage({ card }: CardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [invoicePayDay, setInvoicePayDay] = useState<string | null>(card.invoice_pay_day ?? null);
   const [filters, setFilters] = useState<{ flag_id?: number }>({});
+  const [flags, setFlags] = useState<{ id: number; flag_description: string }[]>([]);
   const isArchived = Boolean(card.archived_at);
 
   const getCardTotalValue = async () => {
@@ -69,6 +70,13 @@ function CardPage({ card }: CardProps) {
     } catch (error) {}
   };
 
+  const getFlags = async () => {
+    try {
+      const response = await request({ method: "GET", endpoint: "flags" });
+      setFlags(response?.data?.data?.flags ?? []);
+    } catch (error) {}
+  };
+
   const openModal = () => {
     setIsModalOpen(true);
   };
@@ -76,6 +84,10 @@ function CardPage({ card }: CardProps) {
   const openOutputModal = () => {
     setIsOutputModalOpen(true);
   };
+
+  useEffect(() => {
+    getFlags();
+  }, []);
 
   useEffect(() => {
     getCardData();
@@ -102,7 +114,7 @@ function CardPage({ card }: CardProps) {
           </div>
           {filters.flag_id && (
             <div style={{ marginBottom: 16 }}>
-              <AppliedFiltersBar filters={["Bandeira selecionada"]} />
+              <AppliedFiltersBar filters={[`Bandeira: ${flags.find(f => f.id === filters.flag_id)?.flag_description || "Selecionada"}`]} />
             </div>
           )}
           <TransactionTab

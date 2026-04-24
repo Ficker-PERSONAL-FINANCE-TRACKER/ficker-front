@@ -58,6 +58,7 @@ const Cards = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [cards, setCards] = useState<Card[]>([]);
   const [archivedCards, setArchivedCards] = useState<Card[]>([]);
+  const [flags, setFlags] = useState<{ id: number; flag_description: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
@@ -113,8 +114,14 @@ const Cards = () => {
       const rawCards = response?.data?.data?.cards ?? [];
       const hydratedCards = await hydrateCards(rawCards);
 
-      const activeCards = hydratedCards.filter(c => !c.archived_at);
-      const archivedCardsResult = hydratedCards.filter(c => c.archived_at);
+      // Filtragem por bandeira (client-side para garantir se a API não filtrar)
+      let filteredCards = hydratedCards;
+      if (filters.flag_id) {
+        filteredCards = filteredCards.filter(c => Number(c.flag_id) === Number(filters.flag_id));
+      }
+
+      const activeCards = filteredCards.filter(c => !c.archived_at);
+      const archivedCardsResult = filteredCards.filter(c => c.archived_at);
 
       setCards(activeCards);
       setArchivedCards(archivedCardsResult);
@@ -136,26 +143,26 @@ const Cards = () => {
 
   const getFlagColor = (flagId: number) => {
     const colors: { [key: number]: string } = {
-      3: "linear-gradient(135deg, #1e1e1e 0%, #3a3a3a 100%)",
-      4: "linear-gradient(135deg, #1a1f71 0%, #0056b3 100%)",
-      5: "linear-gradient(135deg, #d32f2f 0%, #ff5252 100%)",
-      6: "linear-gradient(135deg, #2d3e50 0%, #4c5c6e 100%)",
-      7: "linear-gradient(135deg, #00875a 0%, #22a06b 100%)",
-      8: "linear-gradient(135deg, #007bc1 0%, #00b0ff 100%)",
-      9: "linear-gradient(135deg, #004a97 0%, #0074e4 100%)",
+      1: "linear-gradient(135deg, #1e1e1e 0%, #3a3a3a 100%)", // Mastercard
+      2: "linear-gradient(135deg, #1a1f71 0%, #0056b3 100%)", // Visa
+      3: "linear-gradient(135deg, #d32f2f 0%, #ff5252 100%)", // Hipercard
+      4: "linear-gradient(135deg, #2d3e50 0%, #4c5c6e 100%)", // Elo
+      5: "linear-gradient(135deg, #00875a 0%, #22a06b 100%)", // Alelo
+      6: "linear-gradient(135deg, #007bc1 0%, #00b0ff 100%)", // Amex
+      7: "linear-gradient(135deg, #004a97 0%, #0074e4 100%)", // Diners
     };
     return colors[flagId] || "linear-gradient(135deg, #6C5DD3 0%, #8E82EF 100%)";
   };
 
   const getFlagImage = (flagId: number) => {
     const images: { [key: number]: string } = {
-      3: "/mastercard.png",
-      4: "/visa.png",
-      5: "/hipercard.png",
-      6: "/elo.png",
-      7: "/alelo.png",
-      8: "/amex.png",
-      9: "/diners.png",
+      1: "/mastercard.png",
+      2: "/visa.png",
+      3: "/hipercard.png",
+      4: "/elo.png",
+      5: "/alelo.png",
+      6: "/amex.png",
+      7: "/diners.png",
     };
     return images[flagId] || "/mastercard.png";
   };
@@ -381,6 +388,22 @@ const Cards = () => {
     );
   };
 
+  const getFlags = async () => {
+    try {
+      const response = await request({
+        method: "GET",
+        endpoint: "flags",
+      });
+      setFlags(response?.data?.data?.flags ?? []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getFlags();
+  }, []);
+
   useEffect(() => {
     getCards();
   }, [isModalOpen, filters]);
@@ -388,9 +411,12 @@ const Cards = () => {
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
     if (showArchived) labels.push("Exibindo arquivados");
-    if (filters.flag_id) labels.push("Bandeira selecionada");
+    if (filters.flag_id) {
+      const flag = flags.find(f => f.id === filters.flag_id);
+      labels.push(`Bandeira: ${flag ? flag.flag_description : "Selecionada"}`);
+    }
     return labels;
-  }, [showArchived, filters]);
+  }, [showArchived, filters, flags]);
 
   const hasAppliedFilters = appliedFiltersLabels.length > 0;
 
