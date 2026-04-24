@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import {
   EditOutlined,
+  CalendarOutlined,
   DollarOutlined,
   RocketOutlined,
   WalletOutlined,
@@ -398,7 +399,7 @@ const CategoriesPage = () => {
               </span>
             ) : null}
             <span className={styles.filterSummary}>{filterSummary}</span>
-            <Button className={styles.filterButton} onClick={openFilterModal}>
+            <Button className={styles.filterButton} icon={<CalendarOutlined />} onClick={openFilterModal}>
               Filtrar
             </Button>
           </div>

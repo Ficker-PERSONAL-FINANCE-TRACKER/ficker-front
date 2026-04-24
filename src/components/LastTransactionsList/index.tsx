@@ -1,4 +1,5 @@
-import { Image, Empty, Button, Modal } from "antd";
+import { Image, Empty, Button, Modal, Tooltip } from "antd";
+import { InfoCircleOutlined } from "@ant-design/icons";
 import "./styles.scss";
 import { useState } from "react";
 import { ITransaction } from "@/interfaces";
@@ -54,6 +55,7 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
         signal: "-",
         badgeBg: "#FFF7E6",
         badgeColor: "#D48806",
+        isCreditCardPurchase: true,
       };
     }
 
@@ -64,6 +66,7 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
       signal: "-",
       badgeBg: "#FFEBE6",
       badgeColor: "#DE350B",
+      isCreditCardPurchase: false,
     };
   };
 
@@ -116,10 +119,15 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
                 </div>
                 <div
                   className="transaction-area__value"
-                  style={{ color: presentation.valueColor }}
+                  style={{ color: presentation.valueColor, display: "flex", alignItems: "center", gap: "4px" }}
                 >
                   {presentation.signal}
                   {formatCurrency(transaction.transaction_value)}
+                  {presentation.isCreditCardPurchase && (
+                    <Tooltip title="Compra no cartão: este valor será cobrado na fatura e não deduz do saldo atual imediatamente.">
+                      <InfoCircleOutlined style={{ fontSize: "14px", cursor: "help" }} />
+                    </Tooltip>
+                  )}
                 </div>
               </div>
             );
@@ -186,8 +194,17 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
                       fontWeight: 700,
                       color: presentation.valueColor
                     }}>
-                      {presentation.signal === ' ' ? '+ ' : '- '}
-                      {formatCurrency(transaction.transaction_value)}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "4px" }}>
+                        <span>
+                          {presentation.signal === ' ' ? '+ ' : '- '}
+                          {formatCurrency(transaction.transaction_value)}
+                        </span>
+                        {presentation.isCreditCardPurchase && (
+                          <Tooltip title="Compra no cartão: este valor será cobrado na fatura e não deduz do saldo atual imediatamente.">
+                            <InfoCircleOutlined style={{ fontSize: "14px", cursor: "help", fontWeight: 400 }} />
+                          </Tooltip>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

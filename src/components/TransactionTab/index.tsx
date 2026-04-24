@@ -1,4 +1,4 @@
-import { Col } from "antd";
+import { Col, Tooltip } from "antd";
 import styles from "./transactiontab.module.scss";
 import dayjs from "dayjs";
 import Image from "next/image";
@@ -22,6 +22,7 @@ import {
   WifiOutlined,
   ShoppingOutlined,
   TagsOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 
 interface TransactionTabProps {
@@ -234,8 +235,17 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                     </td>
 
                     <td className={styles.tdValue} style={{ color: presentation.valueColor, whiteSpace: "nowrap" }}>
-                      {presentation.signal}
-                      {formatCurrency(transaction.transaction_value)}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                        <span>
+                          {presentation.signal}
+                          {formatCurrency(transaction.transaction_value)}
+                        </span>
+                        {transaction.is_credit_card_purchase && (
+                          <Tooltip title="Compra no cartão: este valor será cobrado na fatura e não deduz do saldo atual imediatamente.">
+                            <InfoCircleOutlined style={{ fontSize: "14px", cursor: "help" }} />
+                          </Tooltip>
+                        )}
+                      </div>
                     </td>
 
                     {typeId === 2 && (
