@@ -124,7 +124,7 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
                   </Space>
                 </Select.Option>
 
-                <Select.OptGroup label="Sugestões">
+                {/* <Select.OptGroup label="Sugestões">
                   {filteredSuggestions.map((cat) => (
                     <Select.Option key={cat.key} value={`suggestion:${cat.key}`}>
                       <Space>
@@ -133,7 +133,7 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
                       </Space>
                     </Select.Option>
                   ))}
-                </Select.OptGroup>
+                </Select.OptGroup> */}
 
                 {categories.length > 0 && (
                   <Select.OptGroup label="Minhas categorias">

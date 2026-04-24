@@ -245,7 +245,7 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
                   </Space>
                 </Select.Option>
                 
-                <Select.OptGroup label="Sugestões">
+                {/* <Select.OptGroup label="Sugestões">
                   {filteredSuggestions.map(cat => (
                     <Select.Option key={cat.id} value={cat.id}>
                       <Space>
@@ -254,7 +254,7 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
                       </Space>
                     </Select.Option>
                   ))}
-                </Select.OptGroup>
+                </Select.OptGroup> */}
 
                 {categories && categories.length > 0 && (
                   <Select.OptGroup label="Minhas categorias">

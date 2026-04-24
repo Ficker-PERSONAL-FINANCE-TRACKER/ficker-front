@@ -1,13 +1,12 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { MenuProps } from "antd";
-import { Button, Menu, Modal, Space, message } from "antd";
+import { Drawer, Menu } from "antd";
 import Image from "next/image";
 import "./styles.scss";
 import { usePathname, useRouter } from "next/navigation";
 import { Cookies } from "react-cookie";
 import { 
-  BarsOutlined,
   ApiOutlined,
   TagOutlined,
 } from "@ant-design/icons";
@@ -15,6 +14,7 @@ import useMediaQuery from "use-media-antd-query";
 import SidebarAlert from "../SidebarAlert";
 import Link from "next/link";
 import { request } from "@/service/api";
+import { MobileHeader } from "../MobileHeader";
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -112,6 +112,9 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
   const menu = cookie.get("menu");
   const colSize = useMediaQuery();
   const [showMenu, setShowMenu] = useState<boolean>(colSize === "xs" ? false : true);
+  const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
+
+  const isMobile = colSize === "xs" || colSize === "sm";
 
   const selectedKey =
     Object.entries(paths).find(([, path]) => path === pathname)?.[0] ?? (menu ? menu.toString() : "1");
@@ -126,8 +129,33 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
   });
   const [balanceData, setBalanceData] = useState<any>(balance || null);
   const toggleMenu = () => {
-    setShowMenu(!showMenu);
+    if (isMobile) {
+      setMobileDrawerVisible(!mobileDrawerVisible);
+    } else {
+      setShowMenu(!showMenu);
+    }
   };
+
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileDrawerVisible(false);
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (isMobile) {
+      document.body.classList.add("has-mobile-header");
+      setShowMenu(false);
+    } else {
+      document.body.classList.remove("has-mobile-header");
+      setShowMenu(true);
+    }
+
+    return () => {
+      document.body.classList.remove("has-mobile-header");
+    };
+  }, [isMobile]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -171,13 +199,80 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
     fetchData();
   }, [user, balance]);
 
+  const menuContent = useMemo(() => {
+    return (
+      <div className="menu-sidebar show">
+        <div>
+          <div className="logo-sidebar">
+            <Link href="/" onClick={() => setMobileDrawerVisible(false)}>
+              <Image src="/logo.png" alt="Logo" width={130} height={27} />
+            </Link>
+          </div>
+          <Menu
+            style={{ width: "100%", border: "none" }}
+            selectedKeys={[selectedKey]}
+            mode="inline"
+            items={items}
+            onClick={async ({ key }) => {
+              cookie.set("menu", key);
+              if (key === "10") {
+                try {
+                  await request({ method: "POST", endpoint: "logout" });
+                } catch (error) {
+                  console.error("Logout falhou:", error);
+                }
+                cookie.remove("menu");
+                localStorage.clear();
+                setMobileDrawerVisible(false);
+                router.replace("/login");
+              } else {
+                const targetPath = paths[key];
+                if (targetPath) {
+                  setMobileDrawerVisible(false);
+                  router.push(targetPath);
+                }
+              }
+            }}
+          />
+        </div>
+
+        <div className="sidebar-footer">
+          {balanceData && (
+            <SidebarAlert balance={balanceData} visible={showAlert && pathname === "/"} />
+          )}
+          <div className="user-profile">
+            <div className="avatar-circle">{userData?.name?.[0]?.toUpperCase() || "U"}</div>
+            <div className="user-info">
+              <span className="user-name">
+                {userData?.name ? userData.name.split(" ").slice(0, 2).join(" ") : "User"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }, [balanceData, cookie, pathname, router, selectedKey, showAlert, userData]);
+
   return (
-    <div className="sidebar-container">
-      {/* <div className="burger-area">
-        <BarsOutlined onClick={toggleMenu} className="burger-icon" />
-      </div> */}
-      {showMenu && (
-        <div className={`menu-sidebar ${showMenu ? "show" : ""}`}>
+    <div className="sidebar-container" style={isMobile ? { width: 0, flex: "0 0 0" } : undefined}>
+      {isMobile && (
+        <>
+          <MobileHeader onMenuClick={toggleMenu} />
+          <Drawer
+            placement="left"
+            open={mobileDrawerVisible}
+            onClose={() => setMobileDrawerVisible(false)}
+            closable={false}
+            width={280}
+            bodyStyle={{ padding: 0 }}
+          >
+            {menuContent}
+          </Drawer>
+        </>
+      )}
+
+      {!isMobile && showMenu && (
+        <div className="menu-sidebar show">
           <div>
             <div className="logo-sidebar">
               <Link href="/">
@@ -185,7 +280,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
               </Link>
             </div>
             <Menu
-              style={{ width: 250, border: 'none' }}
+              style={{ width: 250, border: "none" }}
               selectedKeys={[selectedKey]}
               mode="inline"
               items={items}
@@ -199,7 +294,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
                   }
                   cookie.remove("menu");
                   localStorage.clear();
-                  router.replace("/login");;
+                  router.replace("/login");
                 } else {
                   const targetPath = paths[key];
                   if (targetPath) {
@@ -214,11 +309,8 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
             {balanceData && (
               <SidebarAlert balance={balanceData} visible={showAlert && pathname === "/"} />
             )}
-            
             <div className="user-profile">
-              <div className="avatar-circle">
-                {userData?.name?.[0]?.toUpperCase() || "U"}
-              </div>
+              <div className="avatar-circle">{userData?.name?.[0]?.toUpperCase() || "U"}</div>
               <div className="user-info">
                 <span className="user-name">
                   {userData?.name ? userData.name.split(" ").slice(0, 2).join(" ") : "User"}
