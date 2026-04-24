@@ -1,5 +1,5 @@
 "use client";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import { Modal, Col, Row, Select, Form, Button, Input, message } from "antd";
 import { useEffect } from "react";
 import styles from "@/app/EnterTransaction/entertransaction.module.scss";
@@ -32,7 +32,7 @@ export const ModalNewCategory = ({ isModalOpen, setIsModalOpen, onCategoryCreate
       onCategoryCreated?.();
       handleCancel();
     } catch (errorInfo) {
-      message.error("Erro ao adicionar categoria!");
+      message.error(getApiErrorMessage(errorInfo));
     }
   };
 

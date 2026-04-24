@@ -9,6 +9,38 @@ interface RequestParams {
   loaderStateSetter?: (state: boolean) => void;
 }
 
+export const getApiErrorMessage = (error: any): string => {
+  const data = error?.response?.data;
+
+  if (typeof data === "string" && data.trim()) return data;
+
+  const message = typeof data?.message === "string" ? data.message : "";
+  const errors = data?.errors;
+
+  if (errors && typeof errors === "object") {
+    const fieldMessages: string[] = [];
+    for (const value of Object.values(errors)) {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (typeof item === "string" && item.trim()) fieldMessages.push(item);
+        }
+      } else if (typeof value === "string" && value.trim()) {
+        fieldMessages.push(value);
+      }
+    }
+
+    const unique = Array.from(new Set([message, ...fieldMessages].filter(Boolean)));
+    if (unique.length > 0) return unique[0];
+  }
+
+  if (message) return message;
+
+  const fallback = typeof error?.message === "string" ? error.message : "";
+  if (fallback) return fallback;
+
+  return "Ocorreu um erro inesperado. Tente novamente.";
+};
+
 const toggleLoader = (
   loaderStateSetter: ((state: boolean) => void) | undefined,
   state: boolean

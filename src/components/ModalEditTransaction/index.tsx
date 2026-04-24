@@ -1,5 +1,5 @@
 "use client";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message } from "antd";
 import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
@@ -69,7 +69,7 @@ export const EditTransactionModal = ({
           message.success("Transação excluída com sucesso!");
           handleCancel();
         } catch (error) {
-          message.error("Não foi possível excluir a transação.");
+          message.error(getApiErrorMessage(error));
           console.log(error);
         }
       },
@@ -103,7 +103,7 @@ export const EditTransactionModal = ({
       message.success("Transação atualizada com sucesso!");
       handleCancel();
     } catch (errorInfo) {
-      message.error("Erro ao editar transação!");
+      message.error(getApiErrorMessage(errorInfo));
     }
   };
   const onChange: DatePickerProps["onChange"] = (date, dateString) => {

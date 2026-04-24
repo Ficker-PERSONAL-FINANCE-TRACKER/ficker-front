@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Row, Col, Progress, Button, Modal, Form, InputNumber, message, Card, Empty, Spin, Checkbox, Select } from "antd";
 import CustomMenu from "@/components/CustomMenu";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import {
@@ -262,7 +262,7 @@ const CategoriesPage = () => {
 
       setCategories(mergedCategories);
     } catch (error) {
-      message.error("Erro ao carregar categorias");
+      message.error(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -316,7 +316,7 @@ const CategoriesPage = () => {
       setIsModalOpen(false);
       await fetchData();
     } catch (error) {
-      message.error("Erro ao salvar meta");
+      message.error(getApiErrorMessage(error));
     }
   };
 

@@ -1,5 +1,5 @@
 "use client";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space, Switch } from "antd";
 import type { DatePickerProps } from "antd";
@@ -146,7 +146,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
       handleCancel();
       if (onSuccess) onSuccess();
     } catch (errorInfo) {
-      message.error("Erro ao adicionar transação!");
+      message.error(getApiErrorMessage(errorInfo));
     }
   };
 

@@ -1,5 +1,5 @@
 "use client";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, Row, Select, Form, Button, Input, message } from "antd";
 import { useEffect, useState } from "react";
@@ -53,7 +53,7 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen, onSuccess }: CardMod
       handleCancel();
       if (onSuccess) onSuccess();
     } catch (errorInfo) {
-      message.error("Erro ao cadastrar cartão!");
+      message.error(getApiErrorMessage(errorInfo));
     }
   };
 

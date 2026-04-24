@@ -1,5 +1,5 @@
 "use client";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
 import type { DatePickerProps } from "antd";
 import { useEffect, useMemo, useState } from "react";
@@ -152,7 +152,7 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
       message.success("Transação adicionada com sucesso!");
       handleCancel();
     } catch (errorInfo) {
-      message.error("Erro ao adicionar transação!");
+      message.error(getApiErrorMessage(errorInfo));
     }
   };
   const onChange: DatePickerProps["onChange"] = (date, dateString) => {

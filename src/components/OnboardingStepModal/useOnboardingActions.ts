@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { message, Form } from "antd";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 
 const normalizeCategoryName = (value: string) =>
   (value || "")
@@ -134,9 +134,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
       message.success("Entrada registrada com sucesso!");
       setCurrentStep(1);
     } catch (error: any) {
-      if (error?.response) {
-        message.error(error?.response?.data?.message || "Erro ao registrar entrada.");
-      }
+      message.error(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -156,9 +154,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
       message.success("Meta de gastos configurada com sucesso!");
       setCurrentStep(2);
     } catch (error: any) {
-      if (error?.response) {
-        message.error(error?.response?.data?.message || "Erro ao salvar meta.");
-      }
+      message.error(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -184,9 +180,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
       }
       setCurrentStep(3);
     } catch (error: any) {
-      if (error?.response) {
-        message.error(error?.response?.data?.message || "Erro ao salvar cartão.");
-      }
+      message.error(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -213,9 +207,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
       }
       await completeOnboarding();
     } catch (error: any) {
-      if (error?.response) {
-        message.error(error?.response?.data?.message || "Erro ao salvar objetivo.");
-      }
+      message.error(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -235,7 +227,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
       message.success("Configuração inicial concluída!");
       onComplete();
     } catch (error: any) {
-      message.error(error?.response?.data?.message || "Erro ao finalizar configuração.");
+      message.error(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }

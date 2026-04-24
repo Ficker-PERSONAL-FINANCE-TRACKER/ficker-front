@@ -1,5 +1,5 @@
 "use client";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
 import { useEffect, useState, useMemo } from "react";
@@ -183,7 +183,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
       handleCancel();
       if (onSuccess) onSuccess();
     } catch (errorInfo) {
-      message.error("Erro ao adicionar transação!");
+      message.error(getApiErrorMessage(errorInfo));
     }
   };
 
