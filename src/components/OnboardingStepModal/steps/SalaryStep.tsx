@@ -1,9 +1,10 @@
 import React from "react";
-import { Form, InputNumber, Input, Typography, DatePicker, Select, Space, Checkbox } from "antd";
+import { Form, InputNumber, Input, Typography, DatePicker, Select, Space, Checkbox, ConfigProvider } from "antd";
+import ptBR from "antd/locale/pt_BR";
 import { PlusOutlined, WalletOutlined, RocketOutlined, DollarOutlined, StarOutlined } from "@ant-design/icons";
 import styles from "../styles.module.scss";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface SalaryStepProps {
   form: any;
@@ -22,122 +23,124 @@ const SUGGESTED_INCOME_CATEGORIES = [
 export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDescriptionCategory, setShowDescriptionCategory }) => {
   return (
     <div className={styles.stepContent}>
-      <Title level={4} className={styles.stepTitle}>Registre seu Sálario</Title>
-      <Form 
-        form={form} 
-        layout="vertical"
-        onValuesChange={(changedValues) => {
-          if (Object.prototype.hasOwnProperty.call(changedValues, "category_id")) {
-            const nextValue = changedValues.category_id;
-            const shouldShowDescription = nextValue === 0;
-            setShowDescriptionCategory(shouldShowDescription);
+      <Title level={4} className={styles.stepTitle}>Registre seu salário</Title>
+      <ConfigProvider locale={ptBR}>
+        <Form 
+          form={form} 
+          layout="vertical"
+          onValuesChange={(changedValues) => {
+            if (Object.prototype.hasOwnProperty.call(changedValues, "category_id")) {
+              const nextValue = changedValues.category_id;
+              const shouldShowDescription = nextValue === 0;
+              setShowDescriptionCategory(shouldShowDescription);
 
-            if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
-              form.setFieldsValue({ category_description: nextValue.replace("suggestion:", "") });
-            }
+              if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
+                form.setFieldsValue({ category_description: nextValue.replace("suggestion:", "") });
+              }
 
-            if (!shouldShowDescription && nextValue !== 0) {
-              form.setFieldValue("category_description", undefined);
+              if (!shouldShowDescription && nextValue !== 0) {
+                form.setFieldValue("category_description", undefined);
+              }
             }
-          }
-        }}
-      >
-        <Form.Item
-          name="description"
-          label="Descricao"
-          rules={[{ required: true, message: "Informe a descricao" }]}
+          }}
         >
-          <Input placeholder="Ex: Salario, Saldo inicial..." className={styles.inputField} />
-        </Form.Item>
-
-        <div style={{ display: 'flex', gap: '12px' }}>
           <Form.Item
-            name="date"
-            label="Data"
-            style={{ flex: 1 }}
-            rules={[{ required: true, message: "Informe a data" }]}
+            name="description"
+            label="Descrição"
+            rules={[{ required: true, message: "Informe a descrição" }]}
           >
-            <DatePicker 
-              format="DD/MM/YYYY" 
-              className={styles.inputField}
+            <Input placeholder="Ex: Salário, saldo inicial..." className={styles.inputField} />
+          </Form.Item>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Form.Item
+              name="date"
+              label="Data"
+              style={{ flex: 1 }}
+              rules={[{ required: true, message: "Informe a data" }]}
+            >
+              <DatePicker 
+                format="DD/MM/YYYY" 
+                className={styles.inputField}
+                style={{ width: "100%" }}
+                placeholder="dd/mm/aaaa"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="category_id"
+              label="Categoria"
+              style={{ flex: 1 }}
+              rules={[{ required: true, message: "Selecione uma categoria" }]}
+            >
+              <Select 
+                placeholder="Selecione ou crie" 
+                className={styles.inputField}
+              >
+                <Select.Option value={0}>
+                  <Space>
+                    <PlusOutlined style={{ color: '#6C5DD3' }} />
+                    <span>Nova categoria</span>
+                  </Space>
+                </Select.Option>
+
+                <Select.OptGroup label="Sugestões">
+                  {SUGGESTED_INCOME_CATEGORIES.map((cat) => (
+                    <Select.Option key={cat.key} value={`suggestion:${cat.label}`}>
+                      <Space>
+                        <span style={{ color: cat.color }}>{cat.icon}</span>
+                        <span>{cat.label}</span>
+                      </Space>
+                    </Select.Option>
+                  ))}
+                </Select.OptGroup>
+
+                {categories.length > 0 && (
+                  <Select.OptGroup label="Minhas categorias">
+                    {categories.map((category) => (
+                      <Select.Option key={category.id} value={category.id}>
+                        {category.category_description}
+                      </Select.Option>
+                    ))}
+                  </Select.OptGroup>
+                )}
+              </Select>
+            </Form.Item>
+          </div>
+
+          {showDescriptionCategory && (
+            <Form.Item
+              name="category_description"
+              label="Nome da categoria"
+              rules={[{ required: true, message: "Informe o nome da categoria" }]}
+            >
+              <Input className={styles.inputField} />
+            </Form.Item>
+          )}
+
+          <Form.Item
+            name="transaction_value"
+            label="Valor"
+            rules={[{ required: true, message: "Informe o valor" }]}
+          >
+            <InputNumber
+              className={`${styles.inputField} ${styles.numberField}`}
               style={{ width: "100%" }}
-              placeholder="dd/mm/aaaa"
+              placeholder="R$"
+              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(value: any) => value?.replace(/\$\s?|(,*)/g, "") as any}
             />
           </Form.Item>
 
           <Form.Item
-            name="category_id"
-            label="Categoria"
-            style={{ flex: 1 }}
-            rules={[{ required: true, message: "Selecione uma categoria" }]}
+            name="is_recurring"
+            valuePropName="checked"
+            style={{ marginBottom: 0 }}
           >
-            <Select 
-              placeholder="Selecione ou crie" 
-              className={styles.inputField}
-            >
-              <Select.Option value={0}>
-                <Space>
-                  <PlusOutlined style={{ color: '#6C5DD3' }} />
-                  <span>Nova Categoria</span>
-                </Space>
-              </Select.Option>
-
-              <Select.OptGroup label="Sugestões">
-                {SUGGESTED_INCOME_CATEGORIES.map((cat) => (
-                  <Select.Option key={cat.key} value={`suggestion:${cat.label}`}>
-                    <Space>
-                      <span style={{ color: cat.color }}>{cat.icon}</span>
-                      <span>{cat.label}</span>
-                    </Space>
-                  </Select.Option>
-                ))}
-              </Select.OptGroup>
-
-              {categories.length > 0 && (
-                <Select.OptGroup label="Minhas Categorias">
-                  {categories.map((category) => (
-                    <Select.Option key={category.id} value={category.id}>
-                      {category.category_description}
-                    </Select.Option>
-                  ))}
-                </Select.OptGroup>
-              )}
-            </Select>
+            <Checkbox>Entrada recorrente (mensal)</Checkbox>
           </Form.Item>
-        </div>
-
-        {showDescriptionCategory && (
-          <Form.Item
-            name="category_description"
-            label="Nome da Categoria"
-            rules={[{ required: true, message: "Informe o nome da categoria" }]}
-          >
-            <Input className={styles.inputField} />
-          </Form.Item>
-        )}
-
-        <Form.Item
-          name="transaction_value"
-          label="Valor"
-          rules={[{ required: true, message: "Informe o valor" }]}
-        >
-          <InputNumber
-            className={`${styles.inputField} ${styles.numberField}`}
-            style={{ width: "100%" }}
-            placeholder="R$"
-            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-            parser={(value: any) => value?.replace(/\$\s?|(,*)/g, "") as any}
-          />
-        </Form.Item>
-
-        <Form.Item
-          name="is_recurring"
-          valuePropName="checked"
-          style={{ marginBottom: 0 }}
-        >
-          <Checkbox>Entrada recorrente (Mensal)</Checkbox>
-        </Form.Item>
-      </Form>
+        </Form>
+      </ConfigProvider>
     </div>
   );
 };

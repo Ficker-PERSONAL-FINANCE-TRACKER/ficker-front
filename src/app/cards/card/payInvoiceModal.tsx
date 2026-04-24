@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -93,7 +93,7 @@ export const PayInvoiceModal = ({
       } else if (error?.response?.data?.message) {
         setErrorMessage(error.response.data.message);
       } else {
-        setErrorMessage("Nao foi possivel carregar as faturas do cartao.");
+        setErrorMessage("Não foi possível carregar as faturas do cartão.");
       }
     } finally {
       setLoadingInvoices(false);
@@ -138,7 +138,7 @@ export const PayInvoiceModal = ({
       } else if (error?.response?.data?.message) {
         setErrorMessage(error.response.data.message);
       } else {
-        setErrorMessage("Nao foi possivel pagar a fatura.");
+        setErrorMessage("Não foi possível pagar a fatura.");
       }
     } finally {
       setPaying(false);
@@ -191,7 +191,7 @@ export const PayInvoiceModal = ({
       return <Tag color="blue">Parcialmente paga</Tag>;
     }
 
-    return <Tag color="cyan">Disponivel para pagamento</Tag>;
+    return <Tag color="cyan">Disponível para pagamento</Tag>;
   };
 
   return (
@@ -223,7 +223,7 @@ export const PayInvoiceModal = ({
 
           <Col style={{ marginBottom: 16 }}>
             <p style={{ marginBottom: 0 }}>
-              <strong>Cartao:</strong> {cardDescription}
+              <strong>Cartão:</strong> {cardDescription}
             </p>
           </Col>
 
@@ -291,7 +291,7 @@ export const PayInvoiceModal = ({
           {!hasAnyPayableInvoice && !errorMessage && (
             <Alert
               type="info"
-              message="Nao ha faturas fechadas e em aberto disponiveis para pagamento."
+              message="Não há faturas fechadas e em aberto disponíveis para pagamento."
               showIcon
               style={{ marginBottom: 16 }}
             />
@@ -317,7 +317,7 @@ export const PayInvoiceModal = ({
                     }
 
                     if (amount > openTotal) {
-                      return Promise.reject(new Error("O valor nao pode ser maior que o saldo em aberto da fatura."));
+                      return Promise.reject(new Error("O valor não pode ser maior que o saldo em aberto da fatura."));
                     }
 
                     return Promise.resolve();

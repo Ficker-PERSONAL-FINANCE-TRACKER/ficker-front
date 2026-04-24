@@ -339,32 +339,37 @@
 }
 
 .statusDanger {
-  background: #fff1f0;
+  // background: #fff1f0;
+  background: #fff;
   color: #dc2626;
 }
 
 .statusWarning {
-  background: #fff7e6;
+  // background: #fff7e6;
+  background: #fff;
   color: #d48806;
 }
 
 .statusSuccess {
-  background: #e6f7ef;
+  // background: #e6f7ef;
+  background: #fff;
   color: #16a34a;
 }
 
 .statusNeutral {
-  background: #f3f4f6;
+  background: #fff;
   color: #6b7280;
 }
 
 .statusActive {
-  background: #eef2ff;
+  // background: #eef2ff;
+  background: #fff;
   color: #5b5bd6;
 }
 
 .statusArchive {
-  background: #f3f4f6;
+  // background: #f3f4f6;
+  background: #fff;
   color: #6b7280;
 }
 

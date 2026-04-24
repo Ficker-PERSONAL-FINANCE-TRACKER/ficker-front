@@ -6,12 +6,13 @@ import ExpensesByCategoryChartContainer from "@/components/ExpensesByCategoryCha
 import PaymentMethodUsageChartContainer from "@/components/PaymentMethodUsageChartContainer";
 import PlannedSpendingByRealSpendingChartContainer, { FinanceDataPoint } from "@/components/PlannedSpendingByRealSppendingChartContainer";
 import { request } from "@/service/api";
-import { Button, DatePicker, Form, Popover, Row, Segmented, Select, Spin, Tabs, Input, ConfigProvider } from "antd";
+import { Button, DatePicker, Form, Modal, Row, Segmented, Select, Spin, Tabs, Input, ConfigProvider } from "antd";
 import ptBR from "antd/locale/pt_BR";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import { useEffect, useMemo, useState } from "react";
+import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import styles from "./analysis.module.scss";
@@ -494,7 +495,7 @@ const Analysis = () => {
     let runningBalance = openingBalance;
     let runningReal = 0;
     let runningCredit = 0;
-    const chartPoints = balanceTimelineSeries.map((item) => {
+    const chartPoints = (balanceTimelineSeries || []).map((item) => {
       runningBalance += Number(item.income_total || 0) - Number(item.real_spending_total || 0);
       runningReal += Number(item.real_spending_total || 0);
       runningCredit += Number(item.credit_card_purchase_total || 0);
@@ -587,7 +588,7 @@ const Analysis = () => {
   const hasReferenceInvoiceAwaitingClosure = cards.some(
     (card) => card.reference_invoice_status === "aguardando_fechamento" || card.reference_invoice_status === "awaiting_closure"
   );
-  const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "Período";
+  const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "período";
   const currentReferenceLabel = `${MONTH_OPTIONS[now.getMonth()]?.label ?? dayjs().format("MMMM")} de ${now.getFullYear()}`;
   const yearOptions = Array.from({ length: 7 }, (_, index) => now.getFullYear() - 3 + index).map((year) => ({
     value: year,
@@ -601,6 +602,19 @@ const Analysis = () => {
 
     return `${currentMonthLabel} de ${filters.year}`;
   }, [currentMonthLabel, filters]);
+
+  const appliedFiltersLabels = useMemo(() => {
+    const labels: string[] = [];
+    const isDefaultMonth = filters.mode === "month" && filters.month === (now.getMonth() + 1) && filters.year === now.getFullYear();
+
+    if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+      labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
+    } else if (!isDefaultMonth) {
+      labels.push(`Mês: ${currentMonthLabel}`);
+      labels.push(`Ano: ${filters.year}`);
+    }
+    return labels;
+  }, [currentMonthLabel, filters, now]);
 
   const getCardStatusLabel = (status: string) => {
     return CARD_STATUS_LABELS[status] ?? "Sem fatura aberta";
@@ -685,83 +699,28 @@ const Analysis = () => {
   const selectedMode = Form.useWatch("mode", form) ?? filters.mode;
   
   const renderIndicator = (
-    label: string, 
-    value: any, 
-    percentageOrSubtitle?: number | string, 
-    colorOrClass?: string, 
-    hint?: string,
-    IconComponent?: React.ElementType
+    label: string,
+    value: any,
+    subtitle: string,
+    statusClass?: "statusSuccess" | "statusWarning" | "statusDanger",
+    format: "currency" | "percent" | "raw" = "currency",
+    Icon?: any
   ) => {
-    const isNewStyle = typeof percentageOrSubtitle === 'string';
-    const subtitle = isNewStyle ? percentageOrSubtitle : undefined;
-    const colorClass = isNewStyle ? colorOrClass : undefined;
-
-    const isPlanned = label.toLowerCase().includes("planejado") || 
-                     label.toLowerCase().includes("proxima") || 
-                     label.toLowerCase().includes("futuro");
-
     return (
-      <div className={`${styles.metricIndicator} ${colorClass && styles[colorClass] ? styles[colorClass] : ""}`} title={hint}>
+      <div className={`${styles.metricIndicator} ${statusClass ? styles[statusClass] : ""}`}>
         <div className={styles.indicatorHeader}>
-          {IconComponent && <div className={styles.indicatorIcon}><IconComponent /></div>}
+          {Icon && <div className={styles.indicatorIcon}><Icon /></div>}
           <div className={styles.indicatorLabel}>
             {label}
           </div>
         </div>
-        <h3 className={styles.indicatorValue}>{typeof value === 'number' ? currency(value) : value}</h3>
+        <h3 className={styles.indicatorValue}>
+          {format === "currency" && typeof value === 'number' ? currency(value) : value}
+        </h3>
         {subtitle && <p className={styles.indicatorSubtitle}>{subtitle}</p>}
       </div>
     );
   };
-
-  const filterContent = (
-    <div style={{ width: 320, padding: "12px 0" }}>
-      <Form form={form} layout="vertical" initialValues={{ mode: filters.mode }}>
-        <div style={{ marginBottom: 20 }}>
-          <Segmented
-            block
-            value={selectedMode}
-            onChange={(value) => form.setFieldValue("mode", value)}
-            options={[
-              { value: "month", label: "Mês" },
-              { value: "custom", label: "Período" },
-            ]}
-            style={{ background: "#F8FAFC", borderRadius: 10, padding: 4 }}
-          />
-        </div>
-
-        <Form.Item name="mode" hidden>
-          <Input />
-        </Form.Item>
-
-        {selectedMode === "custom" ? (
-          <Form.Item
-            name="range"
-            label="Intervalo de Datas"
-            rules={[{ required: true, message: "Selecione um intervalo" }]}
-          >
-            <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
-          </Form.Item>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-            <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
-              <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
-            </Form.Item>
-            <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
-              <Select options={yearOptions} placeholder="Ano" style={{ height: 45 }} />
-            </Form.Item>
-          </div>
-        )}
-
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
-          <Button onClick={() => setIsFilterModalOpen(false)}>Cancelar</Button>
-          <Button type="primary" onClick={handleApplyFilters} style={{ background: "#6C5DD3", borderColor: "#6C5DD3" }}>
-            Aplicar
-          </Button>
-        </div>
-      </Form>
-    </div>
-  );
 
   return (
     <ConfigProvider locale={ptBR}>
@@ -774,23 +733,21 @@ const Analysis = () => {
           </div>
           <div className={styles.headerActions}>
             <span className={styles.filterSummary}>{filterSummary}</span>
-            <Popover
-              content={filterContent}
-              title="Filtrar análises"
-              trigger="click"
-              open={isFilterModalOpen}
-              onOpenChange={setIsFilterModalOpen}
-              placement="bottomRight"
+            <Button
+              className={styles.filterButton}
+              icon={<CalendarOutlined />}
+              onClick={openFilterModal}
             >
-              <Button
-                className={styles.filterButton}
-                icon={<CalendarOutlined />}
-              >
-                Filtrar
-              </Button>
-            </Popover>
+              Filtrar
+            </Button>
           </div>
         </div>
+
+        {appliedFiltersLabels.length > 0 && (
+          <div>
+            <AppliedFiltersBar filters={appliedFiltersLabels} />
+          </div>
+        )}
 
         {loading ? (
           <Row justify="center" className={styles.loadingArea}>
@@ -803,7 +760,7 @@ const Analysis = () => {
             items={[
               {
                 key: "general",
-                label: "Resumo Geral",
+                label: "Resumo geral",
                 children: (
                   <div className={styles.tabContentFade}>
                     <div className={styles.metricsGrid}>
@@ -811,16 +768,16 @@ const Analysis = () => {
                         "Entradas no período",
                         summary?.income_total,
                         "Tudo o que entrou no caixa no período filtrado.",
-                        undefined,
-                        undefined,
+                        "statusSuccess",
+                        "currency",
                         RiseOutlined
                       )}
                       {renderIndicator(
                         "Gasto real no período",
                         summary?.real_spending_total,
                         "Saídas que realmente afetaram o saldo.",
-                        undefined,
-                        undefined,
+                        "statusDanger",
+                        "currency",
                         FallOutlined
                       )}
                       {renderIndicator(
@@ -828,15 +785,15 @@ const Analysis = () => {
                         summary?.planned_spending_total,
                         "Meta de gasto considerada para o recorte atual.",
                         undefined,
-                        undefined,
+                        "currency",
                         CalendarOutlined
                       )}
                       {renderIndicator(
                         "Saldo líquido",
                         summary?.balance_delta,
                         "Entradas do período menos o gasto real do mesmo recorte.",
-                        undefined,
-                        undefined,
+                        (summary?.balance_delta ?? 0) >= 0 ? "statusSuccess" : "statusDanger",
+                        "currency",
                         WalletOutlined
                       )}
                     </div>
@@ -899,7 +856,7 @@ const Analysis = () => {
               },
               {
                 key: "cards",
-                label: "Cartões e Crédito",
+                label: "Cartões de crédito",
                 children: (
                   <div className={styles.tabContentFade}>
                     <div className={styles.metricsGrid}>
@@ -907,32 +864,32 @@ const Analysis = () => {
                         "Compras no crédito no período",
                         summary?.credit_card_purchase_total,
                         "Consumo no cartão que ainda não virou gasto real.",
-                        undefined,
-                        undefined,
+                        "statusWarning",
+                        "currency",
                         ShoppingCartOutlined
                       )}
                       {renderIndicator(
                         "Pagamentos de fatura no período",
                         summary?.invoice_payment_total,
                         invoicePaymentsKpiSummary.join(" - ") || "Sem pagamentos no período.",
-                        undefined,
-                        undefined,
+                        "statusSuccess",
+                        "currency",
                         BankOutlined
                       )}
                       {renderIndicator(
                         "Quitação das faturas do período",
                         invoiceSettlementPercentageInPeriod.toFixed(1) + "%",
                         `${invoiceSettlementPercentageInPeriod.toFixed(1)}% do valor das faturas com vencimento no período já foi quitado.`,
-                        undefined,
-                        undefined,
+                        invoiceSettlementPercentageInPeriod >= 100 ? "statusSuccess" : "statusWarning",
+                        "raw",
                         CheckCircleOutlined
                       )}
                       {renderIndicator(
                         `Quitação do aberto atual (${currentReferenceLabel})`,
                         currentOpenSettlementPercentage.toFixed(1) + "%",
                         `${currentOpenSettlementPercentage.toFixed(1)}% da fatura atual já foi quitada.`,
-                        undefined,
-                        undefined,
+                        currentOpenSettlementPercentage >= 100 ? "statusSuccess" : "statusWarning",
+                        "raw",
                         CheckSquareOutlined
                       )}
                     </div>
@@ -1007,6 +964,10 @@ const Analysis = () => {
                                   <strong className={styles.mValue}>{formatDate(displayPayDay)}</strong>
                                 </div>
                                 <div className={styles.metricGroup}>
+                                  <span className={styles.mLabel}><BankOutlined /> {invoicePaymentSubtitle}</span>
+                                  <strong className={styles.mValue}>{currency(card.invoice_payments_total_in_period)}</strong>
+                                </div>
+                                <div className={styles.metricGroup}>
                                   <span className={styles.mLabel}><CreditCardOutlined /> Próxima fatura</span>
                                   <strong className={styles.mValue}>{currency(card.next_invoice_total)}</strong>
                                   <span className={styles.mSub}>{formatDate(card.next_invoice_pay_day)}</span>
@@ -1033,11 +994,6 @@ const Analysis = () => {
                                   <strong className={styles.mValue}>{currency(card.latest_purchase_in_period)}</strong>
                                   <span className={styles.mSub}>{formatDate(card.latest_purchase_date_in_period)}</span>
                                 </div>
-                                <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><BankOutlined /> Pagamentos de fatura no período</span>
-                                  <strong className={styles.mValue}>{currency(card.invoice_payments_total_in_period)}</strong>
-                                  <span className={styles.mSub}>{invoicePaymentSubtitle}</span>
-                                </div>
                               </div>
 
                               <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f3f4f8' }}>
@@ -1053,7 +1009,9 @@ const Analysis = () => {
                           );
                         })
                       ) : (
-                        <div className={styles.emptyState}>Nenhum cartão encontrado.</div>
+                        <div className={styles.emptyState}>
+                          <p>Nenhum cartão com movimentação no período selecionado.</p>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1062,9 +1020,59 @@ const Analysis = () => {
             ]}
           />
         )}
+      </div>
 
-      </div>
-      </div>
+      <Modal
+        title="Filtrar análises"
+        open={isFilterModalOpen}
+        onOk={handleApplyFilters}
+        onCancel={() => setIsFilterModalOpen(false)}
+        okText="Aplicar"
+        cancelText="Cancelar"
+        centered
+        width={400}
+      >
+        <div style={{ padding: "10px 0" }}>
+          <Form form={form} layout="vertical" initialValues={{ mode: filters.mode }}>
+            <div style={{ marginBottom: 20 }}>
+              <Segmented
+                block
+                value={selectedMode}
+                onChange={(value) => form.setFieldValue("mode", value)}
+                options={[
+                  { value: "month", label: "Mês" },
+                  { value: "custom", label: "Período" },
+                ]}
+                style={{ background: "#F8FAFC", borderRadius: 10, padding: 4 }}
+              />
+            </div>
+
+            <Form.Item name="mode" hidden>
+              <Input />
+            </Form.Item>
+
+            {selectedMode === "custom" ? (
+              <Form.Item
+                name="range"
+                label="Intervalo de Datas"
+                rules={[{ required: true, message: "Selecione um intervalo" }]}
+              >
+                <RangePicker format="DD/MM/YYYY" style={{ width: "100%", height: 45 }} />
+              </Form.Item>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
+                <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
+                  <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
+                </Form.Item>
+                <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
+                  <Select options={yearOptions} placeholder="Ano" style={{ height: 45 }} />
+                </Form.Item>
+              </div>
+            )}
+          </Form>
+        </div>
+      </Modal>
+    </div>
     </ConfigProvider>
   );
 };

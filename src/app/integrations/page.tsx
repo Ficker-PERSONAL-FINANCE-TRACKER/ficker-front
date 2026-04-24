@@ -1,11 +1,13 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Row, Col, Card, Button, Modal, Space, message, Typography, Badge, Tag } from "antd";
+import { Row, Col, Card, Button, Modal, Space, message, Typography, Badge, Tag, Spin } from "antd";
 import { 
   SendOutlined, 
   WhatsAppOutlined, 
-  CheckCircleFilled
+  CheckCircleFilled,
+  InfoCircleOutlined
 } from "@ant-design/icons";
+import dayjs from "dayjs";
 import CustomMenu from "@/components/CustomMenu";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { request } from "@/service/api";
@@ -221,11 +223,11 @@ const Integrations = () => {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "row" }}>
+    <div style={{ display: "flex", flexDirection: "row", width: "100%", overflow: "hidden" }}>
       <CustomMenu />
-      <div style={{ width: "90vw" }}>
-        <div className={styles.titleArea}>
-          <h2>Integrações</h2>
+      <div style={{ flex: "1 1 0%", overflowX: "hidden" }}>
+        <div className={styles.titleArea} >
+          <h2 >Integrações</h2>
         </div>
 
         <Row gutter={[24, 24]} style={{ padding: "20px 30px" }}>
@@ -250,7 +252,7 @@ const Integrations = () => {
                     <SendOutlined style={{ fontSize: 24, color: '#fff' }} />
                   </div>
                   <div>
-                    <Title level={4} style={{ margin: 0 }}>Telegram</Title>
+                    <Title level={4} style={{ margin: 0, fontSize: 16 }}>Telegram</Title>
                   </div>
                 </div>
                 {telegramLinkStatus?.linked && (
@@ -294,7 +296,7 @@ const Integrations = () => {
                     <WhatsAppOutlined style={{ fontSize: 24, color: '#fff' }} />
                   </div>
                   <div>
-                    <Title level={4} style={{ margin: 0 }}>WhatsApp</Title>
+                    <Title level={4} style={{ margin: 0 , fontSize: 16}}>WhatsApp</Title>
                   </div>
                 </div>
                 {whatsappLinkStatus?.linked && (
@@ -341,12 +343,12 @@ const Integrations = () => {
           {whatsappLinkStatus?.linked ? (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <CheckCircleFilled style={{ fontSize: 64, color: '#52c41a', marginBottom: 16 }} />
-              <Title level={4}>WhatsApp Vinculado!</Title>
+              <Title level={4}>WhatsApp vinculado!</Title>
               <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
                 Sua conta está conectada e pronta para uso.
               </Text>
               <Button danger onClick={handleWhatsAppUnlink} loading={whatsappLoading}>
-                Desvincular Conta
+                Desvincular conta
               </Button>
             </div>
           ) : (
@@ -368,7 +370,7 @@ const Integrations = () => {
                   alt="WhatsApp QR Code" 
                   style={{ width: 220, height: 220 }}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://wa.me/5511999999999?text=Vincular%20minha%20conta";
+                    (e.target as HTMLImageElement).src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://wa.me/5582994440333?text=vincular`;
                   }}
                 />
               </div>
@@ -378,7 +380,7 @@ const Integrations = () => {
                   type="primary" 
                   size="large" 
                   icon={<WhatsAppOutlined />}
-                  href="https://wa.me/5511999999999?text=Vincular%20minha%20conta" 
+                  href={`https://wa.me/5582994440333?text=vincular`} 
                   target="_blank"
                   style={{ 
                     borderRadius: 8, 
@@ -408,73 +410,90 @@ const Integrations = () => {
           )}
         </div>
       </Modal>
+
       <Modal
         open={telegramModalOpen}
-        title="Gerenciar conta no Telegram"
+        title="Vincular conta no Telegram"
         onCancel={() => setTelegramModalOpen(false)}
         footer={[
           <Button key="close" onClick={() => setTelegramModalOpen(false)}>
             Fechar
           </Button>,
         ]}
+        width={500}
       >
-        <div className="telegram-link-modal">
+        <div style={{ padding: '10px 0' }}>
           {telegramLoading ? (
-            <p>Carregando status do Telegram...</p>
-          ) : (
-            <>
-              <p>
-                {telegramStatusMessage}
-              </p>
-
-              {telegramLinkStatus?.account && (
-                <div className="telegram-link-status" style={{ background: '#f5f5f5', padding: 16, borderRadius: 8, marginBottom: 16 }}>
-                  <p>
-                    <strong>Status</strong> {telegramStatusLabel}
-                  </p>
-                  <p>
-                    <strong>Usuário</strong>{" "}
-                    {telegramLinkStatus.account.telegram_username
-                      ? `@${telegramLinkStatus.account.telegram_username}`
-                      : telegramLinkStatus.account.telegram_user_id}
-                  </p>
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <Spin tip="Consultando status..." />
+            </div>
+          ) : telegramLinkStatus?.linked ? (
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <CheckCircleFilled style={{ fontSize: 64, color: '#52c41a', marginBottom: 16 }} />
+              <Title level={4}>Telegram vinculado!</Title>
+              <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+                Sua conta está conectada ao bot do Telegram.
+              </Text>
+              <div style={{ background: '#f5f5f5', borderRadius: 8, padding: 16, marginBottom: 24, textAlign: 'left' }}>
+                <div style={{ marginBottom: 8 }}>
+                  <Text type="secondary">Usuário: </Text>
+                  <Text strong>{telegramLinkStatus.account?.telegram_username || "Não informado"}</Text>
                 </div>
-              )}
+                <div>
+                  <Text type="secondary">Conectado em: </Text>
+                  <Text strong>{telegramLinkStatus.account?.verified_at ? dayjs(telegramLinkStatus.account.verified_at).format("DD/MM/YYYY [às] HH:mm") : "Não informado"}</Text>
+                </div>
+              </div>
+              <Button danger onClick={handleTelegramUnlink} loading={telegramUnlinkLoading}>
+                Desvincular conta
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                <Title level={4}>Vincule seu Telegram</Title>
+                <Text type="secondary" style={{ display: 'block' }}>
+                  Para vincular sua conta, envie o código abaixo para nosso bot no Telegram.
+                </Text>
+              </div>
 
-              <Space className="telegram-link-actions" wrap style={{ marginBottom: 16 }}>
-                <Button type="primary" loading={telegramCodeLoading} onClick={handleTelegramLinkCode}>
-                  {telegramLinkStatus?.linked ? "Gerar novo código" : "Vincular"}
-                </Button>
-                <Button
-                  danger
-                  loading={telegramUnlinkLoading}
-                  onClick={handleTelegramUnlink}
-                  disabled={!telegramLinkStatus?.linked}
-                >
-                  Desvincular
-                </Button>
-              </Space>
-
-              {telegramCode && (
-                <div style={{ background: '#F5F3FF', border: '1px solid #DED9F6', padding: 16, borderRadius: 8 }}>
-                  <p style={{ marginBottom: 8 }}>Use este código no bot do Telegram <a href="https://t.me/FickerTelegramBot" target="_blank" rel="noreferrer" style={{ color: '#6C5DD3', fontWeight: 600 }}>@FickerTelegramBot</a> para vincular sua conta:</p>
-                  <div style={{ 
-                    fontSize: 24, 
-                    fontWeight: 700, 
-                    textAlign: 'center', 
-                    padding: '12px', 
-                    background: '#fff', 
-                    borderRadius: 4, 
-                    marginBottom: 8,
-                    letterSpacing: 2,
-                    color: '#6C5DD3'
-                  }}>
+              {telegramCode ? (
+                <div style={{ textAlign: 'center', padding: '24px 0', background: '#f5f5f5', borderRadius: 12, marginBottom: 24 }}>
+                  <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: 8, color: '#6C5DD3', marginBottom: 8 }}>
                     {telegramCode}
                   </div>
-                  <p style={{ fontSize: 12, margin: 0 }}>Validade: {formatTelegramExpiry(telegramCodeExpiresAt ?? undefined)}</p>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    Válido até {dayjs(telegramCodeExpiresAt).format("DD/MM/YYYY [às] HH:mm")}
+                  </Text>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '24px 0', background: '#f5f5f5', borderRadius: 12, marginBottom: 24 }}>
+                  <Button 
+                    onClick={handleTelegramLinkCode} 
+                    loading={telegramCodeLoading}
+                    type="primary"
+                    style={{ background: '#6C5DD3', borderColor: '#6C5DD3', borderRadius: 8 }}
+                  >
+                    Gerar código de vínculo
+                  </Button>
                 </div>
               )}
-            </>
+
+              <div style={{ background: '#e6f7ff', border: '1px solid #91d5ff', borderRadius: 8, padding: 16 }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <InfoCircleOutlined style={{ color: '#1890ff', marginTop: 4 }} />
+                  <div>
+                    <Text strong style={{ display: 'block', marginBottom: 4 }}>Como vincular:</Text>
+                    <ol style={{ margin: 0, paddingLeft: 20 }}>
+                      <li>Abra o Telegram e procure por <Text strong>@ficker_bot</Text></li>
+                      <li>Inicie uma conversa enviando <Text strong>/vincular</Text></li>
+                      <li>Envie o código gerado acima para o bot</li>
+                      <li>Pronto! Sua conta será vinculada instantaneamente</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </Modal>

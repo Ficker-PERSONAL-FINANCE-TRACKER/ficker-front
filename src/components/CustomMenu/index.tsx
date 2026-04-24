@@ -67,7 +67,7 @@ const items: MenuItem[] = [
     <Image src="/icons/icon-card.svg" alt="Meus cartões" width={22} height={22} />
   ),
   getItem(
-    "Meta de Gastos",
+    "Meta de gastos",
     "7",
     <TagOutlined style={{ fontSize: 22 }} />
   ),

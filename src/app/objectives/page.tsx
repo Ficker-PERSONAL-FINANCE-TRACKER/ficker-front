@@ -61,6 +61,13 @@ type Objective = {
   progress_percentage: number | null;
   created_at?: string | null;
   updated_at?: string | null;
+  recommendations?: {
+    current_age: number;
+    years_until_retirement: number;
+    estimated_required_corpus: number;
+    gap_to_target: number;
+    recommended_monthly_contribution: number;
+  };
 };
 
 type ObjectiveFormValues = {
@@ -96,7 +103,7 @@ const objectiveTypes: ObjectiveType[] = [
   { id: "travel", title: "Planejar viagem", icon: <GlobalOutlined /> },
   { id: "item", title: "Comprar um bem", icon: <ShoppingOutlined /> },
   { id: "investment", title: "Fazer um aporte", icon: <ThunderboltOutlined /> },
-  { id: "succession", title: "Planejar sucessao", icon: <SafetyCertificateOutlined /> },
+  { id: "succession", title: "Planejar sucessão", icon: <SafetyCertificateOutlined /> },
   { id: "other", title: "Outros", icon: <EllipsisOutlined /> },
 ];
 
@@ -117,7 +124,7 @@ const getApiErrorMessage = (error: any, fallback: string) =>
   error?.response?.data?.message ?? error?.response?.data?.data?.message ?? fallback;
 
 const getMonthLabel = (month?: number | null) =>
-  MONTH_OPTIONS.find((option) => option.value === month)?.label ?? "Mês nao definido";
+  MONTH_OPTIONS.find((option) => option.value === month)?.label ?? "Mês não definido";
 
 const getContributionRecommendation = (objective: Objective) => {
   if (objective.type === "retirement" || !objective.target_year || !objective.target_month || !objective.total_value) {
@@ -166,18 +173,18 @@ const getRetirementTimeLeft = (objective: Objective) => {
 
 const formatTimeLeft = (years: number, months: number) => {
   if (years === 0 && months === 0) {
-    return "Prazo ja alcancado";
+    return "Prazo já alcançado";
   }
 
   if (years === 0) {
-    return `Faltam ${months} ${months === 1 ? "mes" : "meses"}`;
+    return `Faltam ${months} ${months === 1 ? "mês" : "meses"}`;
   }
 
   if (months === 0) {
     return `Faltam ${years} ${years === 1 ? "ano" : "anos"}`;
   }
 
-  return `Faltam ${years} ${years === 1 ? "ano" : "anos"} e ${months} ${months === 1 ? "mes" : "meses"}`;
+  return `Faltam ${years} ${years === 1 ? "ano" : "anos"} e ${months} ${months === 1 ? "mês" : "meses"}`;
 };
 
 const ObjectivesPage = () => {
@@ -221,7 +228,7 @@ const ObjectivesPage = () => {
       const response = await request({ method: "GET", endpoint: "objectives" });
       setObjectives(response?.data?.data?.objectives ?? []);
     } catch (error: any) {
-      message.error(getApiErrorMessage(error, "Nao foi possivel carregar os objetivos."));
+      message.error(getApiErrorMessage(error, "Não foi possível carregar os objetivos."));
     } finally {
       setLoading(false);
     }
@@ -281,7 +288,7 @@ const ObjectivesPage = () => {
       setSubmitting(true);
 
       if (!selectedType.isRetirement && Number(values.target_year) === currentYear && Number(values.target_month) < currentMonth) {
-        message.error("Nao escolha um mes anterior ao atual para objetivos no ano corrente.");
+        message.error("Não escolha um mês anterior ao atual para objetivos no ano corrente.");
         return;
       }
 
@@ -311,7 +318,7 @@ const ObjectivesPage = () => {
         return;
       }
 
-      message.error(getApiErrorMessage(error, "Nao foi possivel salvar o objetivo."));
+      message.error(getApiErrorMessage(error, "Não foi possível salvar o objetivo."));
     } finally {
       setSubmitting(false);
     }
@@ -325,7 +332,7 @@ const ObjectivesPage = () => {
       message.success("Objetivo removido com sucesso!");
       await loadObjectives();
     } catch (error: any) {
-      message.error(getApiErrorMessage(error, "Nao foi possivel remover o objetivo."));
+      message.error(getApiErrorMessage(error, "Não foi possível remover o objetivo."));
     } finally {
       setDeletingId(null);
     }
@@ -338,7 +345,7 @@ const ObjectivesPage = () => {
         <div className={styles.pageHeader}>
           <div>
             <h2 className={styles.pageTitle}>Objetivos</h2>
-            <p className={styles.pageSubtitle}>Crie, acompanhe e edite os objetivos que voce quer tirar do papel.</p>
+            <p className={styles.pageSubtitle}>Crie, acompanhe e edite os objetivos que você quer tirar do papel.</p>
           </div>
           <div style={{ alignSelf: "center" }}>
             <span className={styles.counterTag}>{objectives.length} planos em andamento</span>
@@ -352,7 +359,7 @@ const ObjectivesPage = () => {
             </div>
           ) : objectives.length === 0 ? (
             <div className={styles.emptyState}>
-              <Empty description="Nenhum objetivo salvo ate o momento" />
+              <Empty description="Nenhum objetivo salvo até o momento" />
             </div>
           ) : (
             <Row gutter={[24, 24]}>
@@ -377,7 +384,7 @@ const ObjectivesPage = () => {
                           <Button type="text" icon={<EditOutlined />} onClick={() => handleOpenEditModal(objective)} />
                           <Popconfirm
                             title="Remover objetivo"
-                            description="Essa acao nao pode ser desfeita."
+                            description="Essa ação não pode ser desfeita."
                             okText="Remover"
                             cancelText="Cancelar"
                             onConfirm={() => handleDeleteObjective(objective.id)}
@@ -395,30 +402,53 @@ const ObjectivesPage = () => {
                               <strong>{formatCurrency(objective.monthly_income)}</strong>
                             </div>
                             <div className={styles.metricRow}>
-                              <span>Valor ja guardado</span>
+                              <span>Valor já guardado</span>
                               <strong>{formatCurrency(objective.current_saved)}</strong>
                             </div>
                             <div className={styles.metricRow}>
                               <span>Meta de aposentadoria</span>
-                              <strong>{objective.retirement_age ? `${objective.retirement_age} anos` : "Nao definida"}</strong>
+                              <strong>{objective.retirement_age ? `${objective.retirement_age} anos` : "Não definida"}</strong>
                             </div>
                             <div className={styles.metricRow}>
-                              <span>Data de nascimento</span>
-                              <strong>{objective.birth_date ? dayjs(objective.birth_date).format("DD/MM/YYYY") : "Nao informada"}</strong>
+                              <span>Idade atual</span>
+                              <strong>{objective.recommendations?.current_age ? `${objective.recommendations.current_age} anos` : (objective.birth_date ? `${dayjs().diff(dayjs(objective.birth_date), 'year')} anos` : "Não informada")}</strong>
                             </div>
                             <div className={styles.metricRow}>
                               <span>Prazo estimado</span>
                               <strong>
-                                {retirementTimeLeft === null
-                                  ? "Nao disponivel"
-                                  : formatTimeLeft(retirementTimeLeft.years, retirementTimeLeft.months)}
+                                {objective.recommendations?.years_until_retirement !== undefined
+                                  ? `Faltam ${objective.recommendations.years_until_retirement} anos`
+                                  : (retirementTimeLeft === null
+                                    ? "Não disponível"
+                                    : formatTimeLeft(retirementTimeLeft.years, retirementTimeLeft.months))}
                               </strong>
                             </div>
+
+                            {objective.recommendations && (
+                              <div className={styles.recommendationBox} style={{ marginTop: 16 }}>
+                                <strong>Recomendações para sua aposentadoria</strong>
+                                <div className={styles.metricRow} style={{ padding: "4px 0" }}>
+                                  <span>Patrimônio necessário</span>
+                                  <strong>{formatCurrency(objective.recommendations.estimated_required_corpus)}</strong>
+                                </div>
+                                <div className={styles.metricRow} style={{ padding: "4px 0" }}>
+                                  <span>Falta acumular</span>
+                                  <strong>{formatCurrency(objective.recommendations.gap_to_target)}</strong>
+                                </div>
+                                <div className={styles.metricRow} style={{ padding: "4px 0", borderBottom: "none" }}>
+                                  <span>Aporte mensal sugerido</span>
+                                  <strong style={{ color: "#6C5DD3" }}>{formatCurrency(objective.recommendations.recommended_monthly_contribution)}</strong>
+                                </div>
+                                <span style={{ fontSize: "11px", color: "#666", marginTop: "8px", display: "block" }}>
+                                  * Cálculo baseado na regra dos 4% ao ano.
+                                </span>
+                              </div>
+                            )}
                           </>
                         ) : (
                           <>
                             <div className={styles.metricRow}>
-                              <span>Guardado ate agora</span>
+                              <span>Guardado até agora</span>
                               <strong>{formatCurrency(objective.current_saved)}</strong>
                             </div>
                             <div className={styles.metricRow}>
@@ -430,7 +460,7 @@ const ObjectivesPage = () => {
                               <strong>
                                 {objective.target_month && objective.target_year
                                   ? `${getMonthLabel(objective.target_month)} de ${objective.target_year}`
-                                  : "Nao definido"}
+                                  : "Não definido"}
                               </strong>
                             </div>
                             <Progress
@@ -442,7 +472,7 @@ const ObjectivesPage = () => {
                             />
                             <div className={styles.progressFooter}>
                               <span>{formatCurrency(objective.current_saved)} acumulados</span>
-                              <strong>{progress.toFixed(1)}% concluido</strong>
+                              <strong>{progress.toFixed(1)}% concluído</strong>
                             </div>
                             {recommendation ? (
                               <div className={styles.recommendationBox}>
@@ -450,15 +480,15 @@ const ObjectivesPage = () => {
                                 <span>Faltam {formatCurrency(recommendation.remainingAmount)} para chegar ao valor final.</span>
                                 <span>
                                   {recommendation.monthsLeft === 1
-                                    ? `Junte ${formatCurrency(recommendation.monthlyAmount)} ate o final deste mes.`
-                                    : `Junte ${formatCurrency(recommendation.monthlyAmount)} por mes ate o prazo final.`}
+                                    ? `Junte ${formatCurrency(recommendation.monthlyAmount)} até o final deste mês.`
+                                    : `Junte ${formatCurrency(recommendation.monthlyAmount)} por mês até o prazo final.`}
                                 </span>
                                 {recommendation.annualAmount !== null ? (
                                   <span>
-                                    Ou, se preferir uma visao anual, reserve cerca de {formatCurrency(recommendation.annualAmount)} por ano ate o prazo final.
+                                    Ou, se preferir uma visão anual, reserve cerca de {formatCurrency(recommendation.annualAmount)} por ano até o prazo final.
                                   </span>
                                 ) : null}
-                                <span>O calculo considera meses fechados e so muda na virada do mes.</span>
+                                <span>O cálculo considera meses fechados e só muda na virada do mês.</span>
                               </div>
                             ) : null}
                           </>
@@ -521,7 +551,7 @@ const ObjectivesPage = () => {
           open={isModalOpen}
           onOk={handleSave}
           onCancel={closeModal}
-          okText={editingObjective ? "Salvar alteracoes" : "Salvar objetivo"}
+          okText={editingObjective ? "Salvar alterações" : "Salvar objetivo"}
           cancelText="Cancelar"
           centered
           width={460}
@@ -537,7 +567,7 @@ const ObjectivesPage = () => {
             <p className={styles.modalDescription}>
               {selectedType?.isRetirement
                 ? "Preencha os dados da aposentadoria para acompanhar esse plano com mais clareza."
-                : "Informe quanto esse objetivo exige e ate quando voce quer concluir esse plano."}
+                : "Informe quanto esse objetivo exige e até quando você quer concluir esse plano."}
             </p>
           </div>
 
@@ -557,7 +587,7 @@ const ObjectivesPage = () => {
                     parser={currencyParser}
                   />
                 </Form.Item>
-                <Form.Item name="current_saved" label="Valor que voce ja guardou">
+                <Form.Item name="current_saved" label="Valor que você já guardou">
                   <InputNumber
                     style={{ width: "100%" }}
                     placeholder="Exemplo: 10.000,00"
@@ -584,7 +614,7 @@ const ObjectivesPage = () => {
                     parser={currencyParser}
                   />
                 </Form.Item>
-                <Form.Item name="current_saved" label="Valor que voce ja guardou">
+                <Form.Item name="current_saved" label="Valor que você já guardou">
                   <InputNumber
                     style={{ width: "100%" }}
                     placeholder="Exemplo: 10.000,00"
@@ -596,10 +626,10 @@ const ObjectivesPage = () => {
                 <div className={styles.fieldRow}>
                   <Form.Item
                     name="target_month"
-                    label="Mes final do objetivo"
-                    rules={[{ required: true, message: "Informe o mes final do objetivo" }]}
+                    label="Mês final do objetivo"
+                    rules={[{ required: true, message: "Informe o mês final do objetivo" }]}
                   >
-                    <Select options={monthOptions} placeholder="Selecione o mes" />
+                    <Select options={monthOptions} placeholder="Selecione o mês" />
                   </Form.Item>
                   <Form.Item
                     name="target_year"

@@ -128,6 +128,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
           date: formattedDate,
           type_id: 1,
           transaction_value: String(values.transaction_value),
+          is_recurring: values.is_recurring || false,
         },
       });
       message.success("Entrada registrada com sucesso!");
@@ -152,7 +153,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
           planned_spending: values.planned_spending,
         },
       });
-      message.success("Meta de gasto configurada com sucesso!");
+      message.success("Meta de gastos configurada com sucesso!");
       setCurrentStep(2);
     } catch (error: any) {
       if (error?.response) {
@@ -178,13 +179,13 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
             closure: Number(values.closure),
           },
         });
-        message.success("Cartao adicionado com sucesso!");
+        message.success("Cartão adicionado com sucesso!");
         loadInitialData();
       }
       setCurrentStep(3);
     } catch (error: any) {
       if (error?.response) {
-        message.error(error?.response?.data?.message || "Erro ao salvar cartao.");
+        message.error(error?.response?.data?.message || "Erro ao salvar cartão.");
       }
     } finally {
       setLoading(false);
@@ -231,10 +232,10 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
         method: "POST",
         endpoint: "onboarding/complete",
       });
-      message.success("Configuracao inicial concluida!");
+      message.success("Configuração inicial concluída!");
       onComplete();
     } catch (error: any) {
-      message.error(error?.response?.data?.message || "Erro ao finalizar configuracao.");
+      message.error(error?.response?.data?.message || "Erro ao finalizar configuração.");
     } finally {
       setLoading(false);
     }

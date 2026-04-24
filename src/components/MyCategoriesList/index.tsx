@@ -84,7 +84,7 @@ const MyCategoriesList = ({ categories, loading = false, onRefresh }: MyCategori
   return (
     <div className="card">
       <div className="title-area">
-        <h4>Top Categorias de Gastos</h4>
+        <h4>Top categorias de gastos</h4>
         <div className="title-area__actions">
           {sortedCategories.length > 0 && (
             <Button
@@ -123,14 +123,14 @@ const MyCategoriesList = ({ categories, loading = false, onRefresh }: MyCategori
             description="Nenhuma categoria adicionada."
             style={{ margin: "20px 0" }}
           >
-            <Button type="primary" onClick={showModal}>Adicionar Categoria</Button>
+            <Button type="primary" onClick={showModal}>Adicionar categoria</Button>
           </Empty>
         ) : (
           visibleCategories.map((category, index) => renderCategoryRow(category, index))
         )}
       </div>
       <Modal
-        title="Top Categorias de Gastos"
+        title="Top categorias de gastos"
         open={isListModalOpen && sortedCategories.length > 0}
         onCancel={() => setIsListModalOpen(false)}
         footer={null}

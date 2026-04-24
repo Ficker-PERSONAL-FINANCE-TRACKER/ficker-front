@@ -9,13 +9,14 @@ import { ITransaction } from "@/interfaces";
 import CustomMenu from "@/components/CustomMenu";
 import dayjs from "dayjs";
 import { OutputTemporalFilter, type OutputFilters } from "./temporalFilter";
+import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 
 const Outputs = () => {
   const now = new Date();
   const monthNames = [
     "Janeiro",
     "Fevereiro",
-    "Marco",
+    "Março",
     "Abril",
     "Maio",
     "Junho",
@@ -43,9 +44,18 @@ const Outputs = () => {
 
   const getTransactions = async () => {
     try {
+      const params = new URLSearchParams();
+      if (filters.category_id) params.set("category_id", String(filters.category_id));
+      if (filters.payment_method_id) params.set("payment_method_id", String(filters.payment_method_id));
+      if (filters.card_id) params.set("card_id", String(filters.card_id));
+      if (filters.flag_id) params.set("flag_id", String(filters.flag_id));
+
+      const queryString = params.toString();
+      const endpoint = `transaction/type/2${queryString ? `?${queryString}` : ""}`;
+
       const response = await request({
         method: "GET",
-        endpoint: "transaction/type/2",
+        endpoint,
       });
       setTransactions(response?.data?.data?.transactions ?? []);
     } catch (error) {
@@ -82,7 +92,26 @@ const Outputs = () => {
 
   useEffect(() => {
     getTransactions();
-  }, [isModalOpen, isEditModalOpen]);
+  }, [isModalOpen, isEditModalOpen, filters]);
+
+  const appliedFiltersLabels = useMemo(() => {
+    const labels: string[] = [];
+    const isDefaultMonth = filters.mode === "month" && filters.month === (now.getMonth() + 1) && filters.year === now.getFullYear();
+
+    if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+      labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
+    } else if (!isDefaultMonth) {
+      labels.push(`Mês: ${monthNames[filters.month - 1]}`);
+      labels.push(`Ano: ${filters.year}`);
+    }
+
+    if (filters.category_id) labels.push("Categoria selecionada");
+    if (filters.payment_method_id) labels.push("Método de pagamento selecionado");
+    if (filters.card_id) labels.push("Cartão selecionado");
+    if (filters.flag_id) labels.push("Bandeira selecionada");
+
+    return labels;
+  }, [filters, monthNames, now]);
 
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
@@ -91,19 +120,23 @@ const Outputs = () => {
       <div style={{ width: "90vw", flex: "1 1 0%", overflowX: "hidden" }}>
         <div className={styles.titleArea}>
           <div>
-            <h2>Saidas</h2>
+            <h2>Saídas</h2>
           </div>
           <div className={styles.buttonsArea} style={{ width: "auto", display: "flex", alignItems: "center", gap: 12 }}>
             <SearchField style={{ width: 300, marginRight: 0, flex: "0 0 auto" }} />
             <button className={styles.button} onClick={showModal} style={{ whiteSpace: "nowrap" }}>
-              Nova Transacao
+              Nova saída
             </button>
             <OutputTemporalFilter filters={filters} onChange={setFilters} />
           </div>
         </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 30px", marginTop: -4, marginBottom: 10 }}>
-          <span style={{ color: "#808191", fontSize: 13, fontWeight: 600 }}>{filterSummary}</span>
-        </div>
+
+        {appliedFiltersLabels.length > 0 && (
+          <div style={{ padding: "0 30px" }}>
+            <AppliedFiltersBar filters={appliedFiltersLabels} />
+          </div>
+        )}
+
         <div style={{ padding: "0 30px" }}>
           <TransactionTab
             data={filteredTransactions}

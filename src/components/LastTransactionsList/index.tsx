@@ -72,7 +72,7 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h4 style={{ margin: 0 }}>Últimas Transações</h4>
+        <h4 style={{ margin: 0 }}>Últimas transações</h4>
         {transactions && transactions.length > 0 && (
           <Button 
             type="link" 
@@ -131,14 +131,14 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
             style={{ margin: "20px 0" }}
           >
             <Link href="/EnterTransaction">
-              <Button type="primary">Registrar Transação</Button>
+              <Button type="primary">Registrar transação</Button>
             </Link>
           </Empty>
         )}
       </div>
 
       <Modal
-        title="Histórico Completo de Transações"
+        title="Histórico completo de transações"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}

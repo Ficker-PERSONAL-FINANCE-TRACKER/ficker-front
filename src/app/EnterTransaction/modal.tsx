@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 import { request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
-import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space } from "antd";
+import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space, Switch } from "antd";
 import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
@@ -18,12 +18,14 @@ import {
   DollarOutlined,
   ToolOutlined,
   CoffeeOutlined,
-  StarOutlined
+  StarOutlined,
+  SyncOutlined
 } from "@ant-design/icons";
 
 interface EnterTransactionModalProps {
   isModalOpen: boolean;
   setIsModalOpen: (value: boolean) => void;
+  onSuccess?: () => void;
 }
 
 interface Category {
@@ -73,7 +75,7 @@ const extractCategoriesFromResponse = (response: any): Category[] => {
   return [];
 };
 
-export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTransactionModalProps) => {
+export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }: EnterTransactionModalProps) => {
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [form] = Form.useForm();
@@ -125,10 +127,12 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
           ...categoryPayload,
           date: dayjs(values.date).format("YYYY-MM-DD"),
           type_id: 1,
+          is_recurring: values.is_recurring || false,
         },
       });
       message.success("Transação adicionada com sucesso!");
       handleCancel();
+      if (onSuccess) onSuccess();
     } catch (errorInfo) {
       message.error("Erro ao adicionar transação!");
     }
@@ -159,7 +163,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
 
   return (
     <Modal
-      title="Nova Entrada"
+      title="Nova entrada"
       open={isModalOpen}
       onCancel={handleCancel}
       okButtonProps={{
@@ -240,7 +244,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
                 <Select.Option value={0}>
                   <Space>
                     <PlusOutlined style={{ color: '#6C5DD3' }} />
-                    <span>Nova Categoria</span>
+                    <span>Nova categoria</span>
                   </Space>
                 </Select.Option>
 
@@ -256,7 +260,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
                 </Select.OptGroup>
 
                 {categories.length > 0 && (
-                  <Select.OptGroup label="Minhas Categorias">
+                  <Select.OptGroup label="Minhas categorias">
                     {categories.map((category) => (
                       <Select.Option key={category.id} value={category.id}>
                         {category.category_description}
@@ -269,7 +273,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
           </Col>
           {showDescriptionCategory ? (
             <Col>
-              <label>Descrição da Categoria</label>
+              <label>Descrição da categoria</label>
               <Form.Item
                 name="category_description"
                 rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
@@ -288,6 +292,19 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen }: EnterTran
             <Input className={styles.input} placeholder="R$" />
           </Form.Item>
         </Col>
+
+        <Col style={{ marginBottom: 20 }}>
+          <Form.Item
+            name="is_recurring"
+            valuePropName="checked"
+          >
+            <Space>
+              <Switch size="small" />
+              <span>Entrada recorrente (mensal)</span>
+            </Space>
+          </Form.Item>
+        </Col>
+
         <Row>
           <Button className={styles.modalButtonWhite} onClick={handleCancel}>
             Cancelar

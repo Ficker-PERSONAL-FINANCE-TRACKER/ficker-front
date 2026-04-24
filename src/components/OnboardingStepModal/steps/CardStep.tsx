@@ -2,7 +2,7 @@ import React from "react";
 import { Form, Input, Typography, Select } from "antd";
 import styles from "../styles.module.scss";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface CardStepProps {
   form: any;
@@ -23,7 +23,7 @@ const DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => ({ value: i + 1, label:
 export const CardStep: React.FC<CardStepProps> = ({ form, onSkip }) => {
   return (
     <div className={styles.stepContent}>
-      <Title level={4} className={styles.stepTitle}>Qual o seu cartao de credito?</Title>
+      <Title level={4} className={styles.stepTitle}>Qual é o seu cartão de crédito?</Title>
       <Form form={form} layout="vertical">
         <Form.Item
           name="flag_id"
@@ -40,15 +40,15 @@ export const CardStep: React.FC<CardStepProps> = ({ form, onSkip }) => {
         </Form.Item>
         <Form.Item
           name="card_description"
-          label="Descricao"
-          rules={[{ required: true, message: "Informe a descricao" }]}
+          label="Descrição"
+          rules={[{ required: true, message: "Informe a descrição" }]}
         >
-          <Input placeholder="Ex: Cartao Nubank, Cartao Itau..." className={styles.inputField} />
+          <Input placeholder="Ex: Cartão Nubank, Cartão Itaú..." className={styles.inputField} />
         </Form.Item>
         <div style={{ display: 'flex', gap: '12px' }}>
           <Form.Item
             name="expiration"
-            label="Dia de Vencimento"
+            label="Dia de vencimento"
             style={{ flex: 1 }}
             rules={[{ required: true, message: "Informe o vencimento" }]}
           >
@@ -56,7 +56,7 @@ export const CardStep: React.FC<CardStepProps> = ({ form, onSkip }) => {
           </Form.Item>
           <Form.Item
             name="closure"
-            label="Dia de Fechamento"
+            label="Dia de fechamento"
             style={{ flex: 1 }}
             rules={[{ required: true, message: "Informe o fechamento" }]}
           >

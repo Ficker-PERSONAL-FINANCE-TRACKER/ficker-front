@@ -1,43 +1,75 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+INFORMAÇÕES SOBRE O PROGRAMA DE COMPUTADOR
 
-## Getting Started
+Título do Programa: (Não utilize expressões designativas das funções executadas pelos programas. Por exemplo: gerenciador de bases de dados, editor de texto; A proteção ao nome comercial do programa de computador pode ser obtida concomitantemente as providências relativas ao registro, bastando informar o nome comercial como título do programa de computador.)
 
-First, install the package
+R=
+ 
+Data de criação do programa de computador: (Entende-se por data de criação a primeira utilização do programa ou sua disponibilização a terceiros)
+R= 08/11/2023
 
-```bash
-npm install
-# or
-yarn install
-```
+Linguagem(s) de programação na(s) qual(is) foi desenvolvido e está disponibilizado o programa: 
+ R=                             
+ 
+Descreva objetivamente o campo de invenção: (exemplo: novo uso de equipamento, processo para tratamento de efluentes, equipamento para…, etc.)
+Sistema para identificação e recuperação de objetos pessoais por meio de QR Code vinculado a página web com informações controladas pelo proprietário.
 
-Second, run the development server:
+O presente programa de computador é: uma modificação tecnológica ou derivação (NOVA VERSÃO) de outro já existente? (Em caso afirmativo, informe o título do programa original)
+(	x 	)	novo
+(	 	)	modificação
+(	 	)	derivação
+(	 	)	nova versão
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+Informe o campo de aplicação do presente programa de computador, definindo áreas de aplicação: (consulte a tabela do campo de aplicação para programas de computador que consta no sítio do INPI)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+R=
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Informe a classificação do tipo de programa de computador, definindo áreas de aplicação: (consulte a tabela do tipo de programa de computador que consta no sítio do INPI)
 
-## Learn More
+R=
+ 
 
-To learn more about Next.js, take a look at the following resources:
+Detalhe a inovação presente no programa:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+Que problemas que o programa de computador resolve ou vantagens que apresenta: (Exemplo: Eficiência, Produtividade, Custo, Qualidade do produto, Redução de resíduos, etc.)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+R=
 
-Check out our [Next.js deployment](https://nextjs.org/docs/deployment) for more details.
+Uso presente e futuro do programa:
+Atualmente, o .... está sendo utilizado por ....
 
+ 
+ANTECEDENTES DA INVENÇÃO (PROGRAMA)
+Conhece outro programa com características similares? (em caso afirmativo, informe o nome do software e as vantagens da sua tecnologia)
+R=
+
+
+EXPERIÊNCIA COM O SETOR PRODUTIVO
+Nº	PERGUNTA	SIM	NÃO
+1	O presente programa já foi revelado ao setor produtivo?	 	 
+2	Foi demonstrado interesse comercial?  
+Obs.: Se a resposta para a pergunta nº 1 for afirmativa, informe quando, onde e nome da empresa; Se a resposta para a pergunta nº 2 for afirmativa, informe nome, contato e telefone da empresa.
+ 
+FINANCIAMENTO DA PESQUISA
+O projeto foi financiado?	(	 	)	SIM	(	 X	)	NÃO
+Assinale o agente financiador do invento:
+(	 	)	CNPq	(	 	)	CAPES	(	 	)	FINEP	(	 	)	FAPEAL
+(	 	)	Empresa	Qual?:	 
+Número do contrato: (anexar cópia ou edital)
+ 
+Contato no órgão:
+ 
+O órgão financiador foi informado do invento?
+ 
+Contrato via Fundação de Apoio	(	 	)	SIM	(	 	)	NÃO
+Teve suporte interno? (Fomento Institucional para o desenvolvimento seja através de programa institucional ou do campus)
+ 
+TRANSFERÊNCIA DE TECNOLOGIA
+Especifique áreas de aplicação que possam utilizar esta tecnologia - SOFTWARE
+R=
+ 
+Dê sua opinião sobre a potencialidade de comercialização, incluindo sugestões a longo prazo:
+
+R=

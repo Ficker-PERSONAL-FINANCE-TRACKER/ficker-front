@@ -36,7 +36,7 @@ export default function Login() {
       if (error?.response?.data?.errors) {
         setErrors(error.response.data.errors);
       } else {
-        setGlobalError("Senha ou email incorreto!");
+        setGlobalError("E-mail ou senha incorretos!");
       }
     }
   };

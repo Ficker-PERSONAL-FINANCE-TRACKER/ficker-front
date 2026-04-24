@@ -53,16 +53,27 @@ export const EditTransactionModal = ({
   };
 
   const handleDelete = async () => {
-    try {
-      const response = await request({
-        method: "DELETE",
-        endpoint: `transaction/${transaction.id}`,
-      });
-      message.success("Transação excluída com sucesso!");
-      handleCancel();
-    } catch (error) {
-      console.log(error);
-    }
+    Modal.confirm({
+      title: "Excluir transação?",
+      content: "Esta ação não pode ser desfeita e removerá permanentemente o registro desta transação.",
+      okText: "Excluir",
+      okType: "danger",
+      cancelText: "Cancelar",
+      centered: true,
+      onOk: async () => {
+        try {
+          await request({
+            method: "DELETE",
+            endpoint: `transaction/${transaction.id}`,
+          });
+          message.success("Transação excluída com sucesso!");
+          handleCancel();
+        } catch (error) {
+          message.error("Não foi possível excluir a transação.");
+          console.log(error);
+        }
+      },
+    });
   };
 
   const getCategories = async (typeId: number) => {
@@ -116,7 +127,7 @@ export const EditTransactionModal = ({
 
   return (
     <Modal
-      title="Editar Transação"
+      title="Editar transação"
       open={isModalOpen}
       onCancel={handleCancel}
       okButtonProps={{
@@ -191,7 +202,7 @@ export const EditTransactionModal = ({
                 className={styles.input}
                 style={{ width: 200, height: 35 }}
                 options={[
-                  { value: 0, label: "Nova" },
+                  { value: 0, label: "Nova categoria" },
                   ...categories.map((category) => ({
                     value: category.id,
                     label: category.category_description,
@@ -202,7 +213,7 @@ export const EditTransactionModal = ({
           </Col>
           {showDescriptionCategory ? (
             <Col>
-              <label>Descrição da Categoria</label>
+              <label>Descrição da categoria</label>
               <Form.Item
                 name="category_description"
                 rules={[

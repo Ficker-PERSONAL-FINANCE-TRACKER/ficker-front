@@ -17,6 +17,8 @@ import { request } from "@/service/api";
 import dayjs from "dayjs";
 import CustomMenu from "@/components/CustomMenu";
 import SearchField from "@/components/SearchField";
+import { CardFilter } from "./cardFilter";
+import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 import { motion } from "framer-motion";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import styles from "./cards.module.scss";
@@ -44,6 +46,10 @@ interface ActionModalState {
   card: Card | null;
 }
 
+interface CardFilters {
+  flag_id?: number;
+}
+
 const Cards = () => {
   const router = useRouter();
   const { Text } = Typography;
@@ -55,6 +61,7 @@ const Cards = () => {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [filters, setFilters] = useState<CardFilters>({});
   const [actionModal, setActionModal] = useState<ActionModalState>({
     open: false,
     action: null,
@@ -94,31 +101,26 @@ const Cards = () => {
     setLoading(true);
 
     try {
-      const [activeResponse, archivedResponse] = await Promise.all([
-        request({
-          method: "GET",
-          endpoint: "cards",
-        }),
-        request({
-          method: "GET",
-          endpoint: "cards",
-          params: { status: "archived" },
-        }),
-      ]);
+      const params: any = { status: "all" };
+      if (filters.flag_id) params.flag_id = filters.flag_id;
 
-      const rawActiveCards = activeResponse?.data?.data?.cards ?? [];
-      const rawArchivedCards = archivedResponse?.data?.data?.cards ?? [];
+      const response = await request({
+        method: "GET",
+        endpoint: "cards",
+        params
+      });
 
-      const [activeCards, archivedCardsResult] = await Promise.all([
-        hydrateCards(rawActiveCards),
-        hydrateCards(rawArchivedCards),
-      ]);
+      const rawCards = response?.data?.data?.cards ?? [];
+      const hydratedCards = await hydrateCards(rawCards);
+
+      const activeCards = hydratedCards.filter(c => !c.archived_at);
+      const archivedCardsResult = hydratedCards.filter(c => c.archived_at);
 
       setCards(activeCards);
       setArchivedCards(archivedCardsResult);
     } catch (error) {
       console.log(error);
-      messageApi.error("Nao foi possivel carregar os cartoes.");
+      messageApi.error("Não foi possível carregar os cartões.");
     } finally {
       setLoading(false);
     }
@@ -193,17 +195,17 @@ const Cards = () => {
 
     if (actionModal.action === "archive") {
       return {
-        title: "Arquivar cartao?",
+        title: "Arquivar cartão?",
         okText: "Arquivar",
         okType: "default" as const,
         content: (
           <>
             <p>
-              O cartao <strong>{cardName}</strong> saira da lista principal e ira para Arquivados.
+              O cartão <strong>{cardName}</strong> sairá da lista principal e irá para Arquivados.
             </p>
             <ul className={styles.modalList}>
-              <li>Compras, faturas e historico continuarao preservados.</li>
-              <li>Novas compras no credito ficarao bloqueadas enquanto ele estiver arquivado.</li>
+              <li>Compras, faturas e histórico continuarão preservados.</li>
+              <li>Novas compras no crédito ficarão bloqueadas enquanto ele estiver arquivado.</li>
             </ul>
           </>
         ),
@@ -212,17 +214,17 @@ const Cards = () => {
 
     if (actionModal.action === "unarchive") {
       return {
-        title: "Restaurar cartao?",
+        title: "Restaurar cartão?",
         okText: "Restaurar",
         okType: "default" as const,
         content: (
           <>
             <p>
-              O cartao <strong>{cardName}</strong> voltara para a lista principal.
+              O cartão <strong>{cardName}</strong> voltará para a lista principal.
             </p>
             <ul className={styles.modalList}>
-              <li>Ele voltara a aparecer entre os cartoes ativos.</li>
-              <li>Novas compras no credito serao permitidas novamente.</li>
+              <li>Ele voltará a aparecer entre os cartões ativos.</li>
+              <li>Novas compras no crédito serão permitidas novamente.</li>
             </ul>
           </>
         ),
@@ -230,18 +232,25 @@ const Cards = () => {
     }
 
     return {
-      title: "Excluir cartao permanentemente?",
+      title: "Excluir cartão permanentemente?",
       okText: "Excluir permanentemente",
       okType: "primary" as const,
       danger: true,
       content: (
         <>
+          <div style={{ background: '#fff2f0', border: '1px solid #ffccc7', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+            <p style={{ color: '#ff4d4f', fontWeight: 600, margin: 0 }}>Atenção: Efeito cascata</p>
+            <p style={{ color: '#ff4d4f', fontSize: '13px', margin: '4px 0 0 0' }}>
+              Ao excluir este cartão, todos os dados vinculados a ele serão apagados permanentemente.
+            </p>
+          </div>
           <p>
-            O cartao <strong>{cardName}</strong> sera removido definitivamente.
+            O cartão <strong>{cardName}</strong> será removido definitivamente.
           </p>
           <ul className={styles.modalList}>
-            <li>Compras, parcelas e vinculos analiticos desse cartao serao removidos.</li>
-            <li>Pagamentos de fatura relacionados podem ser recalculados ou excluidos.</li>
+            <li>Compras, parcelas e vínculos analíticos desse cartão serão removidos.</li>
+            <li>Pagamentos de fatura relacionados podem ser recalculados ou excluídos.</li>
+            <li>Esta ação não pode ser desfeita.</li>
           </ul>
         </>
       ),
@@ -261,7 +270,7 @@ const Cards = () => {
           method: "PATCH",
           endpoint: `cards/${actionModal.card.id}/archive`,
         });
-        messageApi.success("Cartao arquivado com sucesso.");
+        messageApi.success("Cartão arquivado com sucesso.");
       }
 
       if (actionModal.action === "unarchive") {
@@ -269,7 +278,7 @@ const Cards = () => {
           method: "PATCH",
           endpoint: `cards/${actionModal.card.id}/unarchive`,
         });
-        messageApi.success("Cartao restaurado com sucesso.");
+        messageApi.success("Cartão restaurado com sucesso.");
       }
 
       if (actionModal.action === "delete") {
@@ -277,14 +286,14 @@ const Cards = () => {
           method: "DELETE",
           endpoint: `cards/${actionModal.card.id}`,
         });
-        messageApi.success("Cartao excluido com sucesso.");
+        messageApi.success("Cartão excluído com sucesso.");
       }
 
       closeActionModal();
       await getCards();
     } catch (error: any) {
       const apiMessage = error?.response?.data?.message;
-      messageApi.error(apiMessage || "Nao foi possivel concluir a acao.");
+      messageApi.error(apiMessage || "Não foi possível concluir a ação.");
     } finally {
       setActionLoading(false);
     }
@@ -374,7 +383,16 @@ const Cards = () => {
 
   useEffect(() => {
     getCards();
-  }, [isModalOpen]);
+  }, [isModalOpen, filters]);
+
+  const appliedFiltersLabels = useMemo(() => {
+    const labels: string[] = [];
+    if (showArchived) labels.push("Exibindo arquivados");
+    if (filters.flag_id) labels.push("Bandeira selecionada");
+    return labels;
+  }, [showArchived, filters]);
+
+  const hasAppliedFilters = appliedFiltersLabels.length > 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
@@ -392,8 +410,18 @@ const Cards = () => {
             <button className={styles.button} onClick={openModal}>
               Novo Cartão
             </button>
+            <div style={{ marginTop: "10px" }}>
+              <CardFilter  filters={filters} onChange={setFilters} />
+            </div>
           </div>
         </div>
+
+        {hasAppliedFilters && (
+          <div style={{ padding: "0 30px" }}>
+            <AppliedFiltersBar filters={appliedFiltersLabels} />
+          </div>
+        )}
+
         {loading ? (
           <Row justify={"center"}>
             <Spin size="large" />
@@ -414,7 +442,7 @@ const Cards = () => {
                 </>
               ) : (
                 <Col span={24}>
-                  <Empty description="Nenhum cartao encontrado." />
+                  <Empty description="Nenhum cartão encontrado." />
                 </Col>
               )}
             </Row>
