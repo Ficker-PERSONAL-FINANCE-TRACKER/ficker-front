@@ -10,12 +10,13 @@ import { MainProvider } from "@/context";
 const manrope = Manrope({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ficker-front-gamma.vercel.app/"), // Ajuste para a URL real de produção
   title: "Ficker - Controle suas finanças",
   description: "Ficker é a plataforma ideal para gerenciar suas finanças, metas de gastos e objetivos de vida.",
   openGraph: {
     title: "Ficker - Controle suas finanças",
     description: "Ficker é a plataforma ideal para gerenciar suas finanças, metas de gastos e objetivos de vida.",
-    url: "https://ficker.com.br", // Ajuste conforme a URL real se necessário
+    url: "https://ficker-front-gamma.vercel.app/", // Ajuste conforme a URL real se necessário
     siteName: "Ficker",
     images: [
       {
