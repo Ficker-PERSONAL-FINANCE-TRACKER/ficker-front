@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { Row, Spin, message } from "antd";
 import { request } from "@/service/api";
 import CardPage from "../card";
+import { CardDetailFilter, type CardDetailFilters } from "../card/detailFilter";
 import CustomMenu from "@/components/CustomMenu";
 import styles from "../cards.module.scss";
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
+import dayjs from "dayjs";
 
 interface Card {
   best_day: number;
@@ -23,9 +26,37 @@ interface Card {
 }
 
 export default function CardDetailsPage({ params }: { params: { id: string } }) {
+  const now = new Date();
   const [card, setCard] = useState<Card | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const [filters, setFilters] = useState<CardDetailFilters>({
+    mode: "month",
+    month: now.getMonth() + 1,
+    year: now.getFullYear(),
+    dateFrom: null,
+    dateTo: null,
+  });
+
+  const appliedFiltersLabels = useMemo(() => {
+    const labels: string[] = [];
+    const isDefaultMonth = filters.mode === "month" && filters.month === (now.getMonth() + 1) && filters.year === now.getFullYear();
+
+    if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+      labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
+    } else if (!isDefaultMonth) {
+      const monthName = dayjs().month(filters.month - 1).format("MMMM");
+      labels.push(`Mês: ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`);
+      labels.push(`Ano: ${filters.year}`);
+    }
+
+    if (filters.category_id && filters.category_name) {
+      labels.push(`Categoria: ${filters.category_name}`);
+    }
+
+    return labels;
+  }, [filters, now]);
 
   useEffect(() => {
     const fetchCard = async () => {
@@ -69,7 +100,7 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
       <CustomMenu />
       <div className={styles.pageShell}>
         <div className={styles.titleArea}>
-          <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
             <h2>
               {card ? (
                 <>
@@ -92,6 +123,9 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
                 </span>
               )}
             </h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <CardDetailFilter filters={filters} onChange={setFilters} />
+            </div>
           </div>
         </div>
         {loading ? (
@@ -100,7 +134,14 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
           </Row>
         ) : (
           <Row justify={"start"} className={styles.gridArea}>
-            {card && <CardPage card={card} />}
+            {card && (
+              <CardPage
+                card={card}
+                filters={filters}
+                setFilters={setFilters}
+                appliedFiltersLabels={appliedFiltersLabels}
+              />
+            )}
           </Row>
         )}
       </div>

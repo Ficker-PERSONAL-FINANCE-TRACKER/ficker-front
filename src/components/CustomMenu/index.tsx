@@ -116,7 +116,14 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
   const selectedKey =
     Object.entries(paths).find(([, path]) => path === pathname)?.[0] ?? (menu ? menu.toString() : "1");
 
-  const [userData, setUserData] = useState<{ name: string } | null>(user || null);
+  const [userData, setUserData] = useState<{ name: string } | null>(() => {
+    if (user) return user;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("user_data");
+      return saved ? JSON.parse(saved) : null;
+    }
+    return null;
+  });
   const [balanceData, setBalanceData] = useState<any>(balance || null);
   const toggleMenu = () => {
     setShowMenu(!showMenu);
@@ -132,13 +139,16 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
             endpoint: "user",
           });
           if (response.data) {
-            setUserData(response.data.data || response.data);
+            const data = response.data.data || response.data;
+            setUserData(data);
+            localStorage.setItem("user_data", JSON.stringify(data));
           }
         } catch (error) {
           console.error("Failed to fetch user:", error);
         }
       } else {
         setUserData(user);
+        localStorage.setItem("user_data", JSON.stringify(user));
       }
 
       // Fetch Balance
