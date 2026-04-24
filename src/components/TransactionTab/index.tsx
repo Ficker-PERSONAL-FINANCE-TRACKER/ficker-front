@@ -276,7 +276,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                     </td>
 
                     {typeId === 2 && (
-                      <td>
+                      <td style={{ gridArea: "payment" }}>
                         <div
                           style={{
                             backgroundColor: paymentMethodInfo.bg,
@@ -300,7 +300,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                     )}
 
                     {typeId === 3 && (
-                      <td>
+                      <td style={{ gridArea: "installments" }}>
                         {transaction.installments > 1 ? (
                           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                             <span>{transaction.installments}x</span>
@@ -319,7 +319,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                             </button>
                           </div>
                         ) : (
-                          <span>-</span>
+                          <span style={{ fontSize: "12px", color: "#808191" }}>Sem parcelas</span>
                         )}
                       </td>
                     )}
