@@ -210,15 +210,16 @@ const Resume = () => {
         endpoint: "spending/store",
         method: "POST",
         data: {
-          planned_spending: values.planned_spending,
+          planned_spending: parseFloat(String(values.planned_spending).replace(",", ".")),
         },
       });
       setIsEditMode(false);
       getBalance();
       getPeriodBudgetSummary();
       message.success("Meta atualizada com sucesso!");
-    } catch (error) {
-      message.error("Algo deu errado ao atualizar a meta!");
+    } catch (error: any) {
+      const apiMsg = error?.response?.data?.message;
+      message.error(apiMsg || "Algo deu errado ao atualizar a meta!");
     }
   };
   const refSaldo = useRef(null);

@@ -198,14 +198,21 @@ const CategoriesPage = () => {
       const analysisQueryString = buildAnalysisQueryString(filters);
       const coveredMonths = getCoveredMonths(filters);
 
-      const [categoryTypesResponse, analysisCategoriesResponse, ...monthlyCategoriesResponses] = await Promise.all([
+      const [categoryTypesResult, analysisCategoriesResult, ...monthlyCategoriesResults] = await Promise.allSettled([
         request({ method: "GET", endpoint: "categories/type/2" }),
         request({ method: "GET", endpoint: `analysis/categories?${analysisQueryString}` }),
         ...coveredMonths.map(({ month, year }) => request({ method: "GET", endpoint: `categories?month=${month}&year=${year}` })),
       ]);
 
-      const baseCategories = ((categoryTypesResponse.data ?? []) as CategoryBase[]).filter((category) => Number(category.type_id) === 2);
-      const analysisCategories = (analysisCategoriesResponse.data?.data?.categories ?? []) as AnalysisCategory[];
+      // A API retorna { data: { categories: [...] } } com type_id em cada item
+      const rawCategories = categoryTypesResult.status === "fulfilled"
+        ? (categoryTypesResult.value.data?.data?.categories ?? []) as CategoryBase[]
+        : [];
+      const baseCategories = rawCategories.filter((category) => Number(category.type_id) === 2);
+
+      const analysisCategories = analysisCategoriesResult.status === "fulfilled"
+        ? (analysisCategoriesResult.value.data?.data?.categories ?? []) as AnalysisCategory[]
+        : [];
 
       const spendingByCategory = analysisCategories.reduce<Record<number, number>>((acc, category) => {
         acc[category.category_id] = Number(
@@ -214,8 +221,9 @@ const CategoriesPage = () => {
         return acc;
       }, {});
 
-      const limitByCategory = monthlyCategoriesResponses.reduce<Record<number, number>>((acc, response) => {
-        const monthCategories = (response.data?.data?.categories ?? []) as CategoryMonthData[];
+      const limitByCategory = monthlyCategoriesResults.reduce<Record<number, number>>((acc, result) => {
+        if (result.status !== "fulfilled") return acc;
+        const monthCategories = (result.value.data?.data?.categories ?? []) as CategoryMonthData[];
 
         monthCategories
           .filter((category) => Number(category.type_id) === 2)
