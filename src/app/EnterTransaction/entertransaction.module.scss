@@ -172,11 +172,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: transform 0.2s ease;
 
-.secondaryLink:hover {
-  background-color: #eaeaea;
-  border-radius: 50%;
+  &:hover {
+    background: transparent !important;
+    transform: scale(1.2);
+    box-shadow: none !important;
+  }
 }
 
 .contentArea {

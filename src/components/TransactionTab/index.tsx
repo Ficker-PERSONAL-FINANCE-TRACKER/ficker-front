@@ -81,6 +81,8 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
         label: "Compra no cartão",
         valueColor: "#eab308",
         signal: "-",
+        badgeBg: "#FFF7E6",
+        badgeColor: "#D48806",
       };
     }
 
@@ -203,7 +205,32 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
 
                     <td className={styles.tdDescription} style={isCardDetailTable ? { lineHeight: 1.35 } : undefined}>
                       <div>{transaction.transaction_description}</div>
-                      {typeId === 2 && <span className={styles.transactionKind}>{presentation.label}</span>}
+                      {typeId === 2 && (
+                        <span
+                          className={styles.transactionKind}
+                          style={
+                            (presentation as any).badgeBg
+                              ? {
+                                  backgroundColor: (presentation as any).badgeBg,
+                                  color: (presentation as any).badgeColor,
+                                  padding: "2px 10px",
+                                  borderRadius: "12px",
+                                  fontSize: "11px",
+                                  fontWeight: 600,
+                                  display: "inline-block",
+                                  marginTop: "4px",
+                                }
+                              : {
+                                  fontSize: "12px",
+                                  color: "#808191",
+                                  display: "block",
+                                  marginTop: "2px",
+                                }
+                          }
+                        >
+                          {presentation.label}
+                        </span>
+                      )}
                     </td>
                     <td className={styles.tdDate} style={isCardDetailTable ? { whiteSpace: "nowrap" } : undefined}>
                       {dayjs(transaction.date).format("DD/MM/YYYY")}

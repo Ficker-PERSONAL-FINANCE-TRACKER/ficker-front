@@ -1,13 +1,13 @@
 .pageContent {
   flex: 1;
-  padding: 30px 40px;
+  padding: 20px 30px;
   overflow-x: hidden;
 }
 
 .pageHeader {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -34,8 +34,12 @@
   border-radius: 8px;
   height: 40px;
   padding: 0 18px;
-  font-weight: 400;
+  font-weight: 600;
   box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .filterButton:hover,
