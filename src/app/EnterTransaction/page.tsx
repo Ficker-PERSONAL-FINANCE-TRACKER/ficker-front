@@ -43,9 +43,10 @@ const EnterTransaction = () => {
         method: "GET",
         endpoint: "transaction/type/1",
       });
-      setTransactions(response.data.data.transactions);
+      setTransactions(response?.data?.data?.transactions ?? []);
     } catch (error) {
       console.log(error);
+      setTransactions([]);
     }
   };
 

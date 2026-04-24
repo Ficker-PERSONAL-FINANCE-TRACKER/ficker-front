@@ -31,9 +31,10 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
         method: "GET",
         endpoint: "flags",
       });
-      setFlags(response.data.data.flags);
+      setFlags(response?.data?.data?.flags ?? []);
     } catch (error) {
       console.log(error);
+      setFlags([]);
     }
   };
 
@@ -92,12 +93,10 @@ export const NewCardModal = ({ isModalOpen, setIsModalOpen }: CardModalProps) =>
               data-testid="flag_id"
               className={styles.input}
               style={{ width: 200, height: 40 }}
-              options={[
-                ...flags.map((flag) => ({
-                  value: flag.id,
-                  label: flag.flag_description,
-                })),
-              ]}
+              options={(flags ?? []).map((flag) => ({
+                value: flag.id,
+                label: flag.flag_description,
+              }))}
             />
           </Form.Item>
         </Col>

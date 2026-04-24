@@ -6,6 +6,11 @@
 
 .titleArea {
   padding: 20px 30px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .buttonsArea {
@@ -272,16 +277,6 @@
   color: #d14343 !important;
 }
 
-@media (min-width: 768px) {
-  .titleArea {
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .buttonsArea {
-    display: flex;
-  }
-}
 
 @media (max-width: 1199px) {
   .cardColumn {

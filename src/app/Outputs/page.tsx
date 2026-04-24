@@ -47,9 +47,10 @@ const Outputs = () => {
         method: "GET",
         endpoint: "transaction/type/2",
       });
-      setTransactions(response.data.data.transactions);
+      setTransactions(response?.data?.data?.transactions ?? []);
     } catch (error) {
       console.log(error);
+      setTransactions([]);
     }
   };
 

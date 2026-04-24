@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
@@ -101,8 +101,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
       const response = await request({
         endpoint: "payment/methods",
       });
-      setPaymentMethods(response.data.data.payment_methods);
-    } catch (error) {}
+      setPaymentMethods(response?.data?.data?.payment_methods ?? []);
+    } catch (error) {
+      setPaymentMethods([]);
+    }
   };
 
   const getCategories = async () => {
@@ -123,9 +125,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
         method: "GET",
         endpoint: "cards",
       });
-      setCards(response.data.data.cards);
+      setCards(response?.data?.data?.cards ?? []);
     } catch (error) {
       console.log(error);
+      setCards([]);
     }
   };
 
@@ -295,7 +298,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues }: Outp
                     data-testid="card_id"
                     className={styles.input}
                     style={{ width: 200, height: 40 }}
-                    options={cards.map((card) => ({
+                    options={(cards ?? []).map((card) => ({
                       value: card.id,
                       label: card.card_description,
                     }))}
