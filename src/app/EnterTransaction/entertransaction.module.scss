@@ -203,7 +203,7 @@
 
   .buttonsArea {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
     width: 100%;
     gap: 12px;
   }
@@ -211,7 +211,8 @@
   .buttonsArea > div,
   .buttonsArea > button,
   .buttonsArea > span {
-    width: 100%;
+    width: auto;
+    min-width: 120px;
   }
 
   /* Specific fix for search field and buttons to be on second line */

@@ -754,7 +754,7 @@ const Resume = () => {
         </div>
       {/* The Alert Banner has been moved to the sidebar */}
 
-      <Row gutter={[24, 24]} align="stretch" style={{ padding: "0 30px 30px 30px" }}>
+      <Row gutter={[24, 24]} align="stretch" className={styles.resumeRow}>
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column", zIndex: 10 }}>
           {/* Quick Actions area */}
           <div className={styles.quickActions} style={{ marginBottom: 20 }}>

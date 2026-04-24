@@ -347,7 +347,7 @@ const ObjectivesPage = () => {
             <h2 className={styles.pageTitle}>Objetivos</h2>
             <p className={styles.pageSubtitle}>Crie, acompanhe e edite os objetivos que você quer tirar do papel.</p>
           </div>
-          <div style={{ alignSelf: "center" }}>
+          <div className={styles.counterWrapper}>
             <span className={styles.counterTag}>{objectives.length} planos em andamento</span>
           </div>
         </div>

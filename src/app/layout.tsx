@@ -38,13 +38,13 @@ export const metadata: Metadata = {
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="pt-BR">
-    <MainProvider>
-      <ConfigProvider theme={theme}>
-        <body>
+    <body className={manrope.className}>
+      <MainProvider>
+        <ConfigProvider theme={theme}>
           <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
-        </body>
-      </ConfigProvider>
-    </MainProvider>
+        </ConfigProvider>
+      </MainProvider>
+    </body>
   </html>
 );
 

@@ -305,6 +305,17 @@
   }
 }
 
+.counterWrapper{
+  align-self: center;
+}
+
+@media (max-width: 768px) {
+  .counterWrapper {
+    align-self: flex-start;
+  }
+}
+
+
 @media (max-width: 768px) {
   .pageHeader {
     flex-direction: column;
