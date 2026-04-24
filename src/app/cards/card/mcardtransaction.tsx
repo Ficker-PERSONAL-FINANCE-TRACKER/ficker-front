@@ -16,7 +16,8 @@ import {
   CoffeeOutlined,
   StarOutlined,
   ThunderboltOutlined,
-  WifiOutlined
+  WifiOutlined,
+  TagsOutlined
 } from "@ant-design/icons";
 interface CardTransactionModalProps {
   isModalOpen: boolean;

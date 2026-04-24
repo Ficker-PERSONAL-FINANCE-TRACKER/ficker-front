@@ -3,7 +3,7 @@ import { request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space, Switch } from "antd";
 import type { DatePickerProps } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import dayjs from "dayjs";
 import {
   PlusOutlined,
