@@ -294,7 +294,7 @@ const CategoriesPage = () => {
       });
 
       message.success(
-        `Meta para ${selectedCategory.category_description} atualizada para ${currentMonthLabel.toLowerCase()} de ${filters.year}!`
+        `Meta para ${selectedCategory.category_description} atualizada com sucesso!`
       );
       setIsModalOpen(false);
       await fetchData();
