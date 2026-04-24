@@ -2,7 +2,7 @@
 import { request } from "@/service/api";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
 import type { DatePickerProps } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import styles from "../../EnterTransaction/entertransaction.module.scss";
 import { 
@@ -55,6 +55,25 @@ const extractCategoriesFromResponse = (response: any): Category[] => {
   }
 
   return [];
+};
+
+const getCategoryIcon = (category: any) => {
+  const id = Number(category?.id);
+  const description = category?.category_description?.toLowerCase() || "";
+
+  if (id === 1 || description.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A" };
+  if (id === 2 || description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+  if (id === 3 || description.includes("investimentos")) return { icon: <WalletOutlined />, color: "#FFA940" };
+  if (id === 4 || description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF" };
+  if (id === 5 || description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3" };
+  if (id === 6 || description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A" };
+  if (id === 7 || description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C" };
+  if (id === 8 || description.includes("contas")) return { icon: <ThunderboltOutlined />, color: "#FFD700" };
+  if (id === 9 || description.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF" };
+  if (id === 10 || description.includes("compras")) return { icon: <ShoppingOutlined />, color: "#FF4D4F" };
+  if (id === 11 || description.includes("projetos")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+
+  return { icon: <TagsOutlined />, color: "#808191" };
 };
 
 export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: CardTransactionModalProps) => {
@@ -139,6 +158,15 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
     console.log(date, dateString);
   };
 
+  const filteredSuggestions = useMemo(() => {
+    return defaultCategories.filter(suggestion => {
+      return !categories.some(userCat => 
+        userCat.id === Number(suggestion.id) || 
+        normalizeCategoryName(userCat.category_description) === normalizeCategoryName(suggestion.label)
+      );
+    });
+  }, [categories]);
+
   useEffect(() => {
     getCategories();
     form.resetFields();
@@ -217,7 +245,7 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
                 </Select.Option>
                 
                 <Select.OptGroup label="Sugestões">
-                  {defaultCategories.map(cat => (
+                  {filteredSuggestions.map(cat => (
                     <Select.Option key={cat.id} value={cat.id}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
@@ -229,11 +257,17 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
 
                 {categories && categories.length > 0 && (
                   <Select.OptGroup label="Minhas categorias">
-                    {categories.map((category) => (
-                      <Select.Option key={category.id} value={category.id}>
-                        {category.category_description}
-                      </Select.Option>
-                    ))}
+                    {categories.map((category) => {
+                      const { icon, color } = getCategoryIcon(category);
+                      return (
+                        <Select.Option key={category.id} value={category.id}>
+                          <Space>
+                            <span style={{ color }}>{icon}</span>
+                            {category.category_description}
+                          </Space>
+                        </Select.Option>
+                      );
+                    })}
                   </Select.OptGroup>
                 )}
               </Select>

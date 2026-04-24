@@ -80,6 +80,25 @@ const extractCategoriesFromResponse = (response: any): Category[] => {
   return [];
 };
 
+const getCategoryIcon = (category: any) => {
+  const id = Number(category?.id);
+  const description = category?.category_description?.toLowerCase() || "";
+
+  if (id === 1 || description.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A" };
+  if (id === 2 || description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+  if (id === 3 || description.includes("investimentos")) return { icon: <WalletOutlined />, color: "#FFA940" };
+  if (id === 4 || description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF" };
+  if (id === 5 || description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3" };
+  if (id === 6 || description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A" };
+  if (id === 7 || description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C" };
+  if (id === 8 || description.includes("contas")) return { icon: <ThunderboltOutlined />, color: "#FFD700" };
+  if (id === 9 || description.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF" };
+  if (id === 10 || description.includes("compras")) return { icon: <ShoppingOutlined />, color: "#FF4D4F" };
+  if (id === 11 || description.includes("projetos")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+
+  return { icon: <TagsOutlined />, color: "#808191" };
+};
+
 export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSuccess }: OutputModalProps) => {
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [showCards, setShowCards] = useState(false);
@@ -191,6 +210,22 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
       }
     }
   }, [isModalOpen, initialValues]);
+
+  const filteredSuggestions = useMemo(() => {
+    return SUGGESTED_EXPENSE_CATEGORIES.filter(suggestion => {
+      return !categories.some(userCat => 
+        userCat.id === Number(suggestion.key) || 
+        normalizeCategoryName(userCat.category_description) === normalizeCategoryName(suggestion.label)
+      );
+    });
+  }, [categories]);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    form.resetFields();
+    setShowDescriptionCategory(false);
+    getCategories();
+  }, [isModalOpen]);
 
   return (
     <Modal
@@ -341,7 +376,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
                 </Select.Option>
 
                 <Select.OptGroup label="Sugestões">
-                  {SUGGESTED_EXPENSE_CATEGORIES.map((cat) => (
+                  {filteredSuggestions.map((cat) => (
                     <Select.Option key={cat.key} value={`suggestion:${cat.key}`}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
@@ -353,11 +388,17 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
 
                 {categories.length > 0 && (
                   <Select.OptGroup label="Minhas categorias">
-                    {categories.map((category) => (
-                      <Select.Option key={category.id} value={category.id}>
-                        {category.category_description}
-                      </Select.Option>
-                    ))}
+                    {categories.map((category) => {
+                      const { icon, color } = getCategoryIcon(category);
+                      return (
+                        <Select.Option key={category.id} value={category.id}>
+                          <Space>
+                            <span style={{ color }}>{icon}</span>
+                            {category.category_description}
+                          </Space>
+                        </Select.Option>
+                      );
+                    })}
                   </Select.OptGroup>
                 )}
               </Select>

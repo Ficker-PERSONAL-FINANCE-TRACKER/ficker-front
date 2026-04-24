@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Form, InputNumber, Input, Typography, DatePicker, Select, Space, Checkbox, ConfigProvider } from "antd";
 import ptBR from "antd/locale/pt_BR";
-import { PlusOutlined, WalletOutlined, RocketOutlined, DollarOutlined, StarOutlined } from "@ant-design/icons";
+import { PlusOutlined, WalletOutlined, DollarOutlined, CarOutlined, MedicineBoxOutlined, RocketOutlined, ShoppingOutlined, CoffeeOutlined, StarOutlined, ThunderboltOutlined, WifiOutlined, TagsOutlined } from "@ant-design/icons";
 import styles from "../styles.module.scss";
 
 const { Title } = Typography;
@@ -20,7 +20,43 @@ const SUGGESTED_INCOME_CATEGORIES = [
   { key: "4", label: "Renda Extra", icon: <StarOutlined />, color: "#00B0FF" },
 ];
 
+const normalizeCategoryName = (value: string) =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+const getCategoryIcon = (category: any) => {
+  const id = Number(category?.id);
+  const description = category?.category_description?.toLowerCase() || "";
+
+  if (id === 1 || description.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A" };
+  if (id === 2 || description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+  if (id === 3 || description.includes("investimentos")) return { icon: <WalletOutlined />, color: "#FFA940" };
+  if (id === 4 || description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF" };
+  if (id === 5 || description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3" };
+  if (id === 6 || description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A" };
+  if (id === 7 || description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C" };
+  if (id === 8 || description.includes("contas")) return { icon: <ThunderboltOutlined />, color: "#FFD700" };
+  if (id === 9 || description.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF" };
+  if (id === 10 || description.includes("compras")) return { icon: <ShoppingOutlined />, color: "#FF4D4F" };
+  if (id === 11 || description.includes("projetos")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+
+  return { icon: <TagsOutlined />, color: "#808191" };
+};
+
 export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDescriptionCategory, setShowDescriptionCategory }) => {
+  const filteredSuggestions = useMemo(() => {
+    return SUGGESTED_INCOME_CATEGORIES.filter(suggestion => {
+      return !categories.some(userCat => 
+        userCat.id === Number(suggestion.key) || 
+        normalizeCategoryName(userCat.category_description) === normalizeCategoryName(suggestion.label)
+      );
+    });
+  }, [categories]);
+
   return (
     <div className={styles.stepContent}>
       <Title level={4} className={styles.stepTitle}>Registre seu salário</Title>
@@ -89,7 +125,7 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
                 </Select.Option>
 
                 <Select.OptGroup label="Sugestões">
-                  {SUGGESTED_INCOME_CATEGORIES.map((cat) => (
+                  {filteredSuggestions.map((cat) => (
                     <Select.Option key={cat.key} value={`suggestion:${cat.key}`}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
@@ -101,11 +137,17 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
 
                 {categories.length > 0 && (
                   <Select.OptGroup label="Minhas categorias">
-                    {categories.map((category) => (
-                      <Select.Option key={category.id} value={category.id}>
-                        {category.category_description}
-                      </Select.Option>
-                    ))}
+                    {categories.map((category) => {
+                      const { icon, color } = getCategoryIcon(category);
+                      return (
+                        <Select.Option key={category.id} value={category.id}>
+                          <Space>
+                            <span style={{ color }}>{icon}</span>
+                            {category.category_description}
+                          </Space>
+                        </Select.Option>
+                      );
+                    })}
                   </Select.OptGroup>
                 )}
               </Select>
