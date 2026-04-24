@@ -204,9 +204,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                     </td>
 
                     <td className={styles.tdDescription} style={isCardDetailTable ? { lineHeight: 1.35 } : undefined}>
-                      <div style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {transaction.transaction_description}
-                      </div>
+                      <div>{transaction.transaction_description}</div>
                       {typeId === 2 && (
                         <span
                           className={styles.transactionKind}
@@ -253,17 +251,11 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                           minWidth: isCardDetailTable ? "0" : "100px",
                           justifyContent: "center",
                           width: "auto",
-                          whiteSpace: "nowrap",
-                          maxWidth: "120px", // Limitado a 120px
-                          overflow: "hidden", // Truncamento
-                          textOverflow: "ellipsis", // Truncamento
                           boxSizing: "border-box",
                         }}
                       >
                         {categoryInfo.icon}
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {transaction.category_description || "-"}
-                        </span>
+                        <span>{transaction.category_description || "-"}</span>
                       </div>
                     </td>
 

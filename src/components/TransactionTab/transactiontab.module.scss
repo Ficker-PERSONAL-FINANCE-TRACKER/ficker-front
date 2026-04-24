@@ -121,6 +121,13 @@
     font-size: 14px;
     font-weight: 700;
     color: #11142d;
+
+    div {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   .tdDate {
@@ -132,6 +139,14 @@
   .tdCategory {
     grid-area: category;
     margin-top: 4px;
+    display: none !important;
+
+    div {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   .tdValue {
