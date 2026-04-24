@@ -431,7 +431,7 @@ const Cards = () => {
           <div>
             <h2>Meus cartões</h2>
           </div>
-          <div className={styles.buttonsArea} style={{ width: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+          <div className={styles.buttonsArea}>
             <SearchField />
             <button className={styles.button} onClick={openModal}>
               Novo Cartão
@@ -443,7 +443,7 @@ const Cards = () => {
         </div>
 
         {hasAppliedFilters && (
-          <div style={{ padding: "0 30px" }}>
+          <div className={styles.gridPadding}>
             <AppliedFiltersBar filters={appliedFiltersLabels} />
           </div>
         )}

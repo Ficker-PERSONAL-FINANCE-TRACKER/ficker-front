@@ -174,9 +174,24 @@
 }
 
 .buttonsArea {
-  display: block;
-  width: 400px;
+    width: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
+@media (max-width: 768px) {
+  .buttonsArea {
+    width: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
+
 
 .titleArea {
   padding: 20px 30px;
@@ -218,5 +233,15 @@
   /* Specific fix for search field and buttons to be on second line */
   .titleArea h2 {
     margin-bottom: 8px;
+  }
+}
+
+.gridPadding{
+  padding: 0 30px;
+}
+
+@media (max-width: 768px) {
+  .gridPadding{
+    padding: 0 20px;
   }
 }

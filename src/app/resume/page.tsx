@@ -745,11 +745,11 @@ const Resume = () => {
             >
               <InfoCircleOutlined style={{ fontSize: 20, color: "#808191" }} />
             </div>
-            <div className={styles.notification}>
+            {/* <div className={styles.notification}>
               <Badge dot color="#FF754C">
                 <BellOutlined style={{ fontSize: 22 }} />
               </Badge>
-            </div>
+            </div> */}
           </div>          
         </div>
       {/* The Alert Banner has been moved to the sidebar */}

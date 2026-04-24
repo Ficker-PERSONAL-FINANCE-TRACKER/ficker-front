@@ -116,7 +116,7 @@ const EnterTransaction = () => {
           <div>
             <h2>Entradas</h2>
           </div>
-          <div className={styles.buttonsArea} style={{ width: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+          <div className={styles.buttonsArea}>
             <SearchField style={{ width: 300, marginRight: 0, flex: "0 0 auto" }} />
             <button className={styles.button} onClick={showModal} style={{ whiteSpace: "nowrap" }}>
               Nova entrada
@@ -126,12 +126,12 @@ const EnterTransaction = () => {
         </div>
 
         {appliedFiltersLabels.length > 0 && (
-          <div style={{ padding: "0 30px" }}>
+          <div className={styles.gridPadding}>
             <AppliedFiltersBar filters={appliedFiltersLabels} />
           </div>
         )}
 
-        <div style={{ padding: "0 30px" }}>
+        <div className={styles.gridPadding}>
           <TransactionTab
             data={filteredTransactions}
             typeId={1}
