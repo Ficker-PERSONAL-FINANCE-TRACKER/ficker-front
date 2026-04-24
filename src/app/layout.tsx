@@ -10,17 +10,16 @@ import { MainProvider } from "@/context";
 const manrope = Manrope({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ficker-front-gamma.vercel.app"), // Ajuste para a URL real de produção
   title: "Ficker - Controle suas finanças",
   description: "Ficker é a plataforma ideal para gerenciar suas finanças, metas de gastos e objetivos de vida.",
   openGraph: {
     title: "Ficker - Controle suas finanças",
     description: "Ficker é a plataforma ideal para gerenciar suas finanças, metas de gastos e objetivos de vida.",
-    url: "https://ficker-front-gamma.vercel.app", // Ajuste conforme a URL real se necessário
+    url: "https://ficker-front-gamma.vercel.app",
     siteName: "Ficker",
     images: [
       {
-        url: "/ficker-system.png",
+        url: "https://ficker-front-gamma.vercel.app/ficker-system.png",
         width: 1200,
         height: 630,
         alt: "Ficker System Preview",
@@ -33,7 +32,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ficker - Controle suas finanças",
     description: "Ficker é a plataforma ideal para gerenciar suas finanças, metas de gastos e objetivos de vida.",
-    images: ["/ficker-system.png"],
+    images: ["https://ficker-front-gamma.vercel.app/ficker-system.png"],
   },
 };
 

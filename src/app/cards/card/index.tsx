@@ -118,7 +118,7 @@ function CardPage({ card, filters, setFilters, appliedFiltersLabels }: CardProps
         }}
       />
       <Row gutter={[24, 24]} style={{ padding: "0 18px", paddingLeft: 0 }}>
-        <Col xl={18} lg={16} md={24} xs={24} className={styles.tableResume}>
+        <Col xl={18} lg={16} md={24} xs={24} style={{ paddingLeft: 0 }} className={styles.tableResume}>
           {appliedFiltersLabels.length > 0 && (
             <div style={{ marginBottom: 16 }}>
               <AppliedFiltersBar filters={appliedFiltersLabels} />
@@ -169,3 +169,5 @@ function CardPage({ card, filters, setFilters, appliedFiltersLabels }: CardProps
 }
 
 export default CardPage;
+
+

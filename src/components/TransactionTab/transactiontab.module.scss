@@ -78,7 +78,6 @@
       grid-template-areas:
         "edit description value"
         "edit date value"
-        "edit category value"
         "edit payment value"
         "edit installments value";
       grid-template-columns: 50px 1fr auto;
@@ -99,6 +98,14 @@
       box-shadow: none;
       text-align: left;
       border-radius: 0;
+    }
+
+    .transactionKind {
+      display: none !important;
+    }
+
+    .tdCategory {
+      display: none !important;
     }
   }
 
@@ -144,5 +151,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    background: none;
+    border: none;
   }
 }

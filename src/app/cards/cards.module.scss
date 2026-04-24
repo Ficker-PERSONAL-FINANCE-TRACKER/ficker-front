@@ -300,7 +300,23 @@
   }
 }
 
+.gridTitle{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+
+
 @media (max-width: 768px) {
+
+  .gridTitle{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
   .pageShell {
     width: 100%;
   }
@@ -309,13 +325,6 @@
     flex-direction: column;
     align-items: flex-start;
     padding: 20px;
-  }
-
-  .buttonsArea {
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-    gap: 12px;
   }
 
   .buttonsArea > div,
@@ -333,6 +342,8 @@
     flex-wrap: wrap;
     justify-content: flex-start;
   }
+
+
 
   .gridArea,
   .archivedSection {
@@ -371,10 +382,11 @@
 
 @media (max-width: 768px) {
   .tableResume {
-    order: 2;
+    order: 2 !important;
   }
 
-  .cardInfo{
-   order: 1;
+  .cardInfo {
+    order: 1 !important;
+    width: 100%;
   }
 }

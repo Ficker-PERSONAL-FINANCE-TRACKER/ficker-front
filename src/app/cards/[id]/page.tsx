@@ -100,7 +100,7 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
       <CustomMenu />
       <div className={styles.pageShell}>
         <div className={styles.titleArea}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+          <div className={styles.gridTitle}>
             <h2>
               {card ? (
                 <>

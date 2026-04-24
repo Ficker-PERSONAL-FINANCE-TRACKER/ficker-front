@@ -204,7 +204,9 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                     </td>
 
                     <td className={styles.tdDescription} style={isCardDetailTable ? { lineHeight: 1.35 } : undefined}>
-                      <div>{transaction.transaction_description}</div>
+                      <div style={{ maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {transaction.transaction_description}
+                      </div>
                       {typeId === 2 && (
                         <span
                           className={styles.transactionKind}
@@ -217,13 +219,13 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                                   borderRadius: "12px",
                                   fontSize: "11px",
                                   fontWeight: 600,
-                                  display: "inline-block",
+                                  display: "none", // Oculto no mobile conforme pedido
                                   marginTop: "4px",
                                 }
                               : {
                                   fontSize: "12px",
                                   color: "#808191",
-                                  display: "block",
+                                  display: "none", // Oculto no mobile conforme pedido
                                   marginTop: "2px",
                                 }
                           }
@@ -252,12 +254,16 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                           justifyContent: "center",
                           width: "auto",
                           whiteSpace: "nowrap",
-                          maxWidth: isCardDetailTable ? "100%" : "none",
+                          maxWidth: "120px", // Limitado a 120px
+                          overflow: "hidden", // Truncamento
+                          textOverflow: "ellipsis", // Truncamento
                           boxSizing: "border-box",
                         }}
                       >
                         {categoryInfo.icon}
-                        {transaction.category_description || "-"}
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {transaction.category_description || "-"}
+                        </span>
                       </div>
                     </td>
 
