@@ -192,3 +192,30 @@
     display: flex;
   }
 }
+
+@media (max-width: 768px) {
+  .titleArea {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .buttonsArea {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 12px;
+  }
+
+  .buttonsArea > div,
+  .buttonsArea > button,
+  .buttonsArea > span {
+    width: 100%;
+  }
+
+  /* Specific fix for search field and buttons to be on second line */
+  .titleArea h2 {
+    margin-bottom: 8px;
+  }
+}
