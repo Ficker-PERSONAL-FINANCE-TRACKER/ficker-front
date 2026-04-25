@@ -51,3 +51,16 @@ body {
   background: #d6d6d6;
   border-radius: 0px;
 }
+
+/* Evitar zoom automático no iOS ao focar em inputs/selects */
+@media screen and (max-width: 768px) {
+  input, 
+  select, 
+  textarea,
+  .ant-input,
+  .ant-input-number-input,
+  .ant-select-selection-item,
+  .ant-select-selection-placeholder {
+    font-size: 16px !important;
+  }
+}

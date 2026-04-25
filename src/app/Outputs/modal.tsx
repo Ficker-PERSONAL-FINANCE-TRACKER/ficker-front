@@ -1,9 +1,13 @@
 "use client";
 import { getApiErrorMessage, request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
-import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
+import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space, ConfigProvider } from "antd";
+import ptBR from "antd/lib/locale/pt_BR";
 import { useEffect, useState, useMemo } from "react";
 import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+
+dayjs.locale("pt-br");
 import { Card } from "@/interfaces";
 import {
   PlusOutlined,
@@ -240,189 +244,191 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
         },
       }}
     >
-      <Form
-        form={form}
-        name="basic"
-        data-testid="form"
-        onFinish={handleFinish}
-        onFinishFailed={(errorInfo) => console.log(errorInfo)}
-        onValuesChange={(changedValues) => {
-          if (Object.prototype.hasOwnProperty.call(changedValues, "category_id")) {
-            const nextValue = changedValues.category_id;
-            const shouldShowDescription = nextValue === 0;
-            setShowDescriptionCategory(shouldShowDescription);
+      <ConfigProvider locale={ptBR}>
+        <Form
+          form={form}
+          name="basic"
+          data-testid="form"
+          onFinish={handleFinish}
+          onFinishFailed={(errorInfo) => console.log(errorInfo)}
+          onValuesChange={(changedValues) => {
+            if (Object.prototype.hasOwnProperty.call(changedValues, "category_id")) {
+              const nextValue = changedValues.category_id;
+              const shouldShowDescription = nextValue === 0;
+              setShowDescriptionCategory(shouldShowDescription);
 
-            if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
-              const categoryId = nextValue.replace("suggestion:", "");
-              const suggestion = SUGGESTED_EXPENSE_CATEGORIES.find(cat => cat.key === categoryId);
-              if (suggestion) {
-                form.setFieldsValue({ category_description: suggestion.label });
+              if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
+                const categoryId = nextValue.replace("suggestion:", "");
+                const suggestion = SUGGESTED_EXPENSE_CATEGORIES.find(cat => cat.key === categoryId);
+                if (suggestion) {
+                  form.setFieldsValue({ category_description: suggestion.label });
+                }
+              }
+
+              if (!shouldShowDescription && nextValue !== 0) {
+                form.setFieldValue("category_description", undefined);
               }
             }
 
-            if (!shouldShowDescription && nextValue !== 0) {
-              form.setFieldValue("category_description", undefined);
+            if (Object.prototype.hasOwnProperty.call(changedValues, "payment_method_id")) {
+              setShowCards(changedValues.payment_method_id === 4);
             }
-          }
-
-          if (Object.prototype.hasOwnProperty.call(changedValues, "payment_method_id")) {
-            setShowCards(changedValues.payment_method_id === 4);
-          }
-        }}
-      >
-        <Col style={{ marginTop: 20 }}>
-          <label>Descrição</label>
-          <Form.Item
-            name="transaction_description"
-            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
-          >
-            <Input className={styles.input} style={{ width: "95%" }} data-testid="description" />
-          </Form.Item>
-        </Col>
-        <Col>
-          <label>Data</label>
-          <Form.Item name="date" rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}>
-            <DatePicker
-              data-testid="date"
-              className={styles.input}
-              placeholder="dd/mm/aaaa"
-              format={"DD/MM/YYYY"}
-              disabledDate={(current) => {
-                return current && current > dayjs().endOf("day");
-              }}
-            />
-          </Form.Item>
-        </Col>
-        <Row>
-          <Col>
-            <label>Forma de pagamento</label>
+          }}
+        >
+          <Col style={{ marginTop: 20 }}>
+            <label>Descrição</label>
             <Form.Item
-              name="payment_method_id"
+              name="transaction_description"
               rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
             >
-              <Select
-                data-testid="payment_method_id"
+              <Input className={styles.input} style={{ width: "95%" }} data-testid="description" />
+            </Form.Item>
+          </Col>
+          <Col>
+            <label>Data</label>
+            <Form.Item name="date" rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}>
+              <DatePicker
+                data-testid="date"
                 className={styles.input}
-                style={{ width: 200, height: 40 }}
-                options={paymentMethods?.map((paymentMethod) => ({
-                  value: paymentMethod.id,
-                  label: paymentMethod.description,
-                }))}
+                placeholder="dd/mm/aaaa"
+                format={"DD/MM/YYYY"}
+                disabledDate={(current) => {
+                  return current && current > dayjs().endOf("day");
+                }}
               />
             </Form.Item>
           </Col>
-          {showCards ? (
-            <>
-              <Col>
-                <label>Cartões</label>
-                <Form.Item
-                  name="card_id"
-                  rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
-                >
-                  <Select
-                    data-testid="card_id"
-                    className={styles.input}
-                    style={{ width: 200, height: 40 }}
-                    options={(cards ?? []).map((card) => ({
-                      value: card.id,
-                      label: card.card_description,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-              <Col>
-                <label>Parcelas</label>
-                <Form.Item
-                  name="installments"
-                  rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
-                >
-                  <Select
-                    data-testid="installments"
-                    className={styles.input}
-                    style={{ width: 150, height: 35 }}
-                  >
-                    {Array.from({ length: 12 }, (_, index) => (
-                      <Select.Option key={index + 1} value={index + 1}>
-                        {`${index + 1}x`}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-            </>
-          ) : null}
-        </Row>
-        <Row>
-          <Col>
-            <label>Categoria</label>
-            <Form.Item
-              name="category_id"
-              rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
-            >
-              <Select
-                data-testid="category_id"
-                className={styles.input}
-                style={{ width: 200, height: 40 }}
-                placeholder="Selecione ou crie"
-              >
-                <Select.Option value={0}>
-                  <Space>
-                    <PlusOutlined style={{ color: '#6C5DD3' }} />
-                    <span>Nova categoria</span>
-                  </Space>
-                </Select.Option>
-
-                {/* <Select.OptGroup label="Sugestões">
-                  {filteredSuggestions.map((cat) => (
-                    <Select.Option key={cat.key} value={`suggestion:${cat.key}`}>
-                      <Space>
-                        <span style={{ color: cat.color }}>{cat.icon}</span>
-                        <span>{cat.label}</span>
-                      </Space>
-                    </Select.Option>
-                  ))}
-                </Select.OptGroup> */}
-
-                {categories.length > 0 && (
-                  <Select.OptGroup label="Minhas categorias">
-                    {categories.map((category) => {
-                      const { icon, color } = getCategoryIcon(category);
-                      return (
-                        <Select.Option key={category.id} value={category.id}>
-                          <Space>
-                            <span style={{ color }}>{icon}</span>
-                            {category.category_description}
-                          </Space>
-                        </Select.Option>
-                      );
-                    })}
-                  </Select.OptGroup>
-                )}
-              </Select>
-            </Form.Item>
-          </Col>
-          {showDescriptionCategory ? (
+          <Row>
             <Col>
-              <label>Descrição da categoria</label>
+              <label>Forma de pagamento</label>
               <Form.Item
-                name="category_description"
+                name="payment_method_id"
                 rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
               >
-                <Input className={styles.input} data-testid="category_description" />
+                <Select
+                  data-testid="payment_method_id"
+                  className={styles.input}
+                  style={{ width: 200, height: 40 }}
+                  options={paymentMethods?.map((paymentMethod) => ({
+                    value: paymentMethod.id,
+                    label: paymentMethod.description,
+                  }))}
+                />
               </Form.Item>
             </Col>
-          ) : null}
-        </Row>
-        <Col xl={15}>
-          <label>Valor</label>
-          <Form.Item
-            name="transaction_value"
-            rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
-          >
-            <Input className={styles.input} placeholder="R$" data-testid="value" />
-          </Form.Item>
-        </Col>
-      </Form>
+            {showCards ? (
+              <>
+                <Col>
+                  <label>Cartões</label>
+                  <Form.Item
+                    name="card_id"
+                    rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
+                  >
+                    <Select
+                      data-testid="card_id"
+                      className={styles.input}
+                      style={{ width: 200, height: 40 }}
+                      options={(cards ?? []).map((card) => ({
+                        value: card.id,
+                        label: card.card_description,
+                      }))}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col>
+                  <label>Parcelas</label>
+                  <Form.Item
+                    name="installments"
+                    rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
+                  >
+                    <Select
+                      data-testid="installments"
+                      className={styles.input}
+                      style={{ width: 150, height: 35 }}
+                    >
+                      {Array.from({ length: 12 }, (_, index) => (
+                        <Select.Option key={index + 1} value={index + 1}>
+                          {`${index + 1}x`}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </>
+            ) : null}
+          </Row>
+          <Row>
+            <Col>
+              <label>Categoria</label>
+              <Form.Item
+                name="category_id"
+                rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
+              >
+                <Select
+                  data-testid="category_id"
+                  className={styles.input}
+                  style={{ width: 200, height: 40 }}
+                  placeholder="Selecione ou crie"
+                >
+                  <Select.Option value={0}>
+                    <Space>
+                      <PlusOutlined style={{ color: '#6C5DD3' }} />
+                      <span>Nova categoria</span>
+                    </Space>
+                  </Select.Option>
+
+                  {/* <Select.OptGroup label="Sugestões">
+                    {filteredSuggestions.map((cat) => (
+                      <Select.Option key={cat.key} value={`suggestion:${cat.key}`}>
+                        <Space>
+                          <span style={{ color: cat.color }}>{cat.icon}</span>
+                          <span>{cat.label}</span>
+                        </Space>
+                      </Select.Option>
+                    ))}
+                  </Select.OptGroup> */}
+
+                  {categories.length > 0 && (
+                    <Select.OptGroup label="Minhas categorias">
+                      {categories.map((category) => {
+                        const { icon, color } = getCategoryIcon(category);
+                        return (
+                          <Select.Option key={category.id} value={category.id}>
+                            <Space>
+                              <span style={{ color }}>{icon}</span>
+                              {category.category_description}
+                            </Space>
+                          </Select.Option>
+                        );
+                      })}
+                    </Select.OptGroup>
+                  )}
+                </Select>
+              </Form.Item>
+            </Col>
+            {showDescriptionCategory ? (
+              <Col>
+                <label>Descrição da categoria</label>
+                <Form.Item
+                  name="category_description"
+                  rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
+                >
+                  <Input className={styles.input} data-testid="category_description" />
+                </Form.Item>
+              </Col>
+            ) : null}
+          </Row>
+          <Col xl={15}>
+            <label>Valor</label>
+            <Form.Item
+              name="transaction_value"
+              rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
+            >
+              <Input className={styles.input} placeholder="R$" data-testid="value" />
+            </Form.Item>
+          </Col>
+        </Form>
+      </ConfigProvider>
     </Modal>
   );
 };

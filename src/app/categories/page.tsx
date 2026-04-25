@@ -40,12 +40,6 @@ const MONTH_OPTIONS = [
   { value: 12, label: "Dezembro" },
 ];
 
-type CategoryBase = {
-  id: number;
-  type_id?: number;
-  category_description: string;
-};
-
 type CategoryMonthData = {
   id: number;
   type_id?: number;
@@ -53,14 +47,6 @@ type CategoryMonthData = {
   category_spending: number;
   category_real_spending?: number;
   category_limit?: number;
-};
-
-type AnalysisCategory = {
-  category_id: number;
-  category_description: string;
-  real_spending_total: number;
-  credit_card_purchase_total?: number;
-  expense_composition_total?: number;
 };
 
 type CategoryView = {
@@ -90,27 +76,6 @@ type FilterFormValues = {
   custom_year_start?: number;
   custom_month_end?: number;
   custom_year_end?: number;
-};
-
-const buildAnalysisQueryString = (filters: CategoryFilters) => {
-  const params = new URLSearchParams();
-
-  if (
-    filters.mode === "custom" &&
-    filters.customMonthStart &&
-    filters.customYearStart &&
-    filters.customMonthEnd &&
-    filters.customYearEnd
-  ) {
-    params.set("date_from", dayjs().year(filters.customYearStart).month(filters.customMonthStart - 1).startOf("month").format("YYYY-MM-DD"));
-    params.set("date_to", dayjs().year(filters.customYearEnd).month(filters.customMonthEnd - 1).endOf("month").format("YYYY-MM-DD"));
-  } else {
-    params.set("month", String(filters.month));
-    params.set("year", String(filters.year));
-  }
-
-  params.set("type_id", "2");
-  return params.toString();
 };
 
 const getCoveredMonths = (filters: CategoryFilters) => {
@@ -213,52 +178,49 @@ const CategoriesPage = () => {
     setLoading(true);
 
     try {
-      const analysisQueryString = buildAnalysisQueryString(filters);
       const coveredMonths = getCoveredMonths(filters);
-
       const timestamp = Date.now();
-      const [categoryTypesResult, analysisCategoriesResult, ...monthlyCategoriesResults] = await Promise.allSettled([
-        request({ method: "GET", endpoint: `categories/type/2?t=${timestamp}` }),
-        request({ method: "GET", endpoint: `analysis/categories?${analysisQueryString}&t=${timestamp}` }),
-        ...coveredMonths.map(({ month, year }) => request({ method: "GET", endpoint: `categories?month=${month}&year=${year}&t=${timestamp}` })),
-      ]);
+      
+      const monthlyCategoriesResults = await Promise.allSettled(
+        coveredMonths.map(({ month, year }) => 
+          request({ method: "GET", endpoint: `categories?month=${month}&year=${year}&t=${timestamp}` })
+        )
+      );
 
-      // A API retorna { data: { categories: [...] } } com type_id em cada item
-      const rawCategories = categoryTypesResult.status === "fulfilled"
-        ? (categoryTypesResult.value.data?.data?.categories ?? []) as CategoryBase[]
-        : [];
-      const baseCategories = rawCategories.filter((category) => Number(category.type_id) === 2);
+      const aggregatedData: Record<number, { 
+        id: number; 
+        category_description: string; 
+        limit: number; 
+        spending: number;
+        type_id?: number;
+      }> = {};
 
-      const analysisCategories = analysisCategoriesResult.status === "fulfilled"
-        ? (analysisCategoriesResult.value.data?.data?.categories ?? []) as AnalysisCategory[]
-        : [];
-
-      const spendingByCategory = analysisCategories.reduce<Record<number, number>>((acc, category) => {
-        acc[category.category_id] = Number(
-          category.expense_composition_total ?? (Number(category.real_spending_total || 0) + Number(category.credit_card_purchase_total || 0))
-        );
-        return acc;
-      }, {});
-
-      const limitByCategory = monthlyCategoriesResults.reduce<Record<number, number>>((acc, result) => {
-        if (result.status !== "fulfilled") return acc;
+      monthlyCategoriesResults.forEach((result) => {
+        if (result.status !== "fulfilled") return;
         const monthCategories = (result.value.data?.data?.categories ?? []) as CategoryMonthData[];
 
-        monthCategories
-          .filter((category) => Number(category.type_id) === 2)
-          .forEach((category) => {
-            acc[category.id] = Number(acc[category.id] || 0) + Number(category.category_limit || 0);
-          });
+        monthCategories.forEach((cat) => {
+          if (!aggregatedData[cat.id]) {
+            aggregatedData[cat.id] = {
+              id: cat.id,
+              category_description: cat.category_description,
+              limit: 0,
+              spending: 0,
+              type_id: cat.type_id
+            };
+          }
+          aggregatedData[cat.id].limit += Number(cat.category_limit || 0);
+          aggregatedData[cat.id].spending += Number(cat.category_spending || cat.category_real_spending || 0);
+        });
+      });
 
-        return acc;
-      }, {});
-
-      const mergedCategories = baseCategories
-        .map((category) => ({
-          id: category.id,
-          category_description: category.category_description,
-          category_limit: Number(limitByCategory[category.id] || 0),
-          category_total_spending: Number(spendingByCategory[category.id] || 0),
+      const mergedCategories = Object.values(aggregatedData)
+        .filter((cat) => Number(cat.type_id) === 2)
+        .map((cat) => ({
+          id: cat.id,
+          category_description: cat.category_description,
+          category_limit: cat.limit,
+          category_total_spending: cat.spending,
         }))
         .sort((a, b) => b.category_total_spending - a.category_total_spending || a.category_description.localeCompare(b.category_description, "pt-BR"));
 
