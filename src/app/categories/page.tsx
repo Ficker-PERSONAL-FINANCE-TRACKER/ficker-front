@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Row, Col, Progress, Button, Modal, Form, InputNumber, message, Card, Empty, Spin, Checkbox, Select } from "antd";
@@ -198,10 +198,11 @@ const CategoriesPage = () => {
       const analysisQueryString = buildAnalysisQueryString(filters);
       const coveredMonths = getCoveredMonths(filters);
 
+      const timestamp = Date.now();
       const [categoryTypesResult, analysisCategoriesResult, ...monthlyCategoriesResults] = await Promise.allSettled([
-        request({ method: "GET", endpoint: "categories/type/2" }),
-        request({ method: "GET", endpoint: `analysis/categories?${analysisQueryString}` }),
-        ...coveredMonths.map(({ month, year }) => request({ method: "GET", endpoint: `categories?month=${month}&year=${year}` })),
+        request({ method: "GET", endpoint: `categories/type/2?t=${timestamp}` }),
+        request({ method: "GET", endpoint: `analysis/categories?${analysisQueryString}&t=${timestamp}` }),
+        ...coveredMonths.map(({ month, year }) => request({ method: "GET", endpoint: `categories?month=${month}&year=${year}&t=${timestamp}` })),
       ]);
 
       // A API retorna { data: { categories: [...] } } com type_id em cada item

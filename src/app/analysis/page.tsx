@@ -358,6 +358,7 @@ const Analysis = () => {
       setLoading(true);
 
       try {
+        const timestamp = Date.now();
         const [
           summaryResponse,
           cardsResponse,
@@ -370,16 +371,16 @@ const Analysis = () => {
           invoicesResponse,
           paymentMethodsResponse,
         ] = await Promise.all([
-          request({ method: "GET", endpoint: `analysis/summary?${queryString}` }),
-          request({ method: "GET", endpoint: `analysis/cards?${queryString}` }),
-          request({ method: "GET", endpoint: "cards", params: { status: "all" } }),
-          request({ method: "GET", endpoint: `analysis/top-expenses?${queryString}&limit=5` }),
-          request({ method: "GET", endpoint: `analysis/timeline?${queryString}&group_by=${timelineGroupBy}` }),
-          request({ method: "GET", endpoint: `analysis/timeline?${queryString}&group_by=${balanceTimelineGroupBy}` }),
-          request({ method: "GET", endpoint: `transaction/all` }),
-          request({ method: "GET", endpoint: `analysis/categories?${queryString}` }),
-          request({ method: "GET", endpoint: `analysis/invoices?${queryString}` }),
-          request({ method: "GET", endpoint: `analysis/payment-methods?${queryString}` }),
+          request({ method: "GET", endpoint: `analysis/summary?${queryString}&t=${timestamp}` }),
+          request({ method: "GET", endpoint: `analysis/cards?${queryString}&t=${timestamp}` }),
+          request({ method: "GET", endpoint: `cards?status=all&t=${timestamp}` }),
+          request({ method: "GET", endpoint: `analysis/top-expenses?${queryString}&limit=5&t=${timestamp}` }),
+          request({ method: "GET", endpoint: `analysis/timeline?${queryString}&group_by=${timelineGroupBy}&t=${timestamp}` }),
+          request({ method: "GET", endpoint: `analysis/timeline?${queryString}&group_by=${balanceTimelineGroupBy}&t=${timestamp}` }),
+          request({ method: "GET", endpoint: `transaction/all?t=${timestamp}` }),
+          request({ method: "GET", endpoint: `analysis/categories?${queryString}&t=${timestamp}` }),
+          request({ method: "GET", endpoint: `analysis/invoices?${queryString}&t=${timestamp}` }),
+          request({ method: "GET", endpoint: `analysis/payment-methods?${queryString}&t=${timestamp}` }),
         ]);
 
         const fetchedCards = (cardsResponse.data?.data?.cards ?? []) as AnalysisCard[];

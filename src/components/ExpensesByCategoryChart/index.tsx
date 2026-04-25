@@ -4,7 +4,11 @@ import {
   RadialBar,
   ResponsiveContainer,
   PolarAngleAxis,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
+import useMediaQuery from "use-media-antd-query";
 
 type DataType = {
   name: string;
@@ -22,6 +26,8 @@ const ExpensesByCategoryChart = ({
   data,
   emptyMessage = "Nenhum gasto encontrado no período.",
 }: ExpensesByCategoryChartProps) => {
+  const colSize = useMediaQuery();
+  const isMobile = colSize === "xs" || colSize === "sm";
   const total = data.reduce((acc, item) => acc + Number(item.value || 0), 0);
 
   if (!data.length) {
@@ -53,15 +59,22 @@ const ExpensesByCategoryChart = ({
     });
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 32, padding: "10px 0" }}>
+    <div style={{ 
+      display: "flex", 
+      flexDirection: isMobile ? "column-reverse" : "row",
+      alignItems: "center", 
+      gap: isMobile ? 24 : 32, 
+      padding: "10px 0" 
+    }}>
       {/* Legend on the Left */}
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: 20,
+          gap: isMobile ? 12 : 20,
           flex: 1,
-          maxWidth: 300,
+          width: "100%",
+          maxWidth: isMobile ? "none" : 300,
         }}
       >
         {chartData.map((item, index) => {
@@ -113,7 +126,7 @@ const ExpensesByCategoryChart = ({
       </div>
 
       {/* Chart on the Right */}
-      <div style={{ position: "relative", width: 280, height: 280, flexShrink: 0 }}>
+      <div style={{ position: "relative", width: isMobile ? "100%" : 280, height: isMobile ? 240 : 280, flexShrink: 0 }}>
         <ResponsiveContainer width="100%" height="100%">
           <RadialBarChart
             cx="50%"

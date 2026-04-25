@@ -240,8 +240,9 @@ const Resume = () => {
 
   const getBalance = async () => {
     try {
+      const timestamp = Date.now();
       const { data } = await request({
-        endpoint: "balance",
+        endpoint: `balance?t=${timestamp}`,
       });
       setBalance(data.finances);
 
@@ -306,8 +307,9 @@ const Resume = () => {
 
   const getCardsData = async () => {
     try {
+      const timestamp = Date.now();
       const response = await request({
-        endpoint: "cards",
+        endpoint: `cards?t=${timestamp}`,
       });
       const cardsList = response?.data?.data?.cards || [];
 
@@ -337,8 +339,9 @@ const Resume = () => {
 
   const getPeriodBudgetSummary = async () => {
     try {
+      const timestamp = Date.now();
       const queryString = buildAnalysisQueryString(filters);
-      const summaryResponse = await request({ method: "GET", endpoint: `analysis/summary?${queryString}` });
+      const summaryResponse = await request({ method: "GET", endpoint: `analysis/summary?${queryString}&t=${timestamp}` });
 
       setPeriodBudgetSummary({
         planned_spending_total: Number(summaryResponse.data?.data?.planned_spending_total || 0),

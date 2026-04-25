@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Row, Col, Card, Button, Modal, Space, message, Typography, Badge, Tag, Spin } from "antd";
-import { 
-  SendOutlined, 
-  WhatsAppOutlined, 
+import {
+  SendOutlined,
+  WhatsAppOutlined,
   CheckCircleFilled,
   InfoCircleOutlined
 } from "@ant-design/icons";
@@ -232,20 +232,20 @@ const Integrations = () => {
 
         <Row gutter={[24, 24]} style={{ padding: "20px 30px" }}>
           <Col xs={24} md={12} lg={8}>
-            <Card 
-              hoverable 
+            <Card
+              hoverable
               style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
               bodyStyle={{ padding: 24 }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <div style={{ 
-                    width: 48, 
-                    height: 48, 
-                    borderRadius: 12, 
-                    background: '#6C5DD3', 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                  <div style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    background: '#6C5DD3',
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: 16
                   }}>
@@ -259,13 +259,13 @@ const Integrations = () => {
                   <CheckCircleFilled style={{ color: '#52c41a', fontSize: 20 }} />
                 )}
               </div>
-              
+
               <Text type="secondary" style={{ display: 'block', marginBottom: 24, minHeight: 60 }}>
                 Receba notificações, registre transações e consulte seu saldo diretamente pelo bot do Telegram.
               </Text>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button 
+                <Button
                   onClick={handleOpenTelegramModal}
                   style={{ borderRadius: 8 }}
                 >
@@ -276,34 +276,34 @@ const Integrations = () => {
           </Col>
 
           <Col xs={24} md={12} lg={8}>
-            <Card 
-              hoverable 
+            <Card
+              hoverable
               style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
               bodyStyle={{ padding: 24 }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <div style={{ 
-                    width: 48, 
-                    height: 48, 
-                    borderRadius: 12, 
-                    background: '#25D366', 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                  <div style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    background: '#25D366',
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: 16
                   }}>
                     <WhatsAppOutlined style={{ fontSize: 24, color: '#fff' }} />
                   </div>
                   <div>
-                    <Title level={4} style={{ margin: 0 , fontSize: 16}}>WhatsApp</Title>
+                    <Title level={4} style={{ margin: 0, fontSize: 16 }}>WhatsApp</Title>
                   </div>
                 </div>
                 {whatsappLinkStatus?.linked && (
-                   <Badge count="Conectado" style={{ backgroundColor: '#52c41a' }} />
+                  <Badge count="Conectado" style={{ backgroundColor: '#52c41a' }} />
                 )}
               </div>
-              
+
               <Text type="secondary" style={{ display: 'block', marginBottom: 24, minHeight: 60 }}>
                 Receba notificações e controle suas finanças através do WhatsApp com facilidade.
               </Text>
@@ -316,7 +316,7 @@ const Integrations = () => {
                     </Tag>
                   )}
                 </div>
-                <Button 
+                <Button
                   onClick={handleOpenWhatsAppModal}
                   style={{ borderRadius: 8 }}
                 >
@@ -356,35 +356,35 @@ const Integrations = () => {
               <Text style={{ display: 'block', marginBottom: 20, fontSize: 15 }}>
                 Para vincular sua conta, escaneie o QR Code abaixo ou clique no botão para abrir o chat diretamente.
               </Text>
-              
-              <div style={{ 
-                background: '#fff', 
-                padding: 12, 
-                borderRadius: 12, 
+
+              <div style={{
+                background: '#fff',
+                padding: 12,
+                borderRadius: 12,
                 display: 'inline-block',
                 border: '1px solid #f0f0f0',
                 marginBottom: 20
               }}>
-                <img 
-                  src="/whatsapp-qr.png" 
-                  alt="WhatsApp QR Code" 
+                <img
+                  src="/whatsapp-qr.png"
+                  alt="WhatsApp QR Code"
                   style={{ width: 220, height: 220 }}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://wa.me/5582994440333?text=vincular`;
+                    (e.target as HTMLImageElement).src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://wa.me/558288094143?text=vincular`;
                   }}
                 />
               </div>
 
               <div style={{ marginBottom: 24 }}>
-                <Button 
-                  type="primary" 
-                  size="large" 
+                <Button
+                  type="primary"
+                  size="large"
                   icon={<WhatsAppOutlined />}
-                  href={`https://wa.me/5582994440333?text=vincular`} 
+                  href={`https://wa.me/558288094143?text=vincular`}
                   target="_blank"
-                  style={{ 
-                    borderRadius: 8, 
-                    background: '#25D366', 
+                  style={{
+                    borderRadius: 8,
+                    background: '#25D366',
                     borderColor: '#25D366',
                     padding: '8px 30px',
                     height: 'auto',
@@ -468,8 +468,8 @@ const Integrations = () => {
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '24px 0', background: '#f5f5f5', borderRadius: 12, marginBottom: 24 }}>
-                  <Button 
-                    onClick={handleTelegramLinkCode} 
+                  <Button
+                    onClick={handleTelegramLinkCode}
                     loading={telegramCodeLoading}
                     type="primary"
                     style={{ background: '#6C5DD3', borderColor: '#6C5DD3', borderRadius: 8 }}

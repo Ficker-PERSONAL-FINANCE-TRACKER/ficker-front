@@ -141,7 +141,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
 
   return (
     <Col xs={24} lg={24} style={{ width: "100%" }}>
-      <div style={{ width: "100%", overflowX: isCardDetailTable ? "auto" : "visible", paddingBottom: isCardDetailTable ? 8 : 0 }}>
+      <div className={isCardDetailTable ? styles.tableContainer : undefined} style={{ width: "100%", overflowX: isCardDetailTable ? "auto" : "visible" }}>
         <table className={styles.table} style={isCardDetailTable ? { minWidth: 860 } : undefined}>
 
           <thead className={styles.thead}>

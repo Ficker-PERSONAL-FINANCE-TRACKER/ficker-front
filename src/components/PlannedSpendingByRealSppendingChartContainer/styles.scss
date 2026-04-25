@@ -10,4 +10,8 @@
         margin-top: 0;
         margin-bottom: 20px;
     }
+
+    @media (max-width: 768px) {
+        padding: 16px;
+    }
 }

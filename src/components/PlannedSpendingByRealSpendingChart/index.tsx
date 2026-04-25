@@ -13,6 +13,7 @@ import {
   Customized
 } from "recharts";
 import { FinanceDataPoint } from "../PlannedSpendingByRealSppendingChartContainer";
+import useMediaQuery from "use-media-antd-query";
 
 interface PlannedSpendingByRealSpendingChartProps {
   data: FinanceDataPoint[];
@@ -78,24 +79,27 @@ const ConnectingArrows = (props: any) => {
 };
 
 const PlannedSpendingByRealSpendingChart = ({ data }: PlannedSpendingByRealSpendingChartProps) => {
+  const colSize = useMediaQuery();
+  const isMobile = colSize === "xs" || colSize === "sm";
+
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={isMobile ? 240 : 280}>
       <BarChart
         data={data}
         margin={{
           top: 40,
-          right: 32,
+          right: isMobile ? 10 : 32,
           bottom: 20,
           left: 0,
         }}
-        barGap={-32}
+        barGap={isMobile ? -20 : -32}
       >
         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis
           dataKey="name"
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "#808191", fontSize: 11 }}
+          tick={{ fill: "#808191", fontSize: isMobile ? 10 : 11 }}
         />
         <YAxis hide />
         <Tooltip
@@ -104,9 +108,9 @@ const PlannedSpendingByRealSpendingChart = ({ data }: PlannedSpendingByRealSpend
             borderRadius: "16px", 
             border: "1px solid #f3f4f8", 
             boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-            padding: "12px"
+            padding: isMobile ? "8px" : "12px"
           }}
-          labelStyle={{ fontWeight: 800, color: "#11142d", marginBottom: "8px" }}
+          labelStyle={{ fontWeight: 800, color: "#11142d", marginBottom: "4px" }}
         />
         <Legend 
           verticalAlign="bottom" 
@@ -114,13 +118,13 @@ const PlannedSpendingByRealSpendingChart = ({ data }: PlannedSpendingByRealSpend
           iconType="circle" 
           iconSize={8}
           wrapperStyle={{ paddingTop: "20px" }}
-          formatter={(value) => <span style={{ color: "#808191", fontSize: "11px", fontWeight: 600 }}>{value}</span>}
+          formatter={(value) => <span style={{ color: "#808191", fontSize: isMobile ? "10px" : "11px", fontWeight: 600 }}>{value}</span>}
         />
         
         <Bar 
           dataKey="planejado" 
           name="Planejado" 
-          barSize={32} 
+          barSize={isMobile ? 20 : 32} 
           fill="#A197F0" 
           radius={[6, 6, 0, 0]} 
           isAnimationActive={false}
@@ -129,7 +133,7 @@ const PlannedSpendingByRealSpendingChart = ({ data }: PlannedSpendingByRealSpend
         <Bar 
           dataKey="real" 
           name="Real" 
-          barSize={12} 
+          barSize={isMobile ? 8 : 12} 
           radius={[4, 4, 0, 0]}
           isAnimationActive={false}
         >
