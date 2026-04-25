@@ -2,7 +2,7 @@
 import { getApiErrorMessage, request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space, Switch, ConfigProvider } from "antd";
-import ptBR from "antd/lib/locale/pt_BR";
+import ptBR from "antd/locale/pt_BR";
 import type { DatePickerProps } from "antd";
 import { useEffect, useState, useMemo } from "react";
 import dayjs from "dayjs";
