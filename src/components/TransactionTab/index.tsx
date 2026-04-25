@@ -1,4 +1,4 @@
-import { Col } from "antd";
+import { Col, Tooltip } from "antd";
 import styles from "./transactiontab.module.scss";
 import dayjs from "dayjs";
 import Image from "next/image";
@@ -22,6 +22,7 @@ import {
   WifiOutlined,
   ShoppingOutlined,
   TagsOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 
 interface TransactionTabProps {
@@ -80,6 +81,8 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
         label: "Compra no cartão",
         valueColor: "#eab308",
         signal: "-",
+        badgeBg: "#FFF7E6",
+        badgeColor: "#D48806",
       };
     }
 
@@ -91,7 +94,8 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
   };
 
   const getCategoryInfo = (transaction: ITransaction) => {
-    const desc = (transaction.category_description || "").toLowerCase();
+    const id = Number(transaction.category_id);
+    const description = (transaction.category_description || "").toLowerCase();
 
     if (transaction.is_invoice_payment) {
       return { icon: <TagsOutlined />, color: "#FF4D4F", bg: "#FFF1F0" };
@@ -101,24 +105,33 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
       return { icon: <ShoppingOutlined />, color: "#D48806", bg: "#FFF7E6" };
     }
 
-    if (transaction.type_id === 2) {
-      return { icon: <TagsOutlined />, color: "#FF4D4F", bg: "#FFF1F0" };
-    }
+    // Map by ID (Highest priority)
+    if (id === 1) return { icon: <DollarOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (id === 2) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (id === 3) return { icon: <WalletOutlined />, color: "#FFA940", bg: "#FFF7E6" };
+    if (id === 4) return { icon: <StarOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
+    if (id === 5) return { icon: <CarOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (id === 6) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (id === 7) return { icon: <CoffeeOutlined />, color: "#FF754C", bg: "#FFEBE6" };
+    if (id === 8) return { icon: <ThunderboltOutlined />, color: "#FFD700", bg: "#FFFBE6" };
+    if (id === 9) return { icon: <WifiOutlined />, color: "#8E82EF", bg: "#F5F3FF" };
+    if (id === 10) return { icon: <ShoppingOutlined />, color: "#FF4D4F", bg: "#FFF1F0" };
+    if (id === 11) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
 
-    if (desc.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A", bg: "#E6F7EF" };
-    if (desc.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
-    if (desc.includes("invest")) return { icon: <WalletOutlined />, color: "#FFA940", bg: "#FFF7E6" };
-    if (desc.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
+    // Fallback by description (for legacy or untracked IDs)
+    if (description.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (description.includes("invest")) return { icon: <WalletOutlined />, color: "#FFA940", bg: "#FFF7E6" };
+    if (description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
+    if (description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
+    if (description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C", bg: "#FFEBE6" };
+    if (description.includes("conta")) return { icon: <ThunderboltOutlined />, color: "#FFD700", bg: "#FFFBE6" };
+    if (description.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF", bg: "#F5F3FF" };
+    if (description.includes("compra")) return { icon: <ShoppingOutlined />, color: "#D48806", bg: "#FFF7E6" };
+    if (description.includes("projetos")) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
 
-    if (desc.includes("alimentação")) return { icon: <RestOutlined />, color: "#FFA940", bg: "#FFF7E6" };
-    if (desc.includes("casa")) return { icon: <HomeOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
-    if (desc.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
-    if (desc.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
-    if (desc.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C", bg: "#FFEBE6" };
-    if (desc.includes("conta")) return { icon: <ThunderboltOutlined />, color: "#FFD700", bg: "#FFFBE6" };
-    if (desc.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF", bg: "#F5F3FF" };
-    if (desc.includes("compra")) return { icon: <ShoppingOutlined />, color: "#D48806", bg: "#FFF7E6" };
-
+    // Default icon for custom categories
     return { icon: <TagsOutlined />, color: "#808191", bg: "#F8FAFC" };
   };
 
@@ -141,7 +154,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
 
   return (
     <Col xs={24} lg={24} style={{ width: "100%" }}>
-      <div className={isCardDetailTable ? styles.tableContainer : undefined} style={{ width: "100%", overflowX: isCardDetailTable ? "auto" : "visible" }}>
+      <div style={{ width: "100%", overflowX: isCardDetailTable ? "auto" : "visible", paddingBottom: isCardDetailTable ? 8 : 0 }}>
         <table className={styles.table} style={isCardDetailTable ? { minWidth: 860 } : undefined}>
 
           <thead className={styles.thead}>
@@ -192,7 +205,32 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
 
                     <td className={styles.tdDescription} style={isCardDetailTable ? { lineHeight: 1.35 } : undefined}>
                       <div>{transaction.transaction_description}</div>
-                      {typeId === 2 && <span className={styles.transactionKind}>{presentation.label}</span>}
+                      {typeId === 2 && (
+                        <span
+                          className={styles.transactionKind}
+                          style={
+                            (presentation as any).badgeBg
+                              ? {
+                                  backgroundColor: (presentation as any).badgeBg,
+                                  color: (presentation as any).badgeColor,
+                                  padding: "2px 10px",
+                                  borderRadius: "12px",
+                                  fontSize: "11px",
+                                  fontWeight: 600,
+                                  display: "none", // Oculto no mobile conforme pedido
+                                  marginTop: "4px",
+                                }
+                              : {
+                                  fontSize: "12px",
+                                  color: "#808191",
+                                  display: "none", // Oculto no mobile conforme pedido
+                                  marginTop: "2px",
+                                }
+                          }
+                        >
+                          {presentation.label}
+                        </span>
+                      )}
                     </td>
                     <td className={styles.tdDate} style={isCardDetailTable ? { whiteSpace: "nowrap" } : undefined}>
                       {dayjs(transaction.date).format("DD/MM/YYYY")}
@@ -213,23 +251,30 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                           minWidth: isCardDetailTable ? "0" : "100px",
                           justifyContent: "center",
                           width: "auto",
-                          whiteSpace: "nowrap",
-                          maxWidth: isCardDetailTable ? "100%" : "none",
                           boxSizing: "border-box",
                         }}
                       >
                         {categoryInfo.icon}
-                        {transaction.category_description || "-"}
+                        <span>{transaction.category_description || "-"}</span>
                       </div>
                     </td>
 
                     <td className={styles.tdValue} style={{ color: presentation.valueColor, whiteSpace: "nowrap" }}>
-                      {presentation.signal}
-                      {formatCurrency(transaction.transaction_value)}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                        <span>
+                          {presentation.signal}
+                          {formatCurrency(transaction.transaction_value)}
+                        </span>
+                        {transaction.is_credit_card_purchase && (
+                          <Tooltip title="Compra no cartão: este valor será cobrado na fatura e não deduz do saldo atual imediatamente.">
+                            <InfoCircleOutlined style={{ fontSize: "14px", cursor: "help" }} />
+                          </Tooltip>
+                        )}
+                      </div>
                     </td>
 
                     {typeId === 2 && (
-                      <td>
+                      <td style={{ gridArea: "payment" }}>
                         <div
                           style={{
                             backgroundColor: paymentMethodInfo.bg,
@@ -253,7 +298,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                     )}
 
                     {typeId === 3 && (
-                      <td>
+                      <td style={{ gridArea: "installments" }}>
                         {transaction.installments > 1 ? (
                           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                             <span>{transaction.installments}x</span>
@@ -272,7 +317,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                             </button>
                           </div>
                         ) : (
-                          <span>-</span>
+                          <span style={{ fontSize: "12px", color: "#808191" }}>Sem parcelas</span>
                         )}
                       </td>
                     )}

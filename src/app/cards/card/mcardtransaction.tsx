@@ -1,25 +1,23 @@
 "use client";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
 import type { DatePickerProps } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import styles from "../../EnterTransaction/entertransaction.module.scss";
 import { 
   PlusOutlined, 
-  HomeOutlined, 
+  WalletOutlined,
+  DollarOutlined,
   CarOutlined, 
   MedicineBoxOutlined, 
-  SkinOutlined, 
   RocketOutlined, 
   ShoppingOutlined,
-  BookOutlined,
-  ToolOutlined,
   CoffeeOutlined,
   StarOutlined,
-  RestOutlined,
   ThunderboltOutlined,
-  WifiOutlined
+  WifiOutlined,
+  TagsOutlined
 } from "@ant-design/icons";
 interface CardTransactionModalProps {
   isModalOpen: boolean;
@@ -60,20 +58,42 @@ const extractCategoriesFromResponse = (response: any): Category[] => {
   return [];
 };
 
+const getCategoryIcon = (category: any) => {
+  const id = Number(category?.id);
+  const description = category?.category_description?.toLowerCase() || "";
+
+  if (id === 1 || description.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A" };
+  if (id === 2 || description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+  if (id === 3 || description.includes("investimentos")) return { icon: <WalletOutlined />, color: "#FFA940" };
+  if (id === 4 || description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF" };
+  if (id === 5 || description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3" };
+  if (id === 6 || description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A" };
+  if (id === 7 || description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C" };
+  if (id === 8 || description.includes("contas")) return { icon: <ThunderboltOutlined />, color: "#FFD700" };
+  if (id === 9 || description.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF" };
+  if (id === 10 || description.includes("compras")) return { icon: <ShoppingOutlined />, color: "#FF4D4F" };
+  if (id === 11 || description.includes("projetos")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+
+  return { icon: <TagsOutlined />, color: "#808191" };
+};
+
 export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: CardTransactionModalProps) => {
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [form] = Form.useForm();
 
   const defaultCategories = [
-    { id: 'exp_food', label: 'Alimentação', icon: <RestOutlined />, color: '#FFA940' },
-    { id: 'exp_home', label: 'Casa', icon: <HomeOutlined />, color: '#00B0FF' },
-    { id: 'exp_transp', label: 'Transporte', icon: <CarOutlined />, color: '#6C5DD3' },
-    { id: 'exp_health', label: 'Saúde', icon: <MedicineBoxOutlined />, color: '#00875A' },
-    { id: 'exp_leisure', label: 'Lazer', icon: <CoffeeOutlined />, color: '#FF754C' },
-    { id: 'exp_bills', label: 'Contas', icon: <ThunderboltOutlined />, color: '#FFD700' },
-    { id: 'exp_internet', label: 'Internet', icon: <WifiOutlined />, color: '#8E82EF' },
-    { id: 'exp_shop', label: 'Compras', icon: <ShoppingOutlined />, color: '#FF4D4F' },
+    { id: '1', label: 'Salário', icon: <DollarOutlined />, color: '#00875A' },
+    { id: '2', label: 'Freelance', icon: <RocketOutlined />, color: '#6C5DD3' },
+    { id: '3', label: 'Investimentos', icon: <WalletOutlined />, color: '#FFA940' },
+    { id: '4', label: 'Renda Extra', icon: <StarOutlined />, color: '#00B0FF' },
+    { id: '5', label: 'Transporte', icon: <CarOutlined />, color: '#6C5DD3' },
+    { id: '6', label: 'Saúde', icon: <MedicineBoxOutlined />, color: '#00875A' },
+    { id: '7', label: 'Lazer', icon: <CoffeeOutlined />, color: '#FF754C' },
+    { id: '8', label: 'Contas', icon: <ThunderboltOutlined />, color: '#FFD700' },
+    { id: '9', label: 'Internet', icon: <WifiOutlined />, color: '#8E82EF' },
+    { id: '10', label: 'Compras', icon: <ShoppingOutlined />, color: '#FF4D4F' },
+    { id: '11', label: 'Projetos', icon: <RocketOutlined />, color: '#6C5DD3' },
   ];
 
   const handleCancel = () => {
@@ -97,23 +117,12 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
   const resolveCategoryPayload = (values: Record<string, any>) => {
     const rawCategoryId = values.category_id;
 
-    const selectedDefault = defaultCategories.find((category) => category.id === rawCategoryId);
+    const selectedDefault = defaultCategories.find((category) => category.id === String(rawCategoryId));
 
     if (selectedDefault) {
-      const existingCategory = categories.find(
-        (category) => normalizeCategoryName(category.category_description) === normalizeCategoryName(selectedDefault.label)
-      );
-
-      if (existingCategory) {
-        return {
-          category_id: existingCategory.id,
-          category_description: undefined,
-        };
-      }
-
       return {
-        category_id: 0,
-        category_description: selectedDefault.label,
+        category_id: Number(selectedDefault.id),
+        category_description: undefined,
       };
     }
 
@@ -143,12 +152,21 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
       message.success("Transação adicionada com sucesso!");
       handleCancel();
     } catch (errorInfo) {
-      message.error("Erro ao adicionar transação!");
+      message.error(getApiErrorMessage(errorInfo));
     }
   };
   const onChange: DatePickerProps["onChange"] = (date, dateString) => {
     console.log(date, dateString);
   };
+
+  const filteredSuggestions = useMemo(() => {
+    return defaultCategories.filter(suggestion => {
+      return !categories.some(userCat => 
+        userCat.id === Number(suggestion.id) || 
+        normalizeCategoryName(userCat.category_description) === normalizeCategoryName(suggestion.label)
+      );
+    });
+  }, [categories]);
 
   useEffect(() => {
     getCategories();
@@ -160,14 +178,14 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
       title="Nova Transação no Crédito"
       open={isModalOpen}
       onCancel={handleCancel}
+      onOk={() => form.submit()}
+      okText="Adicionar"
+      cancelText="Cancelar"
+      centered
       okButtonProps={{
         style: {
-          display: "none",
-        },
-      }}
-      cancelButtonProps={{
-        style: {
-          display: "none",
+          background: "#6C5DD3",
+          borderColor: "#6C5DD3",
         },
       }}
     >
@@ -227,8 +245,8 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
                   </Space>
                 </Select.Option>
                 
-                <Select.OptGroup label="Sugestões">
-                  {defaultCategories.map(cat => (
+                {/* <Select.OptGroup label="Sugestões">
+                  {filteredSuggestions.map(cat => (
                     <Select.Option key={cat.id} value={cat.id}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
@@ -236,15 +254,21 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
                       </Space>
                     </Select.Option>
                   ))}
-                </Select.OptGroup>
+                </Select.OptGroup> */}
 
                 {categories && categories.length > 0 && (
                   <Select.OptGroup label="Minhas categorias">
-                    {categories.map((category) => (
-                      <Select.Option key={category.id} value={category.id}>
-                        {category.category_description}
-                      </Select.Option>
-                    ))}
+                    {categories.map((category) => {
+                      const { icon, color } = getCategoryIcon(category);
+                      return (
+                        <Select.Option key={category.id} value={category.id}>
+                          <Space>
+                            <span style={{ color }}>{icon}</span>
+                            {category.category_description}
+                          </Space>
+                        </Select.Option>
+                      );
+                    })}
                   </Select.OptGroup>
                 )}
               </Select>
@@ -286,14 +310,6 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
             <Input className={styles.input} placeholder="R$" data-testid="value" />
           </Form.Item>
         </Col>
-        <Row>
-          <Button className={styles.modalButtonWhite} onClick={handleCancel}>
-            Cancelar
-          </Button>
-          <Button htmlType="submit" className={styles.modalButtonPurple}>
-            Adicionar
-          </Button>
-        </Row>
       </Form>
     </Modal>
   );

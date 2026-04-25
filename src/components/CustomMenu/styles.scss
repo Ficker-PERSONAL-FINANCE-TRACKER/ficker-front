@@ -120,6 +120,10 @@
 }
 
 @media (max-width: 768px) {
+  body.has-mobile-header {
+    padding-top: 60px;
+  }
+
   .burger-icon {
     display: flex;
   }

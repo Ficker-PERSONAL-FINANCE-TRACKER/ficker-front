@@ -3,13 +3,14 @@ import { CardInformation } from "@/components/CardInformation";
 import { TransactionTab } from "@/components/TransactionTab";
 import { request } from "@/service/api";
 import { Alert, Col, Row } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import styles from "../../EnterTransaction/entertransaction.module.scss";
 import { CardTransactionModal } from "./mcardtransaction";
 import { PayInvoiceModal } from "./payInvoiceModal";
 import { ITransaction } from "@/interfaces";
-import { CardFilter } from "../cardFilter";
+import { CardDetailFilter, type CardDetailFilters } from "./detailFilter";
 import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
+import dayjs from "dayjs";
 
 interface Card {
   best_day: number;
@@ -26,17 +27,19 @@ interface Card {
 
 interface CardProps {
   card: Card;
+  filters: CardDetailFilters;
+  setFilters: (filters: CardDetailFilters) => void;
+  appliedFiltersLabels: string[];
 }
 
-function CardPage({ card }: CardProps) {
+function CardPage({ card, filters, setFilters, appliedFiltersLabels }: CardProps) {
+  const now = new Date();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isOutputModalOpen, setIsOutputModalOpen] = useState<boolean>(false);
   const [totalValue, setTotalValue] = useState<number>(0);
   const [cardTranscations, setCardTransactions] = useState<ITransaction[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [invoicePayDay, setInvoicePayDay] = useState<string | null>(card.invoice_pay_day ?? null);
-  const [filters, setFilters] = useState<{ flag_id?: number }>({});
-  const [flags, setFlags] = useState<{ id: number; flag_description: string }[]>([]);
   const isArchived = Boolean(card.archived_at);
 
   const getCardTotalValue = async () => {
@@ -53,7 +56,7 @@ function CardPage({ card }: CardProps) {
   const getCardData = async () => {
     try {
       const params = new URLSearchParams();
-      if (filters.flag_id) params.set("flag_id", String(filters.flag_id));
+      if (filters.category_id) params.set("category_id", String(filters.category_id));
       
       const queryString = params.toString();
       const endpoint = `transaction/card/${card.id}${queryString ? `?${queryString}` : ""}`;
@@ -70,13 +73,6 @@ function CardPage({ card }: CardProps) {
     } catch (error) {}
   };
 
-  const getFlags = async () => {
-    try {
-      const response = await request({ method: "GET", endpoint: "flags" });
-      setFlags(response?.data?.data?.flags ?? []);
-    } catch (error) {}
-  };
-
   const openModal = () => {
     setIsModalOpen(true);
   };
@@ -86,13 +82,27 @@ function CardPage({ card }: CardProps) {
   };
 
   useEffect(() => {
-    getFlags();
-  }, []);
-
-  useEffect(() => {
     getCardData();
     getCardTotalValue();
   }, [isModalOpen, isOutputModalOpen, filters]);
+
+  const filteredTransactions = useMemo(() => {
+    return cardTranscations.filter((transaction) => {
+      const transactionDate = dayjs(transaction.date);
+
+      if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+        const start = dayjs(filters.dateFrom).startOf("day");
+        const end = dayjs(filters.dateTo).endOf("day");
+
+        return (
+          (transactionDate.isAfter(start) || transactionDate.isSame(start, "day")) &&
+          (transactionDate.isBefore(end) || transactionDate.isSame(end, "day"))
+        );
+      }
+
+      return transactionDate.month() + 1 === filters.month && transactionDate.year() === filters.year;
+    });
+  }, [filters, cardTranscations]);
 
   return (
     <Col xl={24}>
@@ -108,23 +118,20 @@ function CardPage({ card }: CardProps) {
         }}
       />
       <Row gutter={[24, 24]} style={{ padding: "0 18px", paddingLeft: 0 }}>
-        <Col xl={18} lg={16} md={24} xs={24} style={{ paddingLeft: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12, gap: 12, alignItems: 'center' }}>
-            <CardFilter filters={filters} onChange={setFilters} />
-          </div>
-          {filters.flag_id && (
+        <Col xl={18} lg={16} md={24} xs={24} style={{ paddingLeft: 0 }} className={styles.tableResume}>
+          {appliedFiltersLabels.length > 0 && (
             <div style={{ marginBottom: 16 }}>
-              <AppliedFiltersBar filters={[`Bandeira: ${flags.find(f => f.id === filters.flag_id)?.flag_description || "Selecionada"}`]} />
+              <AppliedFiltersBar filters={appliedFiltersLabels} />
             </div>
           )}
           <TransactionTab
-            data={cardTranscations}
+            data={filteredTransactions}
             typeId={3}
             editModal={isEditModalOpen}
             setEditModal={setIsEditModalOpen}
           />
         </Col>
-        <Col xl={6} lg={8} md={24} xs={24}>
+        <Col xl={6} lg={8} md={24} xs={24} className={styles.cardInfo}>
           <div style={{ padding: 0, width: "100%", marginTop: "12px" }}>
             <CardInformation
               card={{ ...card, invoice_pay_day: invoicePayDay }}
@@ -162,3 +169,5 @@ function CardPage({ card }: CardProps) {
 }
 
 export default CardPage;
+
+

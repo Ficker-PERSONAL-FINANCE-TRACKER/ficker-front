@@ -1,13 +1,13 @@
 .pageContent {
   flex: 1;
-  padding: 30px 40px;
+  padding: 20px 30px;
   overflow-x: hidden;
 }
 
 .pageHeader {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -34,8 +34,12 @@
   border-radius: 8px;
   height: 40px;
   padding: 0 18px;
-  font-weight: 400;
+  font-weight: 600;
   box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .filterButton:hover,
@@ -506,10 +510,22 @@
   .pageHeader {
     flex-direction: column;
     align-items: stretch;
+    gap: 20px;
   }
 
   .headerActions {
     justify-content: flex-start;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .filterSummary {
+    margin-bottom: 4px;
+  }
+
+  .filterButton {
+    width: 100%;
   }
 
   .filterFieldsRow,
@@ -519,8 +535,15 @@
   .analysisGrid,
   .analysisGridCompact,
   .cardCategoryChartsGrid,
-  .cardInsightMetrics {
-    grid-template-columns: 1fr;
+  .cardInsightMetrics,
+  .cardChartsGrid {
+    grid-template-columns: 1fr !important;
+    width: 100%;
+  }
+
+  .chartContainer {
+    width: 100%;
+    overflow-x: auto;
   }
 
   .metricIndicator {

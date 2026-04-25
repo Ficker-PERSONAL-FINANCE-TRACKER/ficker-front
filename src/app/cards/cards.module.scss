@@ -63,6 +63,16 @@
   }
 }
 
+.gridPadding{
+  padding: 0 30px;
+}
+
+@media (max-width: 768px) {
+  .gridPadding{
+    padding: 0 20px;
+  }
+}
+
 .gridArea {
   padding: 10px 30px 20px;
 }
@@ -290,17 +300,52 @@
   }
 }
 
-@media (max-width: 767px) {
+.gridTitle{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+
+
+@media (max-width: 768px) {
+
+  .gridTitle{
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
   .pageShell {
     width: 100%;
   }
 
-  .buttonsArea {
-    width: 100%;
+  .titleArea {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
   }
 
+  .buttonsArea > div,
+  .buttonsArea > button {
+    width: auto;
+    min-width: 120px;
+  }
+
+  .buttonsArea {
+    width: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+
+
   .gridArea,
-  .titleArea,
   .archivedSection {
     padding-left: 20px;
     padding-right: 20px;
@@ -313,6 +358,35 @@
   }
 
   .button {
+    width: 100%;
+  }
+}
+
+.toggleWrapper {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0 30px;
+}
+
+@media (max-width: 768px) {
+  .toggleWrapper {
+    padding: 0 20px;
+  }
+}
+
+.tableResume{
+  padding-left: 0;
+}
+
+
+
+@media (max-width: 768px) {
+  .tableResume {
+    order: 2 !important;
+  }
+
+  .cardInfo {
+    order: 1 !important;
     width: 100%;
   }
 }

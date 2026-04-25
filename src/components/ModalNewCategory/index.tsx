@@ -1,5 +1,5 @@
 "use client";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import { Modal, Col, Row, Select, Form, Button, Input, message } from "antd";
 import { useEffect } from "react";
 import styles from "@/app/EnterTransaction/entertransaction.module.scss";
@@ -32,7 +32,7 @@ export const ModalNewCategory = ({ isModalOpen, setIsModalOpen, onCategoryCreate
       onCategoryCreated?.();
       handleCancel();
     } catch (errorInfo) {
-      message.error("Erro ao adicionar categoria!");
+      message.error(getApiErrorMessage(errorInfo));
     }
   };
 
@@ -45,14 +45,14 @@ export const ModalNewCategory = ({ isModalOpen, setIsModalOpen, onCategoryCreate
       title="Nova Categoria"
       open={isModalOpen}
       onCancel={handleCancel}
+      onOk={() => form.submit()}
+      okText="Adicionar"
+      cancelText="Cancelar"
+      centered
       okButtonProps={{
         style: {
-          display: "none",
-        },
-      }}
-      cancelButtonProps={{
-        style: {
-          display: "none",
+          background: "#6C5DD3",
+          borderColor: "#6C5DD3",
         },
       }}
     >
@@ -96,22 +96,6 @@ export const ModalNewCategory = ({ isModalOpen, setIsModalOpen, onCategoryCreate
             </Select>
           </Form.Item>
         </Col>
-        <Row
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <Button className={styles.modalButtonWhite} onClick={handleCancel}>
-              Cancelar
-            </Button>
-            <Button htmlType="submit" className={styles.modalButtonPurple}>
-              Adicionar
-            </Button>
-          </div>
-        </Row>
       </Form>
     </Modal>
   );

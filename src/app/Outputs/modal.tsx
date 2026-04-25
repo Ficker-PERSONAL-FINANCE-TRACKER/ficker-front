@@ -1,26 +1,23 @@
 "use client";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
-import type { DatePickerProps } from "antd";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import dayjs from "dayjs";
 import { Card } from "@/interfaces";
 import {
   PlusOutlined,
-  HomeOutlined,
   CarOutlined,
   MedicineBoxOutlined,
-  SkinOutlined,
   RocketOutlined,
   ShoppingOutlined,
-  BookOutlined,
-  ToolOutlined,
   CoffeeOutlined,
   StarOutlined,
-  RestOutlined,
   ThunderboltOutlined,
-  WifiOutlined
+  WifiOutlined,
+  TagsOutlined,
+  WalletOutlined,
+  DollarOutlined
 } from "@ant-design/icons";
 
 interface OutputModalProps {
@@ -45,15 +42,13 @@ interface SuggestedCategory {
 }
 
 const SUGGESTED_EXPENSE_CATEGORIES: SuggestedCategory[] = [
-  { key: "food", label: "Alimentação", icon: <RestOutlined />, color: "#FFA940" },
-  { key: "home", label: "Casa", icon: <HomeOutlined />, color: "#00B0FF" },
-  { key: "transport", label: "Transporte", icon: <CarOutlined />, color: "#6C5DD3" },
-  { key: "health", label: "Saúde", icon: <MedicineBoxOutlined />, color: "#00875A" },
-  { key: "leisure", label: "Lazer", icon: <CoffeeOutlined />, color: "#FF754C" },
-  { key: "bills", label: "Contas", icon: <ThunderboltOutlined />, color: "#FFD700" },
-  { key: "internet", label: "Internet", icon: <WifiOutlined />, color: "#8E82EF" },
-  { key: "shopping", label: "Compras", icon: <ShoppingOutlined />, color: "#FF4D4F" },
-  { key: "projects", label: "Projetos", icon: <RocketOutlined />, color: "#6C5DD3" },
+  { key: "5", label: "Transporte", icon: <CarOutlined />, color: "#6C5DD3" },
+  { key: "6", label: "Saúde", icon: <MedicineBoxOutlined />, color: "#00875A" },
+  { key: "7", label: "Lazer", icon: <CoffeeOutlined />, color: "#FF754C" },
+  { key: "8", label: "Contas", icon: <ThunderboltOutlined />, color: "#FFD700" },
+  { key: "9", label: "Internet", icon: <WifiOutlined />, color: "#8E82EF" },
+  { key: "10", label: "Compras", icon: <ShoppingOutlined />, color: "#FF4D4F" },
+  { key: "11", label: "Projetos", icon: <RocketOutlined />, color: "#6C5DD3" },
 ];
 
 const normalizeCategoryName = (value: string) =>
@@ -80,6 +75,25 @@ const extractCategoriesFromResponse = (response: any): Category[] => {
   }
 
   return [];
+};
+
+const getCategoryIcon = (category: any) => {
+  const id = Number(category?.id);
+  const description = category?.category_description?.toLowerCase() || "";
+
+  if (id === 1 || description.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A" };
+  if (id === 2 || description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+  if (id === 3 || description.includes("investimentos")) return { icon: <WalletOutlined />, color: "#FFA940" };
+  if (id === 4 || description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF" };
+  if (id === 5 || description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3" };
+  if (id === 6 || description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A" };
+  if (id === 7 || description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C" };
+  if (id === 8 || description.includes("contas")) return { icon: <ThunderboltOutlined />, color: "#FFD700" };
+  if (id === 9 || description.includes("internet")) return { icon: <WifiOutlined />, color: "#8E82EF" };
+  if (id === 10 || description.includes("compras")) return { icon: <ShoppingOutlined />, color: "#FF4D4F" };
+  if (id === 11 || description.includes("projetos")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
+
+  return { icon: <TagsOutlined />, color: "#808191" };
 };
 
 export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSuccess }: OutputModalProps) => {
@@ -137,21 +151,10 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
     const rawCategoryId = values.category_id;
 
     if (typeof rawCategoryId === "string" && rawCategoryId.startsWith("suggestion:")) {
-      const suggestionLabel = rawCategoryId.replace("suggestion:", "");
-      const existingCategory = categories.find(
-        (category) => normalizeCategoryName(category.category_description) === normalizeCategoryName(suggestionLabel)
-      );
-
-      if (existingCategory) {
-        return {
-          category_id: existingCategory.id,
-          category_description: undefined,
-        };
-      }
-
+      const categoryId = Number(rawCategoryId.replace("suggestion:", ""));
       return {
-        category_id: 0,
-        category_description: suggestionLabel,
+        category_id: categoryId,
+        category_description: undefined,
       };
     }
 
@@ -180,7 +183,7 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
       handleCancel();
       if (onSuccess) onSuccess();
     } catch (errorInfo) {
-      message.error("Erro ao adicionar transação!");
+      message.error(getApiErrorMessage(errorInfo));
     }
   };
 
@@ -205,19 +208,35 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
     }
   }, [isModalOpen, initialValues]);
 
+  const filteredSuggestions = useMemo(() => {
+    return SUGGESTED_EXPENSE_CATEGORIES.filter(suggestion => {
+      return !categories.some(userCat => 
+        userCat.id === Number(suggestion.key) || 
+        normalizeCategoryName(userCat.category_description) === normalizeCategoryName(suggestion.label)
+      );
+    });
+  }, [categories]);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    form.resetFields();
+    setShowDescriptionCategory(false);
+    getCategories();
+  }, [isModalOpen]);
+
   return (
     <Modal
       title="Nova saída"
       open={isModalOpen}
       onCancel={handleCancel}
+      onOk={() => form.submit()}
+      okText="Adicionar"
+      cancelText="Cancelar"
+      centered
       okButtonProps={{
         style: {
-          display: "none",
-        },
-      }}
-      cancelButtonProps={{
-        style: {
-          display: "none",
+          background: "#6C5DD3",
+          borderColor: "#6C5DD3",
         },
       }}
     >
@@ -234,7 +253,11 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
             setShowDescriptionCategory(shouldShowDescription);
 
             if (typeof nextValue === "string" && nextValue.startsWith("suggestion:")) {
-              form.setFieldsValue({ category_description: nextValue.replace("suggestion:", "") });
+              const categoryId = nextValue.replace("suggestion:", "");
+              const suggestion = SUGGESTED_EXPENSE_CATEGORIES.find(cat => cat.key === categoryId);
+              if (suggestion) {
+                form.setFieldsValue({ category_description: suggestion.label });
+              }
             }
 
             if (!shouldShowDescription && nextValue !== 0) {
@@ -349,24 +372,30 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
                   </Space>
                 </Select.Option>
 
-                <Select.OptGroup label="Sugestões">
-                  {SUGGESTED_EXPENSE_CATEGORIES.map((cat) => (
-                    <Select.Option key={cat.key} value={`suggestion:${cat.label}`}>
+                {/* <Select.OptGroup label="Sugestões">
+                  {filteredSuggestions.map((cat) => (
+                    <Select.Option key={cat.key} value={`suggestion:${cat.key}`}>
                       <Space>
                         <span style={{ color: cat.color }}>{cat.icon}</span>
                         <span>{cat.label}</span>
                       </Space>
                     </Select.Option>
                   ))}
-                </Select.OptGroup>
+                </Select.OptGroup> */}
 
                 {categories.length > 0 && (
                   <Select.OptGroup label="Minhas categorias">
-                    {categories.map((category) => (
-                      <Select.Option key={category.id} value={category.id}>
-                        {category.category_description}
-                      </Select.Option>
-                    ))}
+                    {categories.map((category) => {
+                      const { icon, color } = getCategoryIcon(category);
+                      return (
+                        <Select.Option key={category.id} value={category.id}>
+                          <Space>
+                            <span style={{ color }}>{icon}</span>
+                            {category.category_description}
+                          </Space>
+                        </Select.Option>
+                      );
+                    })}
                   </Select.OptGroup>
                 )}
               </Select>
@@ -393,14 +422,6 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
             <Input className={styles.input} placeholder="R$" data-testid="value" />
           </Form.Item>
         </Col>
-        <Row>
-          <Button className={styles.modalButtonWhite} onClick={handleCancel}>
-            Cancelar
-          </Button>
-          <Button htmlType="submit" className={styles.modalButtonPurple}>
-            Adicionar
-          </Button>
-        </Row>
       </Form>
     </Modal>
   );

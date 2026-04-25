@@ -102,28 +102,6 @@
   background-color: green;
 }
 
-.modalButtonPurple {
-  background-color: #6C5DD3;
-  color: #fff;
-  border-radius: 5px;
-  margin-left: 10px;
-  height: 40px;
-  width: 100px;
-  border: none;
-  cursor: pointer;
-}
-
-.modalButtonWhite {
-  background: #F8FAFC;
-  border: none;
-  color: #6C5DD3;
-  border-radius: 5px;
-  height: 40px;
-  width: 100px;
-  cursor: pointer;
-  font-family: "Manrope", sans-serif !important;
-}
-
 @media (max-width: 767.9px) {
   .thead {
     display: none;
@@ -166,17 +144,29 @@
 }
 
 .secondaryLink {
-  border: none;
+  border: 0 !important;
   height: 40px;
   width: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: transform 0.2s ease;
+  padding: 0 !important;
+  outline: none !important;
 
-.secondaryLink:hover {
-  background-color: #eaeaea;
-  border-radius: 50%;
+  &:hover {
+    background: transparent !important;
+    transform: scale(1.2);
+    box-shadow: none !important;
+    border: 0 !important;
+    outline: none !important;
+  }
+
+  &::after {
+    display: none !important;
+  }
 }
 
 .contentArea {
@@ -184,9 +174,24 @@
 }
 
 .buttonsArea {
-  display: block;
-  width: 400px;
+    width: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
+@media (max-width: 768px) {
+  .buttonsArea {
+    width: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
+
 
 .titleArea {
   padding: 20px 30px;
@@ -200,5 +205,36 @@
 
   .buttonsArea {
     display: flex;
+  }
+}
+
+@media (max-width: 768px) {
+  .titleArea {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .buttonsArea > div,
+  .buttonsArea > button,
+  .buttonsArea > span {
+    width: auto;
+    min-width: 120px;
+  }
+
+  /* Specific fix for search field and buttons to be on second line */
+  .titleArea h2 {
+    margin-bottom: 8px;
+  }
+}
+
+.gridPadding{
+  padding: 0 30px;
+}
+
+@media (max-width: 768px) {
+  .gridPadding{
+    padding: 0 20px;
   }
 }
