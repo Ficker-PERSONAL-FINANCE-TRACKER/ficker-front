@@ -6,8 +6,10 @@
 }
 
 .pageContent {
-  flex: 1;
-  padding: 28px 32px 36px;
+  width: 90vw;
+  flex: 1 1 0%;
+  padding: 20px 30px 10px;
+  overflow-x: hidden;
 }
 
 .pageHeader {
@@ -15,14 +17,14 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .pageTitle {
-  margin: 0 0 6px;
   color: #11142d;
   font-size: 1.5rem;
   font-weight: 700;
+  margin-bottom: 6px;
 }
 
 .pageSubtitle {
@@ -294,9 +296,10 @@
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 768px) {
   .pageContent {
-    padding: 24px 20px 28px;
+    padding: 20px;
+    width: 100%;
   }
 
   .sectionHeader {
@@ -330,7 +333,7 @@
 
 @media (max-width: 640px) {
   .pageContent {
-    padding: 20px 16px 24px;
+    padding: 20px;
   }
 
   .savedObjectiveHeader {

@@ -1,6 +1,7 @@
 .pageContent {
-  flex: 1;
-  padding: 20px 30px;
+  width: 90vw;
+  flex: 1 1 0%;
+  padding: 20px 30px 10px;
   overflow-x: hidden;
 }
 
@@ -9,7 +10,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .headerActions {
@@ -54,9 +55,9 @@
 }
 
 .pageTitle {
-  margin: 0;
   font-weight: 700;
   font-size: 1.5rem;
+  margin-bottom: 6px;
 }
 
 .pageSubtitle {
@@ -502,9 +503,10 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .pageContent {
-    padding: 24px 20px;
+    padding: 20px;
+    width: 100%;
   }
 
   .pageHeader {
