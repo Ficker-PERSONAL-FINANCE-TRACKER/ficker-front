@@ -7,22 +7,13 @@ const { Title } = Typography;
 interface CardStepProps {
   form: any;
   cardsData?: any[];
+  flags?: any[];
   onSkip?: () => void;
 }
 
-const FLAGS = [
-  { id: 1, name: "Mastercard" },
-  { id: 2, name: "Visa" },
-  { id: 3, name: "Hipercard" },
-  { id: 4, name: "Elo" },
-  { id: 5, name: "Alelo" },
-  { id: 6, name: "American Express" },
-  { id: 7, name: "Diners Club" },
-];
-
 const DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
 
-export const CardStep: React.FC<CardStepProps> = ({ form, onSkip }) => {
+export const CardStep: React.FC<CardStepProps> = ({ form, flags = [] }) => {
   return (
     <div className={styles.stepContent}>
       <Title level={4} className={styles.stepTitle}>Qual é o seu cartão de crédito?</Title>
@@ -33,9 +24,9 @@ export const CardStep: React.FC<CardStepProps> = ({ form, onSkip }) => {
           rules={[{ required: true, message: "Informe a bandeira" }]}
         >
           <Select placeholder="Selecione" className={styles.inputField}>
-            {FLAGS.map((flag) => (
-              <Select.Option key={flag.id} value={flag.id}>
-                {flag.name}
+            {flags.map((flag) => (
+              <Select.Option key={flag.id} value={Number(flag.id)}>
+                {flag.flag_description}
               </Select.Option>
             ))}
           </Select>

@@ -29,11 +29,22 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
 
   const [categories, setCategories] = useState<any[]>([]);
   const [cardsData, setCardsData] = useState<any[]>([]);
+  const [flags, setFlags] = useState<any[]>([]);
   const [objectivesData, setObjectivesData] = useState<any[]>([]);
+  const [shouldSubmitCard, setShouldSubmitCard] = useState(false);
+  const [submittedSignatures, setSubmittedSignatures] = useState<Record<string, string>>({});
+  const [salaryDraft, setSalaryDraft] = useState<Record<string, any> | null>(null);
+  const [goalDraft, setGoalDraft] = useState<Record<string, any> | null>(null);
+  const [cardDraft, setCardDraft] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     if (open) {
       setCurrentStep(0);
+      setShouldSubmitCard(false);
+      setSubmittedSignatures({});
+      setSalaryDraft(null);
+      setGoalDraft(null);
+      setCardDraft(null);
       loadInitialData();
     }
   }, [open]);
@@ -74,6 +85,13 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     }
 
     try {
+      const { data } = await request({ method: "GET", endpoint: "flags" });
+      setFlags(data?.data?.flags || data?.flags || []);
+    } catch {
+      console.log("No flags data yet");
+    }
+
+    try {
       const { data } = await request({ method: "GET", endpoint: "objectives" });
       if (data?.data?.objectives) {
         setObjectivesData(data.data.objectives);
@@ -111,27 +129,40 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     };
   };
 
+  const buildSalaryPayload = (values: Record<string, any>) => {
+    const formattedDate = values.date ? values.date.format("YYYY-MM-DD") : new Date().toISOString().split("T")[0];
+    const categoryPayload = resolveCategoryPayload(values);
+
+    return {
+      payload: {
+        transaction_description: values.description,
+        ...categoryPayload,
+        date: formattedDate,
+        type_id: 1,
+        transaction_value: String(values.transaction_value),
+        is_recurring: values.is_recurring || false,
+      },
+      referenceDate: formattedDate,
+    };
+  };
+
+  const buildGoalPayload = (values: Record<string, any>, referenceDate: string) => ({
+    planned_spending: values.planned_spending,
+    reference_date: referenceDate,
+  });
+
+  const buildCardPayload = (values: Record<string, any>) => ({
+    card_description: values.card_description,
+    flag_id: Number(values.flag_id),
+    expiration: Number(values.expiration),
+    closure: Number(values.closure),
+  });
+
   const handleSaveSalary = async () => {
     setLoading(true);
     try {
       const values = await formSalary.validateFields();
-      
-      const formattedDate = values.date ? values.date.format("YYYY-MM-DD") : new Date().toISOString().split("T")[0];
-      const categoryPayload = resolveCategoryPayload(values);
-
-      await request({
-        method: "POST",
-        endpoint: "transaction/store",
-        data: {
-          transaction_description: values.description,
-          ...categoryPayload,
-          date: formattedDate,
-          type_id: 1,
-          transaction_value: String(values.transaction_value),
-          is_recurring: values.is_recurring || false,
-        },
-      });
-      message.success("Entrada registrada com sucesso!");
+      setSalaryDraft(buildSalaryPayload(values));
       setCurrentStep(1);
     } catch (error: any) {
       message.error(getApiErrorMessage(error));
@@ -144,14 +175,8 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     setLoading(true);
     try {
       const values = await formGoal.validateFields();
-      await request({
-        method: "POST",
-        endpoint: "spending/store",
-        data: {
-          planned_spending: values.planned_spending,
-        },
-      });
-      message.success("Meta de gastos configurada com sucesso!");
+      const salaryData = salaryDraft ?? buildSalaryPayload(await formSalary.validateFields());
+      setGoalDraft(buildGoalPayload(values, salaryData.referenceDate));
       setCurrentStep(2);
     } catch (error: any) {
       message.error(getApiErrorMessage(error));
@@ -164,20 +189,8 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     setLoading(true);
     try {
       const values = await formCard.validateFields();
-      if (values.card_description && values.flag_id) {
-        await request({
-          method: "POST",
-          endpoint: "card",
-          data: {
-            card_description: values.card_description,
-            flag_id: Number(values.flag_id),
-            expiration: Number(values.expiration),
-            closure: Number(values.closure),
-          },
-        });
-        message.success("Cartão adicionado com sucesso!");
-        loadInitialData();
-      }
+      setCardDraft(buildCardPayload(values));
+      setShouldSubmitCard(true);
       setCurrentStep(3);
     } catch (error: any) {
       message.error(getApiErrorMessage(error));
@@ -190,22 +203,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     setLoading(true);
     try {
       const values = await formObjective.validateFields();
-      if (values.name && values.total_value) {
-        await request({
-          method: "POST",
-          endpoint: "objectives",
-          data: {
-            type: "item",
-            name: values.name,
-            current_saved: Number(values.current_saved || 0),
-            total_value: Number(values.total_value || 0),
-            target_year: Number(values.target_year),
-            target_month: Number(values.target_month),
-          },
-        });
-        message.success("Objetivo adicionado com sucesso!");
-      }
-      await completeOnboarding();
+      await submitOnboarding(values);
     } catch (error: any) {
       message.error(getApiErrorMessage(error));
     } finally {
@@ -214,18 +212,9 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
   };
 
   const handleSkipObjective = async () => {
-    await completeOnboarding();
-  };
-
-  const completeOnboarding = async () => {
     setLoading(true);
     try {
-      await request({
-        method: "POST",
-        endpoint: "onboarding/complete",
-      });
-      message.success("Configuração inicial concluída!");
-      onComplete();
+      await submitOnboarding(null);
     } catch (error: any) {
       message.error(getApiErrorMessage(error));
     } finally {
@@ -233,7 +222,58 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     }
   };
 
+  const submitIfNeeded = async (key: string, endpoint: string, data: Record<string, any>) => {
+    const signature = JSON.stringify(data);
+
+    if (submittedSignatures[key] === signature) {
+      return;
+    }
+
+    await request({
+      method: "POST",
+      endpoint,
+      data,
+    });
+    setSubmittedSignatures((current) => ({
+      ...current,
+      [key]: signature,
+    }));
+  };
+
+  const submitOnboarding = async (objectiveValues: Record<string, any> | null) => {
+    const salaryData = salaryDraft ?? buildSalaryPayload(await formSalary.validateFields());
+    const goalData = goalDraft ?? buildGoalPayload(await formGoal.validateFields(), salaryData.referenceDate);
+
+    await submitIfNeeded("salary", "transaction/store", salaryData.payload);
+    await submitIfNeeded("goal", "spending/store", goalData);
+
+    if (shouldSubmitCard) {
+      const cardData = cardDraft ?? buildCardPayload(await formCard.validateFields());
+      await submitIfNeeded("card", "card", cardData);
+    }
+
+    if (objectiveValues?.name && objectiveValues?.total_value) {
+      await submitIfNeeded("objective", "objectives", {
+        type: "item",
+        name: objectiveValues.name,
+        current_saved: Number(objectiveValues.current_saved || 0),
+        total_value: Number(objectiveValues.total_value || 0),
+        target_year: Number(objectiveValues.target_year),
+        target_month: Number(objectiveValues.target_month),
+      });
+    }
+
+    await request({
+      method: "POST",
+      endpoint: "onboarding/complete",
+    });
+    message.success("Configuração inicial concluída!");
+    onComplete();
+  };
+
   const handleSkipCard = () => {
+    setShouldSubmitCard(false);
+    setCardDraft(null);
     setCurrentStep(3);
   };
 
@@ -247,6 +287,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     currentStep,
     loading,
     categories,
+    flags,
     showDescriptionCategory,
     setShowDescriptionCategory,
     formSalary,

@@ -3,7 +3,7 @@ import Image from "next/image";
 import styles from "./createaccount.module.scss";
 import Link from "next/link";
 import { useState } from "react";
-import { request } from "@/service/api";
+import { getApiErrorMessage, request } from "@/service/api";
 import { AxiosError } from "axios";
 import { message as msg, Alert } from "antd";
 
@@ -35,7 +35,8 @@ const CreateAccountPage = () => {
       return (window.location.href = "/");
     } catch (error) {
       if (error instanceof AxiosError) {
-        setErrors(error.response?.data?.errors || {});
+        const apiErrors = error.response?.data?.errors;
+        setErrors(apiErrors || { general: [getApiErrorMessage(error)] });
       } else {
         msg.error("Ops! Algo deu errado ao tentar se cadastrar.");
       }

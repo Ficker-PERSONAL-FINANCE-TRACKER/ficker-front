@@ -26,7 +26,6 @@ import {
   CreditCardOutlined,
   FallOutlined,
   ForwardOutlined,
-  HistoryOutlined,
   InfoCircleOutlined,
   LineChartOutlined,
   LockOutlined,
@@ -88,6 +87,8 @@ type AnalysisCard = {
   card_description: string;
   flag_description?: string | null;
   archived_at?: string | null;
+  closure_day?: number;
+  expiration_day?: number;
   current_invoice_pay_day?: string | null;
   current_invoice_closure_date?: string | null;
   current_invoice_original_total?: number;
@@ -117,6 +118,9 @@ type AnalysisCard = {
   paid_invoices_count_in_period?: number;
   current_invoice_total: number;
   open_invoice_total: number;
+  period_invoice_open_total?: number;
+  period_invoice_status?: string;
+  period_invoice_pay_day?: string | null;
   future_commitment_total: number;
   current_invoice_status: string;
   can_pay_current_invoice: boolean;
@@ -171,25 +175,12 @@ type AnalysisPaymentMethod = {
   total_value: number;
 };
 
-type AnalysisInvoice = {
-  card_id: number;
-  pay_day: string;
-  closure_date?: string | null;
-  invoice_total: number;
-  paid_total: number;
-  open_total: number;
-  is_paid: boolean;
-  paid_at?: string | null;
-  status: string;
-};
-
 type CardLifecycleItem = {
   id: number;
   archived_at?: string | null;
 };
 
 type CardCategoryCharts = Record<number, ChartSlice[]>;
-type CardInvoiceStatusSummary = Record<number, { paid: number; partial: number; noPayment: number }>;
 
 type ChartSlice = {
   name: string;
@@ -295,18 +286,6 @@ const buildPaymentMethodChartData = (methods: AnalysisPaymentMethod[]) =>
     })
     .filter((item): item is ChartSlice => item !== null);
 
-const normalizeInvoiceSummaryStatus = (status: string) => {
-  switch (status) {
-    case "paga":
-    case "paid":
-      return "paid" as const;
-    case "parcialmente_paga":
-      return "partial" as const;
-    default:
-      return "open" as const;
-  }
-};
-
 const Analysis = () => {
   const now = new Date();
   const [summary, setSummary] = useState<AnalysisSummary | null>(null);
@@ -317,7 +296,6 @@ const Analysis = () => {
   const [openingBalance, setOpeningBalance] = useState(0);
   const [categories, setCategories] = useState<AnalysisCategory[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<AnalysisPaymentMethod[]>([]);
-  const [invoices, setInvoices] = useState<AnalysisInvoice[]>([]);
   const [cardCategoryCharts, setCardCategoryCharts] = useState<CardCategoryCharts>({});
   const [loading, setLoading] = useState(true);
   const [categoryLens, setCategoryLens] = useState<"purchases" | "real" | "credit">("purchases");
@@ -368,7 +346,6 @@ const Analysis = () => {
           balanceTimelineResponse,
           transactionsResponse,
           categoriesResponse,
-          invoicesResponse,
           paymentMethodsResponse,
         ] = await Promise.all([
           request({ method: "GET", endpoint: `analysis/summary?${queryString}&t=${timestamp}` }),
@@ -379,7 +356,6 @@ const Analysis = () => {
           request({ method: "GET", endpoint: `analysis/timeline?${queryString}&group_by=${balanceTimelineGroupBy}&t=${timestamp}` }),
           request({ method: "GET", endpoint: `transaction/all?t=${timestamp}` }),
           request({ method: "GET", endpoint: `analysis/categories?${queryString}&t=${timestamp}` }),
-          request({ method: "GET", endpoint: `analysis/invoices?${queryString}&t=${timestamp}` }),
           request({ method: "GET", endpoint: `analysis/payment-methods?${queryString}&t=${timestamp}` }),
         ]);
 
@@ -431,7 +407,6 @@ const Analysis = () => {
         setBalanceTimelineSeries((balanceTimelineResponse.data?.data?.series ?? []) as AnalysisTimelinePoint[]);
         setOpeningBalance(calculatedOpeningBalance);
         setCategories((categoriesResponse.data?.data?.categories ?? []) as AnalysisCategory[]);
-        setInvoices((invoicesResponse.data?.data?.invoices ?? []) as AnalysisInvoice[]);
         setPaymentMethods((paymentMethodsResponse.data?.data?.payment_methods ?? []) as AnalysisPaymentMethod[]);
         setCardCategoryCharts(Object.fromEntries(cardCategoryEntries));
       } catch (error) {
@@ -443,7 +418,6 @@ const Analysis = () => {
         setBalanceTimelineSeries([]);
         setOpeningBalance(0);
         setCategories([]);
-        setInvoices([]);
         setPaymentMethods([]);
         setCardCategoryCharts({});
       } finally {
@@ -455,24 +429,14 @@ const Analysis = () => {
   }, [balancePeriodStart, balanceTimelineGroupBy, queryString, timelineGroupBy]);
 
   const cardMetrics = useMemo(() => {
-    const currentInvoiceTotal = cards.reduce((acc, card) => acc + Number(card.current_invoice_total || 0), 0);
     const nextInvoiceTotal = cards.reduce((acc, card) => acc + Number(card.next_invoice_total || 0), 0);
-    const futureCommitmentTotal = cards.reduce((acc, card) => acc + Number(card.future_commitment_total || 0), 0);
-    const currentCommitmentTotal = currentInvoiceTotal + futureCommitmentTotal;
-    const payableCardsCount = cards.filter((card) => card.can_pay_current_invoice && Number(card.current_invoice_total || 0) > 0).length;
-    const referenceInvoiceOriginalTotal = cards.reduce((acc, card) => acc + Number(card.reference_invoice_original_total || 0), 0);
-    const referenceInvoicePaidTotal = cards.reduce((acc, card) => acc + Number(card.reference_invoice_paid_total || 0), 0);
+    const creditCardPurchasesInPeriod = cards.reduce((acc, card) => acc + Number(card.purchases_total_in_period || 0), 0);
     const invoicesDueTotalInPeriod = cards.reduce((acc, card) => acc + Number(card.invoices_due_total_in_period || 0), 0);
     const invoicesSettledTotalInPeriod = cards.reduce((acc, card) => acc + Number(card.invoices_settled_total_in_period || 0), 0);
 
     return {
-      currentInvoiceTotal,
       nextInvoiceTotal,
-      futureCommitmentTotal,
-      currentCommitmentTotal,
-      payableCardsCount,
-      referenceInvoiceOriginalTotal,
-      referenceInvoicePaidTotal,
+      creditCardPurchasesInPeriod,
       invoicesDueTotalInPeriod,
       invoicesSettledTotalInPeriod,
     };
@@ -527,71 +491,11 @@ const Analysis = () => {
 
   const paymentMethodChartData = useMemo(() => buildPaymentMethodChartData(paymentMethods), [paymentMethods]);
 
-  const cardInvoiceStatusSummary = useMemo<CardInvoiceStatusSummary>(() => {
-    return invoices.reduce<CardInvoiceStatusSummary>((acc, invoice) => {
-      if (invoice.status === "aguardando_fechamento" || invoice.status === "awaiting_closure") {
-        return acc;
-      }
-
-      const current = acc[invoice.card_id] ?? { paid: 0, partial: 0, noPayment: 0 };
-      const normalizedStatus = normalizeInvoiceSummaryStatus(invoice.status);
-
-      if (normalizedStatus === "paid") {
-        current.paid += 1;
-      } else if (normalizedStatus === "partial") {
-        current.partial += 1;
-      } else {
-        current.noPayment += 1;
-      }
-
-      acc[invoice.card_id] = current;
-      return acc;
-    }, {});
-  }, [invoices]);
-
-  const invoicePaymentsKpiSummary = useMemo(() => {
-    const totals = Object.values(cardInvoiceStatusSummary).reduce(
-      (acc, summary) => ({
-        paid: acc.paid + Number(summary.paid || 0),
-        partial: acc.partial + Number(summary.partial || 0),
-        noPayment: acc.noPayment + Number(summary.noPayment || 0),
-      }),
-      { paid: 0, partial: 0, noPayment: 0 }
-    );
-
-    const previousPaid = cards.reduce(
-      (acc, card) => acc + Number(card.previous_paid_invoices_count_in_period || 0),
-      0
-    );
-    const previousPartial = cards.reduce(
-      (acc, card) => acc + Number(card.previous_partial_invoices_count_in_period || 0),
-      0
-    );
-
-    return [
-      totals.paid > 0 ? `${totals.paid} quitada${totals.paid > 1 ? "s" : ""}` : null,
-      totals.partial > 0 ? `${totals.partial} parcial${totals.partial > 1 ? "is" : ""}` : null,
-      totals.noPayment > 0 ? `${totals.noPayment} sem pagamento` : null,
-      previousPaid > 0 ? `${previousPaid} paga${previousPaid > 1 ? "s" : ""} de fatura anterior` : null,
-      previousPartial > 0 ? `${previousPartial} parcial${previousPartial > 1 ? "is" : ""} de fatura anterior` : null,
-    ].filter((item): item is string => Boolean(item));
-  }, [cardInvoiceStatusSummary, cards]);
-
   const topExpense = topExpenses.transactions[0] ?? null;
   const invoiceSettlementPercentageInPeriod = Number(cardMetrics.invoicesDueTotalInPeriod || 0) > 0
     ? (Number(cardMetrics.invoicesSettledTotalInPeriod || 0) / Number(cardMetrics.invoicesDueTotalInPeriod || 0)) * 100
     : 0;
-  const currentOpenSettlementPercentage = Number(cardMetrics.referenceInvoiceOriginalTotal || 0) > 0
-    ? (Number(cardMetrics.referenceInvoicePaidTotal || 0) / Number(cardMetrics.referenceInvoiceOriginalTotal || 0)) * 100
-    : 0;
-  const hasInvoicesInSelectedPeriod = invoices.length > 0;
-  const hasPayableInvoicesInSelectedPeriod = invoices.some((invoice) => invoice.status !== "aguardando_fechamento");
-  const hasReferenceInvoice = cards.some((card) => (card.reference_invoice_status ?? "no_invoice") !== "no_invoice");
-  const hasReferenceInvoiceAwaitingClosure = cards.some(
-    (card) => card.reference_invoice_status === "aguardando_fechamento" || card.reference_invoice_status === "awaiting_closure"
-  );
   const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "período";
-  const currentReferenceLabel = `${MONTH_OPTIONS[now.getMonth()]?.label ?? dayjs().format("MMMM")} de ${now.getFullYear()}`;
   const yearOptions = useMemo(
     () => availableYears.map((year) => ({ value: year, label: String(year) })),
     [availableYears]
@@ -655,20 +559,6 @@ const Analysis = () => {
       default:
         return styles.statusNeutral;
     }
-  };
-
-  const getInvoiceStatusSummaryItems = (cardId: number) => {
-    const summary = cardInvoiceStatusSummary[cardId];
-
-    if (!summary) {
-      return [];
-    }
-
-    return [
-      summary.paid > 0 ? `${summary.paid} quitada${summary.paid > 1 ? "s" : ""}` : null,
-      summary.partial > 0 ? `${summary.partial} parcial${summary.partial > 1 ? "is" : ""}` : null,
-      summary.noPayment > 0 ? `${summary.noPayment} sem pagamento` : null,
-    ].filter((item): item is string => item !== null);
   };
 
   const openFilterModal = () => {
@@ -875,16 +765,16 @@ const Analysis = () => {
                     <div className={styles.metricsGrid}>
                       {renderIndicator(
                         "Compras no crédito no período",
-                        summary?.credit_card_purchase_total,
-                        "Consumo no cartão que ainda não virou gasto real.",
+                        cardMetrics.creditCardPurchasesInPeriod,
+                        "Compras no cartão registradas dentro do filtro selecionado.",
                         "statusWarning",
                         "currency",
                         ShoppingCartOutlined
                       )}
                       {renderIndicator(
-                        "Pagamentos de fatura no período",
-                        summary?.invoice_payment_total,
-                        invoicePaymentsKpiSummary.join(" - ") || "Sem pagamentos no período.",
+                        "Pagamentos de fatura do período",
+                        cardMetrics.invoicesSettledTotalInPeriod,
+                        "Valor pago das faturas que fecharam dentro do filtro.",
                         "statusSuccess",
                         "currency",
                         BankOutlined
@@ -898,11 +788,11 @@ const Analysis = () => {
                         CheckCircleOutlined
                       )}
                       {renderIndicator(
-                        `Quitação do aberto atual (${currentReferenceLabel})`,
-                        currentOpenSettlementPercentage.toFixed(1) + "%",
-                        `${currentOpenSettlementPercentage.toFixed(1)}% da fatura atual já foi quitada.`,
-                        currentOpenSettlementPercentage >= 100 ? "statusSuccess" : "statusWarning",
-                        "raw",
+                        "Próxima fatura após o período",
+                        cardMetrics.nextInvoiceTotal,
+                        "Soma da próxima fatura de cada cartão após o fim do filtro.",
+                        "statusWarning",
+                        "currency",
                         CheckSquareOutlined
                       )}
                     </div>
@@ -910,29 +800,10 @@ const Analysis = () => {
                     <div className={styles.cardInsightsList}>
                       {cards.length > 0 ? (
                         cards.map((card) => {
-                          const hasReferenceInvoice = !(
-                            card.reference_invoice_pay_day == null && Number(card.reference_invoice_original_total || 0) <= 0
-                          );
-                          const displayInvoiceStatus = hasReferenceInvoice
-                            ? card.reference_invoice_status ?? card.current_invoice_status
-                            : card.current_invoice_status;
-                          const displayInvoiceTotal = Number(
-                            (hasReferenceInvoice ? card.reference_invoice_original_total : card.current_invoice_total) || 0
-                          );
-                          const displayInvoicePaid = Number(
-                            (hasReferenceInvoice ? card.reference_invoice_paid_total : card.current_invoice_paid_total) || 0
-                          );
-                          const displayClosureDate = hasReferenceInvoice
-                            ? card.reference_invoice_closure_date ?? card.current_invoice_closure_date
-                            : card.current_invoice_closure_date;
-                          const displayPayDay = hasReferenceInvoice
-                            ? card.reference_invoice_pay_day ?? card.current_invoice_pay_day
-                            : card.current_invoice_pay_day;
-
-                          const cardInvoiceSummary = cardInvoiceStatusSummary[card.card_id];
-                          const invoicePaymentSubtitle = cardInvoiceSummary 
-                            ? `Pago no período - ${getInvoiceStatusSummaryItems(card.card_id).join(", ")}`
-                            : "Pago no período - Nenhuma fatura disponível no período";
+                          const displayInvoiceStatus = card.period_invoice_status ?? card.current_invoice_status;
+                          const displayInvoiceTotal = Number(card.invoices_due_total_in_period || 0);
+                          const displayInvoicePaid = Number(card.invoices_settled_total_in_period || 0);
+                          const displayOpenTotal = Number(card.period_invoice_open_total || 0);
 
                           return (
                             <div key={card.card_id} className={styles.premiumAnalysisCard}>
@@ -953,37 +824,29 @@ const Analysis = () => {
 
                               <div className={styles.cardGrid7}>
                                 <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><WalletOutlined /> Fatura atual</span>
+                                  <span className={styles.mLabel}><WalletOutlined /> Fatura no período</span>
                                   <strong className={styles.mValue}>{currency(displayInvoiceTotal)}</strong>
                                 </div>
                                 <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><CheckCircleOutlined /> Pago até agora</span>
+                                  <span className={styles.mLabel}><CheckCircleOutlined /> Pago da fatura</span>
                                   <strong className={styles.mValue}>{currency(displayInvoicePaid)}</strong>
                                 </div>
                                 <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><LockOutlined /> Total em aberto</span>
-                                  <strong className={styles.mValue}>{currency(card.open_invoice_total)}</strong>
-                                </div>
-                                <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><HistoryOutlined /> Comprometimento futuro</span>
-                                  <strong className={styles.mValue}>{currency(card.future_commitment_total)}</strong>
-                                </div>
-                                <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><CalendarOutlined /> Fechamento</span>
-                                  <strong className={styles.mValue}>{formatDate(displayClosureDate)}</strong>
-                                </div>
-                                <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><CalendarOutlined /> Vencimento</span>
-                                  <strong className={styles.mValue}>{formatDate(displayPayDay)}</strong>
-                                </div>
-                                <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><BankOutlined /> {invoicePaymentSubtitle}</span>
-                                  <strong className={styles.mValue}>{currency(card.invoice_payments_total_in_period)}</strong>
+                                  <span className={styles.mLabel}><LockOutlined /> Aberto no período</span>
+                                  <strong className={styles.mValue}>{currency(displayOpenTotal)}</strong>
                                 </div>
                                 <div className={styles.metricGroup}>
                                   <span className={styles.mLabel}><CreditCardOutlined /> Próxima fatura</span>
                                   <strong className={styles.mValue}>{currency(card.next_invoice_total)}</strong>
                                   <span className={styles.mSub}>{formatDate(card.next_invoice_pay_day)}</span>
+                                </div>
+                                <div className={styles.metricGroup}>
+                                  <span className={styles.mLabel}><CalendarOutlined /> Fechamento</span>
+                                  <strong className={styles.mValue}>{card.closure_day ? `Dia ${card.closure_day}` : "-"}</strong>
+                                </div>
+                                <div className={styles.metricGroup}>
+                                  <span className={styles.mLabel}><CalendarOutlined /> Vencimento</span>
+                                  <strong className={styles.mValue}>{card.expiration_day ? `Dia ${card.expiration_day}` : "-"}</strong>
                                 </div>
                               </div>
 
@@ -1001,11 +864,6 @@ const Analysis = () => {
                                   <span className={styles.mLabel}><ArrowUpOutlined /> Maior compra</span>
                                   <strong className={styles.mValue}>{currency(card.largest_purchase_in_period)}</strong>
                                   <span className={styles.mSub}>{card.largest_purchase_description_in_period || "-"}</span>
-                                </div>
-                                <div className={styles.metricGroup}>
-                                  <span className={styles.mLabel}><HistoryOutlined /> Última compra</span>
-                                  <strong className={styles.mValue}>{currency(card.latest_purchase_in_period)}</strong>
-                                  <span className={styles.mSub}>{formatDate(card.latest_purchase_date_in_period)}</span>
                                 </div>
                               </div>
 

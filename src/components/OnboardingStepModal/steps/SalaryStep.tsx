@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Form, InputNumber, Input, Typography, DatePicker, Select, Space, Checkbox, ConfigProvider } from "antd";
 import ptBR from "antd/locale/pt_BR";
+import dayjs from "dayjs";
 import { PlusOutlined, WalletOutlined, DollarOutlined, CarOutlined, MedicineBoxOutlined, RocketOutlined, ShoppingOutlined, CoffeeOutlined, StarOutlined, ThunderboltOutlined, WifiOutlined, TagsOutlined } from "@ant-design/icons";
 import styles from "../styles.module.scss";
 
@@ -97,13 +98,25 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
               name="date"
               label="Data"
               style={{ flex: 1 }}
-              rules={[{ required: true, message: "Informe a data" }]}
+              rules={[
+                { required: true, message: "Informe a data" },
+                {
+                  validator: (_, value) => {
+                    if (!value || !value.startOf("day").isAfter(dayjs().startOf("day"))) {
+                      return Promise.resolve();
+                    }
+
+                    return Promise.reject(new Error("A data do salário não pode ser futura"));
+                  },
+                },
+              ]}
             >
               <DatePicker 
                 format="DD/MM/YYYY" 
                 className={styles.inputField}
                 style={{ width: "100%" }}
                 placeholder="dd/mm/aaaa"
+                disabledDate={(current) => Boolean(current && current.startOf("day").isAfter(dayjs().startOf("day")))}
               />
             </Form.Item>
 
