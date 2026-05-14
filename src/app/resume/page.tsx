@@ -9,6 +9,7 @@ import {
 } from "@ant-design/icons";
 import styles from "./resume.module.scss";
 import { ResumeTemporalFilter, type ResumeFilters } from "./temporalFilter";
+import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 import MyCategoriesList, { type AmountByCategory } from "@/components/MyCategoriesList";
 import LastTransactionsList from "@/components/LastTransactionsList";
 import { type ITransaction } from "@/interfaces";
@@ -164,6 +165,28 @@ const Resume = () => {
     filters.mode === "month" &&
     filters.month === today.getMonth() + 1 &&
     filters.year === today.getFullYear();
+  const appliedFiltersLabels = useMemo(() => {
+    const labels: string[] = [];
+
+    if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+      labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
+    } else if (!isCurrentMonthFilter) {
+      labels.push(`Mês: ${currentMonthLabel}`);
+      labels.push(`Ano: ${filters.year}`);
+    }
+
+    return labels;
+  }, [currentMonthLabel, filters, isCurrentMonthFilter]);
+
+  const handleClearFilters = () => {
+    setFilters({
+      mode: "month",
+      month: today.getMonth() + 1,
+      year: today.getFullYear(),
+      dateFrom: null,
+      dateTo: null,
+    });
+  };
   const chartRevealKey = useMemo(() => {
     const firstPoint = chartData[0];
     const lastPoint = chartData[chartData.length - 1];
@@ -755,6 +778,11 @@ const Resume = () => {
             </div> */}
           </div>          
         </div>
+        {appliedFiltersLabels.length > 0 && (
+          <div style={{ padding: "0 30px" }}>
+            <AppliedFiltersBar filters={appliedFiltersLabels} onClear={handleClearFilters} />
+          </div>
+        )}
       {/* The Alert Banner has been moved to the sidebar */}
 
       <Row gutter={[24, 24]} align="stretch" className={styles.resumeRow}>

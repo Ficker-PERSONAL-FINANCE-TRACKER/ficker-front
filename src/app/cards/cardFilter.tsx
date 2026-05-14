@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState } from "react";
 import { Button, Form, Modal, Select, ConfigProvider } from "antd";
 import ptBR from "antd/locale/pt_BR";
 import { request } from "@/service/api";
@@ -31,7 +31,7 @@ export const CardFilter = ({ filters, onChange }: CardFilterProps) => {
 
   const openModal = () => {
     fetchFlags();
-    form.setFieldsValue(filters);
+    form.setFieldsValue({ flag_id: filters.flag_id });
     setIsModalOpen(true);
   };
 
@@ -54,7 +54,6 @@ export const CardFilter = ({ filters, onChange }: CardFilterProps) => {
           background: "#6C5DD3",
           color: "#fff",
           border: "none",
-          fontWeight: 600,
         }}
       >
         Filtrar

@@ -1,14 +1,16 @@
 "use client";
 
 import React from "react";
+import { CloseOutlined } from "@ant-design/icons";
 import styles from "./appliedfiltersbar.module.scss";
 
 interface AppliedFiltersBarProps {
   filters: string[];
+  onClear?: () => void;
   style?: React.CSSProperties;
 }
 
-export const AppliedFiltersBar: React.FC<AppliedFiltersBarProps> = ({ filters, style }) => {
+export const AppliedFiltersBar: React.FC<AppliedFiltersBarProps> = ({ filters, onClear, style }) => {
   if (!filters || filters.length === 0) return null;
 
   return (
@@ -23,6 +25,17 @@ export const AppliedFiltersBar: React.FC<AppliedFiltersBarProps> = ({ filters, s
           </span>
         ))}
       </div>
+      {onClear && (
+        <button
+          type="button"
+          className={styles.clearButton}
+          onClick={onClear}
+          aria-label="Limpar filtros"
+          title="Limpar filtros"
+        >
+          <CloseOutlined />
+        </button>
+      )}
     </div>
   );
 };

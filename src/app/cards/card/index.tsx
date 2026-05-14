@@ -2,15 +2,14 @@
 import { CardInformation } from "@/components/CardInformation";
 import { TransactionTab } from "@/components/TransactionTab";
 import { request } from "@/service/api";
-import { Alert, Col, Row } from "antd";
-import { useEffect, useState, useMemo } from "react";
+import { Alert, Col, Pagination, Row } from "antd";
+import { useEffect, useState } from "react";
 import styles from "../../EnterTransaction/entertransaction.module.scss";
 import { CardTransactionModal } from "./mcardtransaction";
 import { PayInvoiceModal } from "./payInvoiceModal";
 import { ITransaction } from "@/interfaces";
 import { CardDetailFilter, type CardDetailFilters } from "./detailFilter";
 import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
-import dayjs from "dayjs";
 
 interface Card {
   best_day: number;
@@ -28,18 +27,19 @@ interface Card {
 interface CardProps {
   card: Card;
   filters: CardDetailFilters;
-  setFilters: (filters: CardDetailFilters) => void;
+  isFilterApplied: boolean;
   appliedFiltersLabels: string[];
+  onClearFilters: () => void;
 }
 
-function CardPage({ card, filters, setFilters, appliedFiltersLabels }: CardProps) {
-  const now = new Date();
+function CardPage({ card, filters, isFilterApplied, appliedFiltersLabels, onClearFilters }: CardProps) {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isOutputModalOpen, setIsOutputModalOpen] = useState<boolean>(false);
   const [totalValue, setTotalValue] = useState<number>(0);
   const [cardTranscations, setCardTransactions] = useState<ITransaction[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [invoicePayDay, setInvoicePayDay] = useState<string | null>(card.invoice_pay_day ?? null);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const isArchived = Boolean(card.archived_at);
 
   const getCardTotalValue = async () => {
@@ -57,6 +57,18 @@ function CardPage({ card, filters, setFilters, appliedFiltersLabels }: CardProps
     try {
       const params = new URLSearchParams();
       if (filters.category_id) params.set("category_id", String(filters.category_id));
+      params.set("page", String(pagination.current));
+      params.set("per_page", String(pagination.pageSize));
+
+      if (isFilterApplied) {
+        if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+          params.set("date_from", filters.dateFrom);
+          params.set("date_to", filters.dateTo);
+        } else {
+          params.set("month", String(filters.month));
+          params.set("year", String(filters.year));
+        }
+      }
       
       const queryString = params.toString();
       const endpoint = `transaction/card/${card.id}${queryString ? `?${queryString}` : ""}`;
@@ -70,6 +82,10 @@ function CardPage({ card, filters, setFilters, appliedFiltersLabels }: CardProps
       } else {
         setCardTransactions([]);
       }
+      setPagination((current) => ({
+        ...current,
+        total: Number(response?.data?.meta?.total ?? response?.data?.total ?? 0),
+      }));
     } catch (error) {}
   };
 
@@ -84,25 +100,11 @@ function CardPage({ card, filters, setFilters, appliedFiltersLabels }: CardProps
   useEffect(() => {
     getCardData();
     getCardTotalValue();
-  }, [isModalOpen, isOutputModalOpen, filters]);
+  }, [isModalOpen, isOutputModalOpen, filters, isFilterApplied, pagination.current, pagination.pageSize]);
 
-  const filteredTransactions = useMemo(() => {
-    return cardTranscations.filter((transaction) => {
-      const transactionDate = dayjs(transaction.date);
-
-      if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
-        const start = dayjs(filters.dateFrom).startOf("day");
-        const end = dayjs(filters.dateTo).endOf("day");
-
-        return (
-          (transactionDate.isAfter(start) || transactionDate.isSame(start, "day")) &&
-          (transactionDate.isBefore(end) || transactionDate.isSame(end, "day"))
-        );
-      }
-
-      return transactionDate.month() + 1 === filters.month && transactionDate.year() === filters.year;
-    });
-  }, [filters, cardTranscations]);
+  useEffect(() => {
+    setPagination((current) => ({ ...current, current: 1 }));
+  }, [filters, isFilterApplied]);
 
   return (
     <Col xl={24}>
@@ -121,14 +123,22 @@ function CardPage({ card, filters, setFilters, appliedFiltersLabels }: CardProps
         <Col xl={18} lg={16} md={24} xs={24} style={{ paddingLeft: 0 }} className={styles.tableResume}>
           {appliedFiltersLabels.length > 0 && (
             <div style={{ marginBottom: 16 }}>
-              <AppliedFiltersBar filters={appliedFiltersLabels} />
+              <AppliedFiltersBar filters={appliedFiltersLabels} onClear={onClearFilters} />
             </div>
           )}
           <TransactionTab
-            data={filteredTransactions}
+            data={cardTranscations}
             typeId={3}
             editModal={isEditModalOpen}
             setEditModal={setIsEditModalOpen}
+          />
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            showSizeChanger={false}
+            onChange={(page) => setPagination((current) => ({ ...current, current: page }))}
+            style={{ marginTop: 24, textAlign: "right" }}
           />
         </Col>
         <Col xl={6} lg={8} md={24} xs={24} className={styles.cardInfo}>

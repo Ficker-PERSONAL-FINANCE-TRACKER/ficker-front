@@ -173,7 +173,6 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
           background: "#6C5DD3",
           color: "#fff",
           border: "none",
-          fontWeight: 600,
           marginTop: 10,
         }}
       >

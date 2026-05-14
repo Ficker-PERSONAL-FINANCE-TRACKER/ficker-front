@@ -154,6 +154,22 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
 
   return (
     <Col xs={24} lg={24} style={{ width: "100%" }}>
+      <EditTransactionModal
+        isModalOpen={editModal}
+        setIsModalOpen={setEditModal}
+        transaction={selectedTransaction}
+      />
+
+      <TransactionInstallmentsModal
+        isOpen={isInstallmentsModalOpen}
+        onClose={() => {
+          setIsInstallmentsModalOpen(false);
+          setSelectedInstallmentsTransaction(null);
+        }}
+        transactionId={selectedInstallmentsTransaction?.id ?? null}
+        transactionDescription={selectedInstallmentsTransaction?.transaction_description}
+      />
+
       <div style={{ width: "100%", overflowX: isCardDetailTable ? "auto" : "visible", paddingBottom: isCardDetailTable ? 8 : 0 }}>
         <table className={styles.table} style={isCardDetailTable ? { minWidth: 860 } : undefined}>
 
@@ -169,30 +185,13 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
             </tr>
           </thead>
           <tbody>
-            <>
-              <EditTransactionModal
-                isModalOpen={editModal}
-                setIsModalOpen={setEditModal}
-                transaction={selectedTransaction}
-              />
+            {data?.map((transaction) => {
+              const presentation = getTransactionPresentation(transaction);
+              const categoryInfo = getCategoryInfo(transaction);
+              const paymentMethodInfo = getPaymentMethodInfo(transaction.payment_method_id);
 
-              <TransactionInstallmentsModal
-                isOpen={isInstallmentsModalOpen}
-                onClose={() => {
-                  setIsInstallmentsModalOpen(false);
-                  setSelectedInstallmentsTransaction(null);
-                }}
-                transactionId={selectedInstallmentsTransaction?.id ?? null}
-                transactionDescription={selectedInstallmentsTransaction?.transaction_description}
-              />
-
-              {data?.map((transaction) => {
-                const presentation = getTransactionPresentation(transaction);
-                const categoryInfo = getCategoryInfo(transaction);
-                const paymentMethodInfo = getPaymentMethodInfo(transaction.payment_method_id);
-
-                return (
-                  <tr key={transaction.id}>
+              return (
+                <tr key={transaction.id}>
                     <td className={styles.tdEdit}>
                       <button
                         type="button"
@@ -321,10 +320,9 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
                         )}
                       </td>
                     )}
-                  </tr>
-                );
-              })}
-            </>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

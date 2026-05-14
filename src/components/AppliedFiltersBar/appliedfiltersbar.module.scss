@@ -29,6 +29,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  flex: 1;
 }
 
 .filterItem {
@@ -41,4 +42,24 @@
 .separator {
   margin-left: 8px;
   color: #d1d1d1;
+}
+
+.clearButton {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #808191;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 12px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.clearButton:hover {
+  background: #f4f2ff;
+  color: #6c5dd3;
 }

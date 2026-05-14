@@ -599,6 +599,24 @@ const Analysis = () => {
     setIsFilterModalOpen(false);
   };
 
+  const handleClearFilters = () => {
+    const defaultFilters = {
+      mode: "month" as const,
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      dateFrom: null,
+      dateTo: null,
+    };
+
+    setFilters(defaultFilters);
+    form.setFieldsValue({
+      mode: defaultFilters.mode,
+      month: defaultFilters.month,
+      year: defaultFilters.year,
+      range: undefined,
+    });
+  };
+
   const selectedMode = Form.useWatch("mode", form) ?? filters.mode;
   
   const renderIndicator = (
@@ -648,7 +666,7 @@ const Analysis = () => {
 
         {appliedFiltersLabels.length > 0 && (
           <div>
-            <AppliedFiltersBar filters={appliedFiltersLabels} />
+            <AppliedFiltersBar filters={appliedFiltersLabels} onClear={handleClearFilters} />
           </div>
         )}
 

@@ -119,14 +119,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
   const selectedKey =
     Object.entries(paths).find(([, path]) => path === pathname)?.[0] ?? (menu ? menu.toString() : "1");
 
-  const [userData, setUserData] = useState<{ name: string } | null>(() => {
-    if (user) return user;
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("user_data");
-      return saved ? JSON.parse(saved) : null;
-    }
-    return null;
-  });
+  const [userData, setUserData] = useState<{ name: string } | null>(user ?? null);
   const [balanceData, setBalanceData] = useState<any>(balance || null);
   const toggleMenu = () => {
     if (isMobile) {

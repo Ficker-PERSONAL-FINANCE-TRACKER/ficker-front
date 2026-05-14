@@ -420,6 +420,11 @@ const Cards = () => {
 
   const hasAppliedFilters = appliedFiltersLabels.length > 0;
 
+  const handleClearFilters = () => {
+    setFilters({});
+    setShowArchived(false);
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
       <CustomMenu />
@@ -444,7 +449,7 @@ const Cards = () => {
 
         {hasAppliedFilters && (
           <div className={styles.gridPadding}>
-            <AppliedFiltersBar filters={appliedFiltersLabels} />
+            <AppliedFiltersBar filters={appliedFiltersLabels} onClear={handleClearFilters} />
           </div>
         )}
 

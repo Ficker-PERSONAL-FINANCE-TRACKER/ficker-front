@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Row, Col, Progress, Button, Modal, Form, InputNumber, message, Card, Empty, Spin, Checkbox, Select } from "antd";
 import CustomMenu from "@/components/CustomMenu";
+import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 import { getApiErrorMessage, request } from "@/service/api";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
@@ -137,6 +138,28 @@ const CategoriesPage = () => {
 
     return `${currentMonthLabel} de ${filters.year}`;
   }, [currentMonthLabel, filters]);
+
+  const appliedFiltersLabels = useMemo(() => {
+    const labels: string[] = [];
+    const isDefaultMonth = filters.mode === "month" && filters.month === (now.getMonth() + 1) && filters.year === now.getFullYear();
+
+    if (
+      filters.mode === "custom" &&
+      filters.customMonthStart &&
+      filters.customYearStart &&
+      filters.customMonthEnd &&
+      filters.customYearEnd
+    ) {
+      const startLabel = MONTH_OPTIONS.find((option) => option.value === filters.customMonthStart)?.label ?? "Início";
+      const endLabel = MONTH_OPTIONS.find((option) => option.value === filters.customMonthEnd)?.label ?? "Fim";
+      labels.push(`Período: ${startLabel} de ${filters.customYearStart} - ${endLabel} de ${filters.customYearEnd}`);
+    } else if (!isDefaultMonth) {
+      labels.push(`Mês: ${currentMonthLabel}`);
+      labels.push(`Ano: ${filters.year}`);
+    }
+
+    return labels;
+  }, [currentMonthLabel, filters, now]);
 
   const isMonthMode = filters.mode === "month";
 
@@ -333,6 +356,29 @@ const CategoriesPage = () => {
     setIsFilterModalOpen(false);
   };
 
+  const handleClearFilters = () => {
+    const defaultFilters = {
+      mode: "month" as const,
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      customMonthStart: null,
+      customYearStart: null,
+      customMonthEnd: null,
+      customYearEnd: null,
+    };
+
+    setFilters(defaultFilters);
+    filterForm.setFieldsValue({
+      mode: defaultFilters.mode,
+      month: defaultFilters.month,
+      year: defaultFilters.year,
+      custom_month_start: undefined,
+      custom_year_start: undefined,
+      custom_month_end: undefined,
+      custom_year_end: undefined,
+    });
+  };
+
   const formatCurrency = (value: number | string) =>
     Number(value || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -367,6 +413,10 @@ const CategoriesPage = () => {
             </Button>
           </div>
         </div>
+
+        {appliedFiltersLabels.length > 0 && (
+          <AppliedFiltersBar filters={appliedFiltersLabels} onClear={handleClearFilters} />
+        )}
 
         <div className={styles.contentArea}>
           {loading ? (

@@ -1,6 +1,7 @@
 "use client";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { useEffect, useMemo, useState } from "react";
+import { Pagination } from "antd";
 import { OutputModal } from "./modal";
 import { request } from "@/service/api";
 import { TransactionTab } from "@/components/TransactionTab";
@@ -30,6 +31,8 @@ const Outputs = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
+  const [isFilterApplied, setIsFilterApplied] = useState(false);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [filters, setFilters] = useState<OutputFilters>({
     mode: "month",
     month: now.getMonth() + 1,
@@ -48,6 +51,18 @@ const Outputs = () => {
       if (filters.category_id) params.set("category_id", String(filters.category_id));
       if (filters.payment_method_id) params.set("payment_method_id", String(filters.payment_method_id));
       if (filters.card_id) params.set("card_id", String(filters.card_id));
+      params.set("page", String(pagination.current));
+      params.set("per_page", String(pagination.pageSize));
+
+      if (isFilterApplied) {
+        if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+          params.set("date_from", filters.dateFrom);
+          params.set("date_to", filters.dateTo);
+        } else {
+          params.set("month", String(filters.month));
+          params.set("year", String(filters.year));
+        }
+      }
 
       const queryString = params.toString();
       const endpoint = `transaction/type/2${queryString ? `?${queryString}` : ""}`;
@@ -57,49 +72,44 @@ const Outputs = () => {
         endpoint,
       });
       setTransactions(response?.data?.data?.transactions ?? []);
+      setPagination((current) => ({
+        ...current,
+        total: Number(response?.data?.meta?.total ?? response?.data?.total ?? 0),
+      }));
     } catch (error) {
       console.log(error);
       setTransactions([]);
     }
   };
 
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((transaction) => {
-      const transactionDate = dayjs(transaction.date);
+  const handleFilterChange = (nextFilters: OutputFilters) => {
+    setFilters(nextFilters);
+    setIsFilterApplied(true);
+    setPagination((current) => ({ ...current, current: 1 }));
+  };
 
-      if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
-        const start = dayjs(filters.dateFrom).startOf("day");
-        const end = dayjs(filters.dateTo).endOf("day");
-
-        return (
-          (transactionDate.isAfter(start) || transactionDate.isSame(start, "day")) &&
-          (transactionDate.isBefore(end) || transactionDate.isSame(end, "day"))
-        );
-      }
-
-      return transactionDate.month() + 1 === filters.month && transactionDate.year() === filters.year;
+  const handleClearFilters = () => {
+    setFilters({
+      mode: "month",
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      dateFrom: null,
+      dateTo: null,
     });
-  }, [filters, transactions]);
-
-  const filterSummary = useMemo(() => {
-    if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
-      return `${dayjs(filters.dateFrom).format("DD/MM/YYYY")} até ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`;
-    }
-
-    return `${monthNames[filters.month - 1]} de ${filters.year}`;
-  }, [filters, monthNames]);
+    setIsFilterApplied(false);
+    setPagination((current) => ({ ...current, current: 1 }));
+  };
 
   useEffect(() => {
     getTransactions();
-  }, [isModalOpen, isEditModalOpen, filters]);
+  }, [isModalOpen, isEditModalOpen, filters, isFilterApplied, pagination.current, pagination.pageSize]);
 
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
-    const isDefaultMonth = filters.mode === "month" && filters.month === (now.getMonth() + 1) && filters.year === now.getFullYear();
 
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
       labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
-    } else if (!isDefaultMonth) {
+    } else if (isFilterApplied) {
       labels.push(`Mês: ${monthNames[filters.month - 1]}`);
       labels.push(`Ano: ${filters.year}`);
     }
@@ -109,7 +119,7 @@ const Outputs = () => {
     if (filters.card_id && filters.card_name) labels.push(`Cartão: ${filters.card_name}`);
 
     return labels;
-  }, [filters, monthNames, now]);
+  }, [filters, isFilterApplied, monthNames]);
 
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
@@ -125,22 +135,30 @@ const Outputs = () => {
             <button className={styles.button} onClick={showModal} style={{ whiteSpace: "nowrap" }}>
               Nova saída
             </button>
-            <OutputTemporalFilter filters={filters} onChange={setFilters} />
+            <OutputTemporalFilter filters={filters} onChange={handleFilterChange} />
           </div>
         </div>
 
         {appliedFiltersLabels.length > 0 && (
           <div className={styles.gridPadding}>
-            <AppliedFiltersBar filters={appliedFiltersLabels} />
+            <AppliedFiltersBar filters={appliedFiltersLabels} onClear={handleClearFilters} />
           </div>
         )}
 
         <div className={styles.gridPadding}>
           <TransactionTab
-            data={filteredTransactions}
+            data={transactions}
             typeId={2}
             editModal={isEditModalOpen}
             setEditModal={setIsEditModalOpen}
+          />
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            showSizeChanger={false}
+            onChange={(page) => setPagination((current) => ({ ...current, current: page }))}
+            style={{ marginTop: 24, textAlign: "right" }}
           />
         </div>
       </div>

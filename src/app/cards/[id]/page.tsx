@@ -29,6 +29,7 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
   const now = new Date();
   const [card, setCard] = useState<Card | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFilterApplied, setIsFilterApplied] = useState(false);
   const router = useRouter();
 
   const [filters, setFilters] = useState<CardDetailFilters>({
@@ -41,11 +42,10 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
 
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
-    const isDefaultMonth = filters.mode === "month" && filters.month === (now.getMonth() + 1) && filters.year === now.getFullYear();
 
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
       labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
-    } else if (!isDefaultMonth) {
+    } else if (isFilterApplied) {
       const monthName = dayjs().month(filters.month - 1).format("MMMM");
       labels.push(`Mês: ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`);
       labels.push(`Ano: ${filters.year}`);
@@ -56,7 +56,23 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
     }
 
     return labels;
-  }, [filters, now]);
+  }, [filters, isFilterApplied]);
+
+  const handleFilterChange = (nextFilters: CardDetailFilters) => {
+    setFilters(nextFilters);
+    setIsFilterApplied(true);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      mode: "month",
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      dateFrom: null,
+      dateTo: null,
+    });
+    setIsFilterApplied(false);
+  };
 
   useEffect(() => {
     const fetchCard = async () => {
@@ -124,7 +140,7 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
               )}
             </h2>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <CardDetailFilter filters={filters} onChange={setFilters} />
+              <CardDetailFilter filters={filters} onChange={handleFilterChange} />
             </div>
           </div>
         </div>
@@ -138,8 +154,9 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
               <CardPage
                 card={card}
                 filters={filters}
-                setFilters={setFilters}
+                isFilterApplied={isFilterApplied}
                 appliedFiltersLabels={appliedFiltersLabels}
+                onClearFilters={handleClearFilters}
               />
             )}
           </Row>
