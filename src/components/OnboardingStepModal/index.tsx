@@ -90,6 +90,16 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
               )}
             </div>
             <Space>
+              {actions.currentStep === 0 && (
+                <Button onClick={actions.handleSkipSalary} type="text" className={styles.secondaryButton}>
+                  Pular
+                </Button>
+              )}
+              {actions.currentStep === 1 && (
+                <Button onClick={actions.handleSkipGoal} type="text" className={styles.secondaryButton}>
+                  Pular
+                </Button>
+              )}
               {actions.currentStep === 2 && (
                 <Button onClick={actions.handleSkipCard} type="text" className={styles.secondaryButton}>
                   Pular

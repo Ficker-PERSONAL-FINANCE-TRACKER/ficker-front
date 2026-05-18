@@ -215,7 +215,8 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
                   console.error("Logout falhou:", error);
                 }
                 cookie.remove("menu");
-                localStorage.clear();
+                localStorage.removeItem("token");
+                localStorage.removeItem("user_data");
                 setMobileDrawerVisible(false);
                 router.replace("/login");
               } else {
@@ -286,7 +287,8 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
                     console.error("Logout falhou:", error);
                   }
                   cookie.remove("menu");
-                  localStorage.clear();
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("user_data");
                   router.replace("/login");
                 } else {
                   const targetPath = paths[key];

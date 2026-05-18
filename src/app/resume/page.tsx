@@ -29,6 +29,9 @@ import { NewCardModal } from "../cards/modal";
 
 dayjs.locale("pt-br");
 
+const TOUR_SEEN_STORAGE_KEY = "hasSeenOnboardingTour";
+const FORCE_FIRST_ACCESS_TOUR_KEY = "showFirstAccessTour";
+
 interface BalanceProps {
   balance: number;
   planned_spending: number;
@@ -213,6 +216,7 @@ const Resume = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [openTour, setOpenTour] = useState(false);
   const [tourStep, setTourStep] = useState(0);
+  const [tourSeenStorageKey, setTourSeenStorageKey] = useState(TOUR_SEEN_STORAGE_KEY);
   const [gastoPlanejado, setGastoPlanejado] = useState("");
 
   const [isEnterModalOpen, setIsEnterModalOpen] = useState(false);
@@ -261,6 +265,48 @@ const Resume = () => {
     }
   };
 
+  const shouldShowFirstAccessTour = async () => {
+    const timestamp = Date.now();
+    const [transactionsRes, cardsRes, spendingRes, objectivesRes] = await Promise.all([
+      request({ method: "GET", endpoint: `transaction/all?per_page=1&t=${timestamp}` }),
+      request({ method: "GET", endpoint: `cards?t=${timestamp}` }),
+      request({ method: "GET", endpoint: `spending?t=${timestamp}` }),
+      request({ method: "GET", endpoint: `objectives?t=${timestamp}` }),
+    ]);
+
+    const transactions = transactionsRes?.data?.data?.transactions ?? [];
+    const cardsList = cardsRes?.data?.data?.cards ?? cardsRes?.data?.cards ?? [];
+    const spending = spendingRes?.data?.data?.spending ?? spendingRes?.data?.spending ?? null;
+    const objectivesList = objectivesRes?.data?.data?.objectives ?? objectivesRes?.data?.objectives ?? [];
+
+    const hasTransactions = transactions.length > 0;
+    const hasCards = cardsList.length > 0;
+    const hasSpendingGoal = Number(spending?.planned_spending || 0) > 0;
+    const hasObjectives = objectivesList.length > 0;
+
+    return !(hasTransactions || hasCards || hasSpendingGoal || hasObjectives);
+  };
+
+  const resolveTourSeenStorageKey = async () => {
+    const cachedUser = localStorage.getItem("user_data");
+
+    if (cachedUser) {
+      try {
+        const parsedUser = JSON.parse(cachedUser);
+        const userIdentifier = parsedUser?.id ?? parsedUser?.email;
+        if (userIdentifier) return `${TOUR_SEEN_STORAGE_KEY}:${userIdentifier}`;
+      } catch {
+        localStorage.removeItem("user_data");
+      }
+    }
+
+    const response = await request({ endpoint: "user" });
+    const currentUser = response?.data?.data ?? response?.data;
+    const userIdentifier = currentUser?.id ?? currentUser?.email;
+
+    return userIdentifier ? `${TOUR_SEEN_STORAGE_KEY}:${userIdentifier}` : TOUR_SEEN_STORAGE_KEY;
+  };
+
   const getBalance = async () => {
     try {
       const timestamp = Date.now();
@@ -269,30 +315,23 @@ const Resume = () => {
       });
       setBalance(data.finances);
 
-      const hasSeenTour = localStorage.getItem("hasSeenOnboardingTour");
-      if (!hasSeenTour) {
-        try {
-          const [catRes, transRes] = await Promise.all([
-            request({ method: "GET", endpoint: "categories" }),
-            request({ method: "GET", endpoint: "transaction/all" })
-          ]);
-          const cats = catRes?.data?.data?.categories;
-          const trans = transRes?.data?.data?.transactions;
-          const bal = data.finances;
+      const nextTourSeenStorageKey = await resolveTourSeenStorageKey();
+      setTourSeenStorageKey(nextTourSeenStorageKey);
 
-          if (
-            Number(bal?.balance || 0) === 0 &&
-            Number(bal?.planned_spending || 0) === 0 &&
-            Number(bal?.real_spending || 0) === 0 &&
-            (!cats || cats.length === 0) &&
-            (!trans || trans.length === 0)
-          ) {
-            setOpenTour(true);
-          } else {
-            localStorage.setItem("hasSeenOnboardingTour", "true");
-          }
-        } catch (error) {
-          console.error(error);
+      const shouldForceTour = sessionStorage.getItem(FORCE_FIRST_ACCESS_TOUR_KEY) === "true";
+      const hasSeenTour = localStorage.getItem(nextTourSeenStorageKey);
+      if (shouldForceTour) {
+        sessionStorage.removeItem(FORCE_FIRST_ACCESS_TOUR_KEY);
+        setTourStep(0);
+        setOpenTour(true);
+      } else if (!hasSeenTour) {
+        const shouldOpenTour = await shouldShowFirstAccessTour();
+
+        if (shouldOpenTour) {
+          setTourStep(0);
+          setOpenTour(true);
+        } else {
+          localStorage.setItem(nextTourSeenStorageKey, "true");
         }
       }
     } catch (error) { }
@@ -578,7 +617,7 @@ const Resume = () => {
   const handleCloseTour = () => {
     setOpenTour(false);
     setTourStep(0);
-    localStorage.setItem("hasSeenOnboardingTour", "true");
+    localStorage.setItem(tourSeenStorageKey, "true");
   };
 
   useEffect(() => {

@@ -31,6 +31,8 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
   const [cardsData, setCardsData] = useState<any[]>([]);
   const [flags, setFlags] = useState<any[]>([]);
   const [objectivesData, setObjectivesData] = useState<any[]>([]);
+  const [shouldSubmitSalary, setShouldSubmitSalary] = useState(false);
+  const [shouldSubmitGoal, setShouldSubmitGoal] = useState(false);
   const [shouldSubmitCard, setShouldSubmitCard] = useState(false);
   const [submittedSignatures, setSubmittedSignatures] = useState<Record<string, string>>({});
   const [salaryDraft, setSalaryDraft] = useState<Record<string, any> | null>(null);
@@ -40,6 +42,8 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
   useEffect(() => {
     if (open) {
       setCurrentStep(0);
+      setShouldSubmitSalary(false);
+      setShouldSubmitGoal(false);
       setShouldSubmitCard(false);
       setSubmittedSignatures({});
       setSalaryDraft(null);
@@ -163,6 +167,7 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     try {
       const values = await formSalary.validateFields();
       setSalaryDraft(buildSalaryPayload(values));
+      setShouldSubmitSalary(true);
       setCurrentStep(1);
     } catch (error: any) {
       message.error(getApiErrorMessage(error));
@@ -175,8 +180,9 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     setLoading(true);
     try {
       const values = await formGoal.validateFields();
-      const salaryData = salaryDraft ?? buildSalaryPayload(await formSalary.validateFields());
-      setGoalDraft(buildGoalPayload(values, salaryData.referenceDate));
+      const referenceDate = salaryDraft?.referenceDate ?? new Date().toISOString().split("T")[0];
+      setGoalDraft(buildGoalPayload(values, referenceDate));
+      setShouldSubmitGoal(true);
       setCurrentStep(2);
     } catch (error: any) {
       message.error(getApiErrorMessage(error));
@@ -241,11 +247,18 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
   };
 
   const submitOnboarding = async (objectiveValues: Record<string, any> | null) => {
-    const salaryData = salaryDraft ?? buildSalaryPayload(await formSalary.validateFields());
-    const goalData = goalDraft ?? buildGoalPayload(await formGoal.validateFields(), salaryData.referenceDate);
+    let salaryData = salaryDraft;
 
-    await submitIfNeeded("salary", "transaction/store", salaryData.payload);
-    await submitIfNeeded("goal", "spending/store", goalData);
+    if (shouldSubmitSalary) {
+      salaryData = salaryData ?? buildSalaryPayload(await formSalary.validateFields());
+      await submitIfNeeded("salary", "transaction/store", salaryData.payload);
+    }
+
+    if (shouldSubmitGoal) {
+      const referenceDate = salaryData?.referenceDate ?? new Date().toISOString().split("T")[0];
+      const goalData = goalDraft ?? buildGoalPayload(await formGoal.validateFields(), referenceDate);
+      await submitIfNeeded("goal", "spending/store", goalData);
+    }
 
     if (shouldSubmitCard) {
       const cardData = cardDraft ?? buildCardPayload(await formCard.validateFields());
@@ -277,6 +290,18 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     setCurrentStep(3);
   };
 
+  const handleSkipSalary = () => {
+    setShouldSubmitSalary(false);
+    setSalaryDraft(null);
+    setCurrentStep(1);
+  };
+
+  const handleSkipGoal = () => {
+    setShouldSubmitGoal(false);
+    setGoalDraft(null);
+    setCurrentStep(2);
+  };
+
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
@@ -300,6 +325,8 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     handleSaveGoal,
     handleSaveCard,
     handleSaveObjective,
+    handleSkipSalary,
+    handleSkipGoal,
     handleSkipObjective,
     handleSkipCard,
     handleBack,
