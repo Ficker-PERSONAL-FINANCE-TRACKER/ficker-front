@@ -64,7 +64,7 @@ function CardPage({ card, filters, isFilterApplied, appliedFiltersLabels, onClea
         if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
           params.set("date_from", filters.dateFrom);
           params.set("date_to", filters.dateTo);
-        } else {
+        } else if (filters.month && filters.year) {
           params.set("month", String(filters.month));
           params.set("year", String(filters.year));
         }

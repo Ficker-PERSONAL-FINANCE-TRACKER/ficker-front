@@ -29,8 +29,8 @@ export type CardDetailFilterMode = "month" | "custom";
 
 export type CardDetailFilters = {
   mode: CardDetailFilterMode;
-  month: number;
-  year: number;
+  month: number | null;
+  year: number | null;
   dateFrom: string | null;
   dateTo: string | null;
   category_id?: number;
@@ -58,6 +58,17 @@ export const CardDetailFilter = ({ filters, onChange }: CardDetailFilterProps) =
   const [availableYears, setYearOptions] = useState<{ value: number; label: string }[]>([]);
   const [categories, setCategories] = useState<{ id: number; category_description: string }[]>([]);
 
+  const validateMonthYearPair = () => {
+    const month = form.getFieldValue("month");
+    const year = form.getFieldValue("year");
+
+    if ((month && !year) || (!month && year)) {
+      return Promise.reject(new Error("Informe mês e ano ou deixe ambos vazios"));
+    }
+
+    return Promise.resolve();
+  };
+
   const fetchFilterData = async () => {
     try {
       const [yearsRes, catsRes] = await Promise.all([
@@ -78,8 +89,8 @@ export const CardDetailFilter = ({ filters, onChange }: CardDetailFilterProps) =
     fetchFilterData();
     form.setFieldsValue({
       mode: filters.mode,
-      month: filters.month,
-      year: filters.year,
+      month: filters.month ?? undefined,
+      year: filters.year ?? undefined,
       category:
         filters.category_id && filters.category_name
           ? { value: filters.category_id, label: filters.category_name }
@@ -110,10 +121,12 @@ export const CardDetailFilter = ({ filters, onChange }: CardDetailFilterProps) =
         ...commonFilters,
       });
     } else {
+      const hasMonthYear = Boolean(values.month && values.year);
+
       onChange({
         mode: "month",
-        month: Number(values.month),
-        year: Number(values.year),
+        month: hasMonthYear ? Number(values.month) : null,
+        year: hasMonthYear ? Number(values.year) : null,
         dateFrom: null,
         dateTo: null,
         ...commonFilters,
@@ -184,11 +197,11 @@ export const CardDetailFilter = ({ filters, onChange }: CardDetailFilterProps) =
               </Form.Item>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-                <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
-                  <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
+                <Form.Item name="month" label="Mês" dependencies={["year"]} rules={[{ validator: validateMonthYearPair }]}>
+                  <Select allowClear options={MONTH_OPTIONS} placeholder="Todos os meses" style={{ height: 45 }} />
                 </Form.Item>
-                <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
-                  <Select options={availableYears} placeholder="Ano" style={{ height: 45 }} />
+                <Form.Item name="year" label="Ano" dependencies={["month"]} rules={[{ validator: validateMonthYearPair }]}>
+                  <Select allowClear options={availableYears} placeholder="Todos os anos" style={{ height: 45 }} />
                 </Form.Item>
               </div>
             )}

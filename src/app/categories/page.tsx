@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Row, Col, Progress, Button, Modal, Form, InputNumber, message, Card, Empty, Spin, Checkbox, Select } from "antd";
+import { Row, Col, Progress, Button, Modal, Form, InputNumber, message, Card, Empty, Spin, Checkbox, Select, Pagination } from "antd";
 import CustomMenu from "@/components/CustomMenu";
 import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 import { getApiErrorMessage, request } from "@/service/api";
@@ -19,6 +19,7 @@ import {
   CarOutlined,
   MedicineBoxOutlined,
   CoffeeOutlined,
+  ReadOutlined,
   ThunderboltOutlined,
   WifiOutlined,
   ShoppingOutlined,
@@ -40,6 +41,8 @@ const MONTH_OPTIONS = [
   { value: 11, label: "Novembro" },
   { value: 12, label: "Dezembro" },
 ];
+
+const CATEGORIES_PER_PAGE = 9;
 
 type CategoryMonthData = {
   id: number;
@@ -101,6 +104,7 @@ const CategoriesPage = () => {
   const now = new Date();
   const [categories, setCategories] = useState<CategoryView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryView | null>(null);
@@ -162,10 +166,15 @@ const CategoriesPage = () => {
   }, [currentMonthLabel, filters, now]);
 
   const isMonthMode = filters.mode === "month";
+  const paginatedCategories = useMemo(() => {
+    const start = (currentPage - 1) * CATEGORIES_PER_PAGE;
+    return categories.slice(start, start + CATEGORIES_PER_PAGE);
+  }, [categories, currentPage]);
 
   const getCategoryIcon = (category: any) => {
     const id = Number(category?.id);
     const description = category?.category_description?.toLowerCase() || "";
+    const normalizedDescription = description.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     // Map by ID (Highest priority)
     if (id === 1) return { icon: <DollarOutlined />, color: "#00875A", bg: "#E6F7EF" };
@@ -185,6 +194,9 @@ const CategoriesPage = () => {
     if (description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
     if (description.includes("investimentos")) return { icon: <WalletOutlined />, color: "#FFA940", bg: "#FFF7E6" };
     if (description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
+    if (normalizedDescription.includes("moradia")) return { icon: <HomeOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (normalizedDescription.includes("alimentacao")) return { icon: <RestOutlined />, color: "#FF754C", bg: "#FFEBE6" };
+    if (normalizedDescription.includes("educacao")) return { icon: <ReadOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
     if (description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
     if (description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
     if (description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C", bg: "#FFEBE6" };
@@ -262,6 +274,13 @@ const CategoriesPage = () => {
   useEffect(() => {
     fetchData();
   }, [filters]);
+
+  useEffect(() => {
+    const lastPage = Math.max(1, Math.ceil(categories.length / CATEGORIES_PER_PAGE));
+    if (currentPage > lastPage) {
+      setCurrentPage(lastPage);
+    }
+  }, [categories.length, currentPage]);
 
   const handleEditLimit = (category: CategoryView) => {
     if (!isMonthMode) {
@@ -353,6 +372,7 @@ const CategoriesPage = () => {
       });
     }
 
+    setCurrentPage(1);
     setIsFilterModalOpen(false);
   };
 
@@ -368,6 +388,7 @@ const CategoriesPage = () => {
     };
 
     setFilters(defaultFilters);
+    setCurrentPage(1);
     filterForm.setFieldsValue({
       mode: defaultFilters.mode,
       month: defaultFilters.month,
@@ -424,8 +445,9 @@ const CategoriesPage = () => {
           ) : categories.length === 0 ? (
             <Empty description="Nenhuma categoria encontrada" />
           ) : (
-            <Row gutter={[24, 24]}>
-              {categories.map((category) => {
+            <>
+              <Row gutter={[24, 24]}>
+                {paginatedCategories.map((category) => {
                 const { icon, color, bg } = getCategoryIcon(category);
                 const limit = Number(category.category_limit || 0);
                 const spending = Number(category.category_total_spending || 0);
@@ -484,8 +506,20 @@ const CategoriesPage = () => {
                     </Card>
                   </Col>
                 );
-              })}
-            </Row>
+                })}
+              </Row>
+              {categories.length > CATEGORIES_PER_PAGE && (
+                <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
+                  <Pagination
+                    current={currentPage}
+                    pageSize={CATEGORIES_PER_PAGE}
+                    total={categories.length}
+                    showSizeChanger={false}
+                    onChange={setCurrentPage}
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
 

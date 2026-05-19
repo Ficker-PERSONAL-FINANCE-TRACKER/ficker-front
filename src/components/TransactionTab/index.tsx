@@ -19,6 +19,7 @@ import {
   CarOutlined,
   MedicineBoxOutlined,
   CoffeeOutlined,
+  ReadOutlined,
   WifiOutlined,
   ShoppingOutlined,
   TagsOutlined,
@@ -96,6 +97,7 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
   const getCategoryInfo = (transaction: ITransaction) => {
     const id = Number(transaction.category_id);
     const description = (transaction.category_description || "").toLowerCase();
+    const normalizedDescription = description.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     if (transaction.is_invoice_payment) {
       return { icon: <TagsOutlined />, color: "#FF4D4F", bg: "#FFF1F0" };
@@ -123,6 +125,9 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
     if (description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
     if (description.includes("invest")) return { icon: <WalletOutlined />, color: "#FFA940", bg: "#FFF7E6" };
     if (description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
+    if (normalizedDescription.includes("moradia")) return { icon: <HomeOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
+    if (normalizedDescription.includes("alimentacao")) return { icon: <RestOutlined />, color: "#FF754C", bg: "#FFEBE6" };
+    if (normalizedDescription.includes("educacao")) return { icon: <ReadOutlined />, color: "#00B0FF", bg: "#E6F7FF" };
     if (description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3", bg: "#F0EFFF" };
     if (description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A", bg: "#E6F7EF" };
     if (description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C", bg: "#FFEBE6" };

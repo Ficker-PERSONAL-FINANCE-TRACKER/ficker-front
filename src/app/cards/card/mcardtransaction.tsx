@@ -9,11 +9,14 @@ import {
   PlusOutlined, 
   WalletOutlined,
   DollarOutlined,
+  HomeOutlined,
   CarOutlined, 
   MedicineBoxOutlined, 
   RocketOutlined, 
   ShoppingOutlined,
   CoffeeOutlined,
+  ReadOutlined,
+  RestOutlined,
   StarOutlined,
   ThunderboltOutlined,
   WifiOutlined,
@@ -61,11 +64,15 @@ const extractCategoriesFromResponse = (response: any): Category[] => {
 const getCategoryIcon = (category: any) => {
   const id = Number(category?.id);
   const description = category?.category_description?.toLowerCase() || "";
+  const normalizedDescription = description.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
   if (id === 1 || description.includes("salário")) return { icon: <DollarOutlined />, color: "#00875A" };
   if (id === 2 || description.includes("freelance")) return { icon: <RocketOutlined />, color: "#6C5DD3" };
   if (id === 3 || description.includes("investimentos")) return { icon: <WalletOutlined />, color: "#FFA940" };
   if (id === 4 || description.includes("renda extra")) return { icon: <StarOutlined />, color: "#00B0FF" };
+  if (normalizedDescription.includes("moradia")) return { icon: <HomeOutlined />, color: "#6C5DD3" };
+  if (normalizedDescription.includes("alimentacao")) return { icon: <RestOutlined />, color: "#FF754C" };
+  if (normalizedDescription.includes("educacao")) return { icon: <ReadOutlined />, color: "#00B0FF" };
   if (id === 5 || description.includes("transporte")) return { icon: <CarOutlined />, color: "#6C5DD3" };
   if (id === 6 || description.includes("saúde")) return { icon: <MedicineBoxOutlined />, color: "#00875A" };
   if (id === 7 || description.includes("lazer")) return { icon: <CoffeeOutlined />, color: "#FF754C" };

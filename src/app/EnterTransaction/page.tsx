@@ -52,7 +52,7 @@ const EnterTransaction = () => {
         if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
           params.set("date_from", filters.dateFrom);
           params.set("date_to", filters.dateTo);
-        } else {
+        } else if (filters.month && filters.year) {
           params.set("month", String(filters.month));
           params.set("year", String(filters.year));
         }
@@ -107,7 +107,7 @@ const EnterTransaction = () => {
 
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
       labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
-    } else if (isFilterApplied) {
+    } else if (isFilterApplied && filters.month && filters.year) {
       labels.push(`Mês: ${monthNames[filters.month - 1]}`);
       labels.push(`Ano: ${filters.year}`);
     }

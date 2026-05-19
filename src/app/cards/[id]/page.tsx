@@ -45,7 +45,7 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
 
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
       labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
-    } else if (isFilterApplied) {
+    } else if (isFilterApplied && filters.month && filters.year) {
       const monthName = dayjs().month(filters.month - 1).format("MMMM");
       labels.push(`Mês: ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`);
       labels.push(`Ano: ${filters.year}`);
