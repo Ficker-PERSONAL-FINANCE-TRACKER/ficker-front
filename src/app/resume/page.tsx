@@ -160,7 +160,7 @@ const Resume = () => {
     return `${currentMonthLabel} de ${filters.year}`;
   }, [currentMonthLabel, filters]);
   const chartLabelPrefix = filters.mode === "month" ? "Dia" : "Data";
-  const goalCardTitle = filters.mode === "month" ? "Meta de gastos" : "Meta do período";
+  const goalCardTitle = filters.mode === "month" ? "Teto de gastos" : "Teto do período";
   const periodPlannedSpending = Number(periodBudgetSummary.planned_spending_total || 0);
   const periodRealSpending = Number(periodBudgetSummary.real_spending_total || 0);
   const spentPercentage = periodPlannedSpending > 0 ? (periodRealSpending / periodPlannedSpending) * 100 : 0;
@@ -243,10 +243,10 @@ const Resume = () => {
       setIsEditMode(false);
       getBalance();
       getPeriodBudgetSummary();
-      message.success("Meta atualizada com sucesso!");
+      message.success("Teto atualizado com sucesso!");
     } catch (error: any) {
       const apiMsg = error?.response?.data?.message;
-      message.error(apiMsg || "Algo deu errado ao atualizar a meta!");
+      message.error(apiMsg || "Algo deu errado ao atualizar o teto!");
     }
   };
   const refSaldo = useRef(null);
@@ -995,8 +995,8 @@ const Resume = () => {
                     {periodPlannedSpending > 0
                       ? `Restam ${formatCurrency(Math.max(periodPlannedSpending - periodRealSpending, 0)).replace(",00", "")}`
                       : filters.mode === "month"
-                        ? "Defina uma meta"
-                        : "Sem meta acumulada"}
+                        ? "Defina um teto"
+                        : "Sem teto acumulado"}
                   </span>
                 </div>
             </div>
@@ -1246,7 +1246,7 @@ const Resume = () => {
         onClose={handleCloseTour}
       />
       <Modal
-        title="Editar meta de gastos"
+        title="Editar teto de gastos"
         open={isEditMode}
         onCancel={() => setIsEditMode(false)}
         footer={null}
@@ -1258,9 +1258,9 @@ const Resume = () => {
           initialValues={{ planned_spending: periodPlannedSpending }}
         >
           <Form.Item
-              label="Valor da meta"
+              label="Valor do teto"
               name="planned_spending"
-              rules={[{ required: true, message: "Por favor, insira o valor da meta de gastos!" }]}
+              rules={[{ required: true, message: "Por favor, insira o valor do teto de gastos!" }]}
             >
               <Input
                 type="number"
@@ -1274,7 +1274,7 @@ const Resume = () => {
               <Space>
                 <Button onClick={() => setIsEditMode(false)}>Cancelar</Button>
                 <Button type="primary" htmlType="submit" style={{ background: '#6C5DD3', borderColor: '#6C5DD3' }}>
-                  Salvar meta de gastos
+                  Salvar teto de gastos
                 </Button>
               </Space>
             </Form.Item>

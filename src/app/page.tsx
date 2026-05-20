@@ -17,6 +17,7 @@ export default function Home() {
     if (token) {
       setAuth(true);
     } else {
+      setAuth(false);
       setLoading(false);
     }
   }, []);

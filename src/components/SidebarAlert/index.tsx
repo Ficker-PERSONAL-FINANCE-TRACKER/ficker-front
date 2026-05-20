@@ -49,10 +49,10 @@ const SidebarAlert: React.FC<SidebarAlertProps> = ({ balance, visible }) => {
       color = '#FF754C';
     }
   } else if (balance.real_spending > 0) {
-    // Caso tenha gastos mas não tenha meta definida
+    // Caso tenha gastos mas não tenha teto definido
     status = 'attention';
-    titleText = 'Sem meta de gastos';
-    messageText = `Você ainda não definiu uma meta de gastos para este mês.`;
+    titleText = 'Sem teto de gastos';
+    messageText = `Você ainda não definiu um teto de gastos para este mês.`;
     img = '/attention.png';
     color = '#FF754C';
   }

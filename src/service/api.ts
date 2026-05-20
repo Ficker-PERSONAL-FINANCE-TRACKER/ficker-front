@@ -82,7 +82,7 @@ export const request = async ({
     const result = await axios(config);
     return result;
   } catch (error: any) {
-    if (error.response?.status === 401 && typeof window !== "undefined") {
+    if (error.response?.status === 401 && endpoint !== "login" && typeof window !== "undefined") {
       localStorage.removeItem("token");
       window.location.href = "/login";
     }

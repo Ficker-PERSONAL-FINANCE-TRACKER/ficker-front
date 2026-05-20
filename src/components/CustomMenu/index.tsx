@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import type { MenuProps } from "antd";
 import { Drawer, Menu } from "antd";
 import Image from "next/image";
@@ -15,6 +15,7 @@ import SidebarAlert from "../SidebarAlert";
 import Link from "next/link";
 import { request } from "@/service/api";
 import { MobileHeader } from "../MobileHeader";
+import MainContext from "@/context";
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -67,7 +68,7 @@ const items: MenuItem[] = [
     <Image src="/icons/icon-card.svg" alt="Meus cartões" width={22} height={22} />
   ),
   getItem(
-    "Meta de gastos",
+    "Teto de gastos",
     "7",
     <TagOutlined style={{ fontSize: 22 }} />
   ),
@@ -107,6 +108,7 @@ const paths: Record<string, string> = {
 
 const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true }) => {
   const router = useRouter();
+  const { setAuth } = useContext(MainContext);
   const pathname = usePathname();
   const cookie = new Cookies();
   const menu = cookie.get("menu");
@@ -218,7 +220,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
                 localStorage.removeItem("token");
                 localStorage.removeItem("user_data");
                 setMobileDrawerVisible(false);
-                router.replace("/login");
+                window.location.replace("/login");
               } else {
                 const targetPath = paths[key];
                 if (targetPath) {
@@ -289,7 +291,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
                   cookie.remove("menu");
                   localStorage.removeItem("token");
                   localStorage.removeItem("user_data");
-                  router.replace("/login");
+                  window.location.replace("/login");
                 } else {
                   const targetPath = paths[key];
                   if (targetPath) {

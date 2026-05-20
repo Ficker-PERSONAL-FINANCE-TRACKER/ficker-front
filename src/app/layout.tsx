@@ -16,10 +16,10 @@ const manrope = Manrope({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Ficker - Controle suas finanças",
-  description: "Ficker é a plataforma ideal para gerenciar suas finanças, metas de gastos e objetivos de vida.",
+  description: "Ficker é a plataforma ideal para gerenciar suas finanças, tetos de gastos e objetivos de vida.",
   openGraph: {
     title: "Ficker - Controle suas finanças",
-    description: "Ficker é a plataforma ideal para gerenciar suas finanças, metas de gastos e objetivos de vida.",
+    description: "Ficker é a plataforma ideal para gerenciar suas finanças, tetos de gastos e objetivos de vida.",
     url: "https://ficker-front-gamma.vercel.app",
     siteName: "Ficker",
     images: [
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Ficker - Controle suas finanças",
-    description: "Ficker é a plataforma ideal para gerenciar suas finanças, metas de gastos e objetivos de vida.",
+    description: "Ficker é a plataforma ideal para gerenciar suas finanças, tetos de gastos e objetivos de vida.",
     images: ["https://ficker-front-gamma.vercel.app/ficker-system.png"],
   },
 };

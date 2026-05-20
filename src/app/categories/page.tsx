@@ -284,7 +284,7 @@ const CategoriesPage = () => {
 
   const handleEditLimit = (category: CategoryView) => {
     if (!isMonthMode) {
-      message.info("A edição de meta fica disponível no filtro por mês.");
+      message.info("A edição de teto fica disponível no filtro por mês.");
       return;
     }
 
@@ -317,7 +317,7 @@ const CategoriesPage = () => {
       });
 
       message.success(
-        `Meta para ${selectedCategory.category_description} atualizada com sucesso!`
+        `Teto para ${selectedCategory.category_description} atualizado com sucesso!`
       );
       setIsModalOpen(false);
       await fetchData();
@@ -417,15 +417,15 @@ const CategoriesPage = () => {
       <div className={styles.pageContent}>
         <div className={styles.pageHeader}>
           <div>
-            <h2 className={styles.pageTitle}>Meta de gastos</h2>
+            <h2 className={styles.pageTitle}>Teto de gastos</h2>
             <p className={styles.pageSubtitle}>
-              A meta total por categoria soma as metas mensais existentes nos meses cobertos pelo filtro.
+              O teto total por categoria soma os tetos mensais existentes nos meses cobertos pelo filtro.
             </p>
           </div>
           <div className={styles.headerActions}>
             {!isMonthMode ? (
               <span className={styles.helperText}>
-                Edição de metas disponível apenas no filtro por mês.
+                Edição de tetos disponível apenas no filtro por mês.
               </span>
             ) : null}
             <span className={styles.filterSummary}>{filterSummary}</span>
@@ -474,7 +474,7 @@ const CategoriesPage = () => {
                           <div>
                             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>{category.category_description}</h3>
                             <span style={{ fontSize: 12, color: "#808191" }}>
-                              {limit > 0 ? `Meta acumulada: ${formatCurrency(limit)}` : "Meta acumulada: não definida"}
+                              {limit > 0 ? `Teto acumulado: ${formatCurrency(limit)}` : "Teto acumulado: não definido"}
                             </span>
                           </div>
                         </div>
@@ -501,7 +501,7 @@ const CategoriesPage = () => {
                       />
 
                       <div style={{ marginTop: 8, textAlign: "right", fontSize: 12, color: "#808191" }}>
-                        {limit > 0 ? `${percent}% consumido` : spending > 0 ? "Sem meta acumulada para o período" : "Sem uso no período"}
+                        {limit > 0 ? `${percent}% consumido` : spending > 0 ? "Sem teto acumulado para o período" : "Sem uso no período"}
                       </div>
                     </Card>
                   </Col>
@@ -524,11 +524,11 @@ const CategoriesPage = () => {
         </div>
 
         <Modal
-          title={`Definir meta para ${selectedCategory?.category_description}`}
+          title={`Definir teto para ${selectedCategory?.category_description}`}
           open={isModalOpen}
           onOk={handleSaveLimit}
           onCancel={() => setIsModalOpen(false)}
-          okText="Salvar meta"
+          okText="Salvar teto"
           cancelText="Cancelar"
           centered
           okButtonProps={{ style: { background: "#6C5DD3" } }}
@@ -541,7 +541,7 @@ const CategoriesPage = () => {
           <Form form={form} layout="vertical">
             <Form.Item
               name="category_limit"
-              label="Valor da meta para este mês"
+              label="Valor do teto para este mês"
               rules={[{ required: true, message: "Por favor, insira um valor" }]}
             >
               <InputNumber
@@ -553,13 +553,13 @@ const CategoriesPage = () => {
             </Form.Item>
 
             <Form.Item name="keep_future" valuePropName="checked">
-              <Checkbox>Manter esta mesma meta para os próximos meses</Checkbox>
+              <Checkbox>Manter este mesmo teto para os próximos meses</Checkbox>
             </Form.Item>
           </Form>
         </Modal>
 
         <Modal
-          title="Filtrar metas"
+          title="Filtrar tetos"
           open={isFilterModalOpen}
           onOk={handleApplyFilters}
           onCancel={() => setIsFilterModalOpen(false)}
