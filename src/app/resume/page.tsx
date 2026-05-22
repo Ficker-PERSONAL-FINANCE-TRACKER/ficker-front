@@ -26,6 +26,9 @@ import CustomTour from "@/components/CustomTour";
 import { EnterTransactionModal } from "../EnterTransaction/modal";
 import { OutputModal } from "../Outputs/modal";
 import { NewCardModal } from "../cards/modal";
+import { CardTransactionModal } from "../cards/card/mcardtransaction";
+import { PayInvoiceModal } from "../cards/card/payInvoiceModal";
+import { ObjectiveModalManager, useObjectiveModalManager } from "@/components/ObjectiveModalManager";
 
 dayjs.locale("pt-br");
 
@@ -222,6 +225,9 @@ const Resume = () => {
   const [isEnterModalOpen, setIsEnterModalOpen] = useState(false);
   const [isOutputModalOpen, setIsOutputModalOpen] = useState(false);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+  const [isCardTransactionModalOpen, setIsCardTransactionModalOpen] = useState(false);
+  const [isPayInvoiceModalOpen, setIsPayInvoiceModalOpen] = useState(false);
+  const [selectedCardForAction, setSelectedCardForAction] = useState<any | null>(null);
 
   const handleRefreshData = () => {
     getBalance();
@@ -229,6 +235,21 @@ const Resume = () => {
     getTransactionsData();
     getPeriodBudgetSummary();
     getCategorySummaries();
+    getObjectives();
+  };
+
+  const focusedCard = cards[currentCardIndex] ?? null;
+
+  const openFocusedCardTransactionModal = () => {
+    if (!focusedCard) return;
+    setSelectedCardForAction(focusedCard);
+    setIsCardTransactionModalOpen(true);
+  };
+
+  const openFocusedCardInvoiceModal = () => {
+    if (!focusedCard) return;
+    setSelectedCardForAction(focusedCard);
+    setIsPayInvoiceModalOpen(true);
   };
 
   const handleFinishEditGoal = async (values: any) => {
@@ -251,6 +272,8 @@ const Resume = () => {
   };
   const refSaldo = useRef(null);
   const refPlanejado = useRef(null);
+  const refAcoesRapidas = useRef(null);
+  const refObjetivos = useRef(null);
   const refReal = useRef(null);
   const refCategorias = useRef(null);
   const refTransacoes = useRef(null);
@@ -429,6 +452,8 @@ const Resume = () => {
       console.error("Erro ao buscar objetivos:", error);
     }
   };
+
+  const objectiveModalManager = useObjectiveModalManager({ onSaved: getObjectives });
 
   const getCategorySummaries = async () => {
     try {
@@ -714,45 +739,61 @@ const Resume = () => {
     {
       title: "Bem-vindo ao Ficker!",
       description:
-        "Comece visualizando seu saldo total e o progresso dos seus objetivos financeiros mais importantes logo no primeiro card.",
+        "Registre entradas, saídas e cartões diretamente pelo painel inicial.",
+      target: () => refAcoesRapidas.current,
+      placement: "bottom" as const,
+      offset: 12,
+    },
+    {
+      title: "Seu dinheiro em perspectiva",
+      description:
+        "Acompanhe seu saldo total e a evolução recente das movimentações.",
       target: () => refSaldo.current,
       placement: "right" as const,
       offset: 12,
     },
     {
-      title: "Gestão de orçamento",
+      title: "Controle seu limite",
       description:
-        "Aqui você acompanha quanto planejou gastar versus seu gasto real.",
+        "Compare o teto planejado com o gasto real do período selecionado.",
       target: () => refPlanejado.current,
       placement: "bottom" as const,
       offset: 12,
     },
     {
-      title: "Meus cartões",
+      title: "Planeje o próximo passo",
       description:
-        "Visualize faturas e limites disponíveis de forma intuitiva.",
+        "Veja o progresso dos seus objetivos financeiros e crie novos planos rapidamente.",
+      target: () => refObjetivos.current,
+      placement: "bottom" as const,
+      offset: 12,
+    },
+    {
+      title: "Acompanhe seus cartões",
+      description:
+        "Visualize faturas disponíveis e adicione transações de forma intuitiva.",
       target: () => refReal.current,
       placement: "left" as const,
       offset: 12,
-      offsetX: -40,
+      offsetX: 0,
     },
     {
-      title: "Categorias de gastos",
+      title: "Entenda seus gastos",
       description:
         "Entenda exatamente para onde seu dinheiro está indo.",
       target: () => refCategorias.current,
       placement: "top" as const,
       offset: 12,
-      offsetY: 2,
+      offsetY: 3,
     },
     {
-      title: "Últimas transações",
+      title: "Revise seus movimentos",
       description:
         "Acesse rapidamente seu histórico recente.",
       target: () => refTransacoes.current,
       placement: "top" as const,
       offset: 12,
-      offsetY: 23,
+      offsetY: 24,
     },
   ];
 
@@ -827,7 +868,7 @@ const Resume = () => {
       <Row gutter={[24, 24]} align="stretch" className={styles.resumeRow}>
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column", zIndex: 10 }}>
           {/* Quick Actions area */}
-          <div className={styles.quickActions} style={{ marginBottom: 20 }}>
+          <div ref={refAcoesRapidas} className={styles.quickActions} style={{ marginBottom: 20 }}>
             <p className={styles.balance_description} style={{ fontSize: 13, color: '#808191', marginBottom: 8, marginTop: 0 }}>Ações rápidas</p>
             <div className={styles.buttonsContainer} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
               <div className={styles.actionButton} style={{ background: '#E6F7EF' }} onClick={() => setIsEnterModalOpen(true)}>
@@ -1003,13 +1044,43 @@ const Resume = () => {
           </div>
 
           {/* Objectives section moved here */}
-          <div className={styles.balance} style={{ marginTop: 20, padding: '24px 32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 className={styles.balance_description} style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+          <div ref={refObjetivos} className={styles.balance} style={{ marginTop: 20, padding: '24px 32px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <h3 className={styles.balance_description} style={{ margin: 0, display: 'flex', alignItems: 'center', justifySelf: 'start' }}>
                 <RocketOutlined style={{ marginRight: 6, fontSize: 12, color: "#6C5DD3" }} />
                 Objetivos
               </h3>
-              <Button type="link" size="small" onClick={() => router.push('/objectives')} style={{ color: '#6C5DD3', padding: 0 }}>
+              {objectives.length > 0 ? (
+                <button
+                  type="button"
+                  aria-label="Criar objetivo"
+                  style={{
+                    border: 'none',
+                    height: 40,
+                    width: 40,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    background: 'transparent',
+                    justifySelf: 'center',
+                    padding: 0,
+                  }}
+                  onMouseEnter={(event) => {
+                    event.currentTarget.style.backgroundColor = '#eaeaea';
+                    event.currentTarget.style.borderRadius = '50%';
+                  }}
+                  onMouseLeave={(event) => {
+                    event.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                  onClick={objectiveModalManager.openTypesModal}
+                >
+                  <Image src="/icons/icon-more.svg" alt="Criar objetivo" width={18} height={18} />
+                </button>
+              ) : (
+                <span />
+              )}
+              <Button type="link" size="small" onClick={() => router.push('/objectives')} style={{ color: '#6C5DD3', padding: 0, justifySelf: 'end' }}>
                 Ver todos
               </Button>
             </div>
@@ -1088,7 +1159,7 @@ const Resume = () => {
                   type="dashed"
                   size="small"
                   icon={<PlusOutlined />}
-                  onClick={() => router.push('/objectives')}
+                  onClick={objectiveModalManager.openTypesModal}
                   style={{ borderRadius: 8, color: '#808191' }}
                 >
                   Criar objetivo
@@ -1220,9 +1291,26 @@ const Resume = () => {
               )}
             </div>
 
-            <Button type="dashed" block icon={<PlusOutlined />} style={{ borderRadius: 12, height: 48, color: '#808191', fontWeight: 500 }}>
-              Adicionar um novo cartão
-            </Button>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+              <Button
+                type="dashed"
+                block
+                disabled={!focusedCard}
+                onClick={openFocusedCardTransactionModal}
+                style={{ borderRadius: 12, height: 48, color: '#808191', fontWeight: 500 }}
+              >
+                Nova transação
+              </Button>
+              <Button
+                type="dashed"
+                block
+                disabled={!focusedCard}
+                onClick={openFocusedCardInvoiceModal}
+                style={{ borderRadius: 12, height: 48, color: '#808191', fontWeight: 500 }}
+              >
+                Pagar fatura
+              </Button>
+            </div>
           </div>
         </Col>
       </Row>
@@ -1296,6 +1384,24 @@ const Resume = () => {
         setIsModalOpen={setIsCardModalOpen}
         onSuccess={handleRefreshData}
       />
+      {selectedCardForAction && (
+        <>
+          <CardTransactionModal
+            isModalOpen={isCardTransactionModalOpen}
+            setIsModalOpen={setIsCardTransactionModalOpen}
+            cardId={selectedCardForAction.id}
+            onSuccess={handleRefreshData}
+          />
+          <PayInvoiceModal
+            isModalOpen={isPayInvoiceModalOpen}
+            setIsModalOpen={setIsPayInvoiceModalOpen}
+            cardId={selectedCardForAction.id}
+            cardDescription={selectedCardForAction.card_description}
+            onSuccess={handleRefreshData}
+          />
+        </>
+      )}
+      <ObjectiveModalManager manager={objectiveModalManager} />
     </div>
     </div>
   );

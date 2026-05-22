@@ -26,6 +26,7 @@ interface CardTransactionModalProps {
   isModalOpen: boolean;
   setIsModalOpen: (value: boolean) => void;
   cardId: number;
+  onSuccess?: () => void;
 }
 
 interface Category {
@@ -84,7 +85,7 @@ const getCategoryIcon = (category: any) => {
   return { icon: <TagsOutlined />, color: "#808191" };
 };
 
-export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: CardTransactionModalProps) => {
+export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId, onSuccess }: CardTransactionModalProps) => {
   const [showDescriptionCategory, setShowDescriptionCategory] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [form] = Form.useForm();
@@ -158,6 +159,7 @@ export const CardTransactionModal = ({ isModalOpen, setIsModalOpen, cardId }: Ca
       });
       message.success("Transação adicionada com sucesso!");
       handleCancel();
+      if (onSuccess) onSuccess();
     } catch (errorInfo) {
       message.error(getApiErrorMessage(errorInfo));
     }

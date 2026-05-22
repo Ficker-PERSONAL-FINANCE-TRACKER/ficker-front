@@ -108,7 +108,15 @@ function CardPage({ card, filters, isFilterApplied, appliedFiltersLabels, onClea
 
   return (
     <Col xl={24}>
-      <CardTransactionModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} cardId={card.id} />
+      <CardTransactionModal
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        cardId={card.id}
+        onSuccess={() => {
+          getCardData();
+          getCardTotalValue();
+        }}
+      />
       <PayInvoiceModal
         isModalOpen={isOutputModalOpen}
         setIsModalOpen={setIsOutputModalOpen}
