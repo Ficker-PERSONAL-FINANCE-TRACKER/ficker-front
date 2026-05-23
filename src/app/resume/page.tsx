@@ -64,6 +64,10 @@ interface ResumeCardSummary {
   period_invoice_pay_day?: string | null;
   next_invoice_total?: number;
   next_invoice_pay_day?: string | null;
+  current_invoice_total?: number;
+  can_pay_current_invoice?: boolean;
+  payable_invoices_count_as_of_period?: number;
+  payable_invoices_open_total_as_of_period?: number;
 }
 
 interface HoveredChartPoint {
@@ -260,6 +264,26 @@ const Resume = () => {
   };
 
   const focusedCard = cards[currentCardIndex] ?? null;
+  const payableInvoiceStatuses = [
+    "disponivel_para_pagamento",
+    "parcialmente_paga",
+    "payable",
+    "partial",
+    "aberta",
+    "open",
+  ];
+  const payableInvoicesCount = cards.reduce((acc, card) => acc + Number(card.payable_invoices_count_as_of_period || 0), 0);
+  const payableInvoicesOpenTotal = cards.reduce((acc, card) => acc + Number(card.payable_invoices_open_total_as_of_period || 0), 0);
+  const periodOpenInvoicesCount = cards.filter((card) =>
+    Number(card.period_invoice_open_total || 0) > 0 &&
+    payableInvoiceStatuses.includes(String(card.period_invoice_status || ""))
+  ).length;
+  const periodOpenInvoicesTotal = cards
+    .filter((card) =>
+      Number(card.period_invoice_open_total || 0) > 0 &&
+      payableInvoiceStatuses.includes(String(card.period_invoice_status || ""))
+    )
+    .reduce((acc, card) => acc + Number(card.period_invoice_open_total || 0), 0);
 
   const openFocusedCardTransactionModal = () => {
     if (!focusedCard) return;
@@ -440,6 +464,10 @@ const Resume = () => {
             period_invoice_pay_day: card.period_invoice_pay_day,
             next_invoice_total: Number(card.next_invoice_total || 0),
             next_invoice_pay_day: card.next_invoice_pay_day,
+            current_invoice_total: Number(card.current_invoice_total || 0),
+            can_pay_current_invoice: Boolean(card.can_pay_current_invoice),
+            payable_invoices_count_as_of_period: Number(card.payable_invoices_count_as_of_period || 0),
+            payable_invoices_open_total_as_of_period: Number(card.payable_invoices_open_total_as_of_period || 0),
           };
         });
 
@@ -1228,7 +1256,32 @@ const Resume = () => {
 
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column", zIndex: 2 }}>
           <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '16px 24px', position: 'relative', overflow: 'visible' }}>
-            <p className={styles.balance_description} style={{ marginBottom: 12 }}>Meus cartões (fatura do período)</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+              <p className={styles.balance_description} style={{ marginBottom: 0 }}>Meus cartões</p>
+              {payableInvoicesCount > 0 && (
+                <div
+                  title={`Acumulado em aberto: ${formatCurrency(payableInvoicesOpenTotal)} | No filtro: ${formatCurrency(periodOpenInvoicesTotal)}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    gap: 3,
+                    padding: '2px 0',
+                    color: '#808191',
+                    whiteSpace: 'nowrap',
+                    lineHeight: 1.25,
+                  }}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600 }}>
+                    {payableInvoicesCount} {payableInvoicesCount === 1 ? 'fatura acumulada' : 'faturas acumuladas'} em aberto
+                  </span>
+                  <span style={{ fontSize: 11, color: '#808191', fontWeight: 500 }}>
+                    {periodOpenInvoicesCount} {periodOpenInvoicesCount === 1 ? 'fatura' : 'faturas'} {filters.mode === "month" ? "do mês" : "do período"} em aberto
+                  </span>
+                </div>
+              )}
+            </div>
             <p className={styles.balance_title} style={{ marginBottom: 24 }}><AnimatedNumber value={totalCardsInvoice} duration={1500} format={formatCurrency} /></p>
 
             {/* Card Slider / Stack Simulation */}
