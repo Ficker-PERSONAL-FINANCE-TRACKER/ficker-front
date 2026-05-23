@@ -5,6 +5,7 @@ import {
   Alert,
   Button,
   Col,
+  DatePicker,
   Form,
   InputNumber,
   Modal,
@@ -117,6 +118,7 @@ export const PayInvoiceModal = ({
         endpoint: `cards/${cardId}/invoices/${selectedPayDay}/pay`,
         data: {
           amount_paid: Number(values.amount_paid),
+          date: values.date.format("YYYY-MM-DD"),
         },
       });
 
@@ -170,10 +172,12 @@ export const PayInvoiceModal = ({
   useEffect(() => {
     if (selectedInvoice && canPayInvoice(selectedInvoice)) {
       form.setFieldValue("amount_paid", Number(selectedInvoice.open_total));
+      form.setFieldValue("date", dayjs());
       return;
     }
 
     form.setFieldValue("amount_paid", undefined);
+    form.setFieldValue("date", undefined);
   }, [selectedInvoice, form]);
 
   const hasAnyPayableInvoice = invoices.some((invoice) => canPayInvoice(invoice));
@@ -298,6 +302,27 @@ export const PayInvoiceModal = ({
           )}
 
           <Form form={form} layout="vertical">
+            <Form.Item
+              label="Data do pagamento"
+              name="date"
+              rules={[{ required: true, message: "Informe a data do pagamento." }]}
+            >
+              <DatePicker
+                format="DD/MM/YYYY"
+                style={{ width: "100%" }}
+                disabled={!selectedInvoice || !canPayInvoice(selectedInvoice)}
+                disabledDate={(current) => {
+                  if (!current || !selectedInvoice) return false;
+
+                  const currentDay = current.startOf("day");
+                  const closureDate = dayjs(selectedInvoice.closure_date).startOf("day");
+                  const today = dayjs().startOf("day");
+
+                  return currentDay.isBefore(closureDate) || currentDay.isAfter(today);
+                }}
+              />
+            </Form.Item>
+
             <Form.Item
               label="Valor a pagar"
               name="amount_paid"

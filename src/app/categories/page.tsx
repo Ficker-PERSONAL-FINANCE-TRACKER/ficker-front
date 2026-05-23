@@ -119,10 +119,11 @@ const CategoriesPage = () => {
   });
   const [form] = Form.useForm();
   const [filterForm] = Form.useForm<FilterFormValues>();
+  const [transactionYears, setTransactionYears] = useState<number[]>([]);
 
   const yearOptions = useMemo(
-    () => Array.from({ length: 7 }, (_, index) => now.getFullYear() - 3 + index).map((year) => ({ value: year, label: String(year) })),
-    [now]
+    () => transactionYears.map((year) => ({ value: year, label: String(year) })),
+    [transactionYears]
   );
 
   const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "Período";
@@ -326,7 +327,17 @@ const CategoriesPage = () => {
     }
   };
 
+  const fetchTransactionYears = async () => {
+    try {
+      const response = await request({ method: "GET", endpoint: "transaction/years" });
+      setTransactionYears(response?.data?.data?.years ?? []);
+    } catch {
+      setTransactionYears([]);
+    }
+  };
+
   const openFilterModal = () => {
+    fetchTransactionYears();
     filterForm.setFieldsValue({
       mode: filters.mode,
       month: filters.month,

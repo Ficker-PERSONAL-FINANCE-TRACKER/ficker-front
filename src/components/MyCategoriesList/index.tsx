@@ -63,7 +63,7 @@ const MyCategoriesList = ({ categories, loading = false, onRefresh }: MyCategori
           }}
           className="circle"
         ></span>
-        <div className="category-area__description">{category.category_description}</div>
+        <div className="category-area__description" title={category.category_description}>{category.category_description}</div>
       </div>
 
       <div style={{ flex: 1, height: "6px", background: "#f0f0f5", borderRadius: "3px", overflow: "hidden" }}>

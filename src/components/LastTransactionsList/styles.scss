@@ -16,30 +16,45 @@
 }
 
 .transaction-area {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 16px;
     margin-bottom: 15px;
     align-items: center;
     padding: 0 10px;
+    min-width: 0;
 }
 
 .transaction-area__infos {
     display: flex;
-    justify-content: center;
     align-items: center;
+    min-width: 0;
 }
 
 .transaction-area__description {
     display: block;
     margin-left: 12px;
+    min-width: 0;
 
     p {
         margin: 0;
         font-size: medium;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     span {
+        display: block;
         color: #808191;
         font-size: smaller;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
+}
+
+.transaction-area__value {
+    justify-self: end;
+    white-space: nowrap;
 }

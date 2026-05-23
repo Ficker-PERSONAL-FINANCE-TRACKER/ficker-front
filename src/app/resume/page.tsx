@@ -192,6 +192,14 @@ const Resume = () => {
     filters.mode === "month" &&
     filters.month === today.getMonth() + 1 &&
     filters.year === today.getFullYear();
+  const selectedMonthStart = dayjs()
+    .year(filters.year)
+    .month(filters.month - 1)
+    .startOf("month");
+  const canEditSpendingGoal =
+    filters.mode === "month" &&
+    !selectedMonthStart.isAfter(dayjs().startOf("month"));
+  const canPayInvoiceInFilter = canEditSpendingGoal;
   const canCreateObjectiveInFilter =
     filters.mode === "custom" && filters.dateFrom && filters.dateTo
       ? !dayjs().isBefore(dayjs(filters.dateFrom), "day") && !dayjs().isAfter(dayjs(filters.dateTo), "day")
@@ -304,6 +312,7 @@ const Resume = () => {
         method: "POST",
         data: {
           planned_spending: parseFloat(String(values.planned_spending).replace(",", ".")),
+          reference_date: selectedMonthStart.format("YYYY-MM-DD"),
         },
       });
       setIsEditMode(false);
@@ -1069,7 +1078,7 @@ const Resume = () => {
                 </div>
                 <Button type="text" onClick={handleClickEditGastoPlanejado} icon={
                   <Image src="/edit.png" alt="Editar" width={20} height={20} />
-                } disabled={!isCurrentMonthFilter} />
+                } disabled={!canEditSpendingGoal} />
             </div>
 
             <div style={{ marginTop: 8 }}>
@@ -1415,7 +1424,7 @@ const Resume = () => {
               <Button
                 type="dashed"
                 block
-                disabled={!focusedCard || !canCreateObjectiveInFilter}
+                disabled={!focusedCard || !canPayInvoiceInFilter}
                 onClick={openFocusedCardInvoiceModal}
                 style={{ borderRadius: 12, height: 48, color: '#808191', fontWeight: 500 }}
               >

@@ -113,7 +113,7 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
                     height={25}
                   />
                   <div className="transaction-area__description">
-                    <p>{transaction.transaction_description}</p>
+                    <p title={transaction.transaction_description}>{transaction.transaction_description}</p>
                     <span>{presentation.label}</span>
                   </div>
                 </div>
