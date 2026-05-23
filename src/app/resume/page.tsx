@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { Button, Col, Row, Typography, message, Badge, Space, Modal, Form, Input, Tooltip as AntTooltip } from "antd";
+import { Button, Col, Row, Typography, message, Badge, Space, Modal, Form, Input, Tooltip as AntTooltip, Spin } from "antd";
 import {
   BellOutlined, PlusOutlined, SwapOutlined,
   CreditCardOutlined, PlusCircleOutlined,
@@ -50,6 +50,22 @@ interface ResumeCategorySummary extends AmountByCategory {
   category_id: number;
 }
 
+interface ResumeCardSummary {
+  id: number;
+  card_description: string;
+  flag_id: number;
+  flag_description?: string | null;
+  expiration: number;
+  closure: number;
+  invoice: number;
+  invoice_value: number;
+  period_invoice_status?: string;
+  period_invoice_open_total?: number;
+  period_invoice_pay_day?: string | null;
+  next_invoice_total?: number;
+  next_invoice_pay_day?: string | null;
+}
+
 interface HoveredChartPoint {
   label: string;
   data: {
@@ -91,7 +107,7 @@ const Resume = () => {
     dateFrom: null,
     dateTo: null,
   });
-  const [cards, setCards] = useState<any[]>([]);
+  const [cards, setCards] = useState<ResumeCardSummary[]>([]);
   const [totalCardsInvoice, setTotalCardsInvoice] = useState(0);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [chartData, setChartData] = useState<any[]>([]);
@@ -102,6 +118,7 @@ const Resume = () => {
   const [periodTransactions, setPeriodTransactions] = useState<ITransaction[]>([]);
   const [periodBalance, setPeriodBalance] = useState(0);
   const [objectives, setObjectives] = useState<any[]>([]);
+  const [isLoadingObjectives, setIsLoadingObjectives] = useState(true);
   const [hoveredChartPoint, setHoveredChartPoint] = useState<HoveredChartPoint | null>(null);
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -171,6 +188,10 @@ const Resume = () => {
     filters.mode === "month" &&
     filters.month === today.getMonth() + 1 &&
     filters.year === today.getFullYear();
+  const canCreateObjectiveInFilter =
+    filters.mode === "custom" && filters.dateFrom && filters.dateTo
+      ? !dayjs().isBefore(dayjs(filters.dateFrom), "day") && !dayjs().isAfter(dayjs(filters.dateTo), "day")
+      : isCurrentMonthFilter;
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
 
@@ -393,29 +414,41 @@ const Resume = () => {
   const getCardsData = async () => {
     try {
       const timestamp = Date.now();
+      const queryString = buildAnalysisQueryString(filters);
       const response = await request({
-        endpoint: `cards?t=${timestamp}`,
+        method: "GET",
+        endpoint: `analysis/cards?${queryString}&t=${timestamp}`,
       });
+
       const cardsList = response?.data?.data?.cards || [];
+      const activeCards = cardsList
+        .filter((card: any) => !card.archived_at)
+        .map((card: any) => {
+          const invoiceValue = Number(card.invoices_due_total_in_period || 0);
 
-      const cardsWithInvoices = await Promise.all(
-        cardsList.map(async (card: any) => {
-          try {
-            const invoiceRes = await request({
-              endpoint: `cards/${card.id}/invoice`,
-            });
-            return {
-              ...card,
-              invoice_value: invoiceRes?.data?.data?.invoice || 0,
-            };
-          } catch (err) {
-            return { ...card, invoice_value: 0 };
-          }
-        })
-      );
+          return {
+            id: Number(card.card_id),
+            card_description: card.card_description,
+            flag_id: Number(card.flag_id || 0),
+            flag_description: card.flag_description,
+            expiration: Number(card.expiration_day || 0),
+            closure: Number(card.closure_day || 0),
+            invoice: invoiceValue,
+            invoice_value: invoiceValue,
+            period_invoice_status: card.period_invoice_status,
+            period_invoice_open_total: Number(card.period_invoice_open_total || 0),
+            period_invoice_pay_day: card.period_invoice_pay_day,
+            next_invoice_total: Number(card.next_invoice_total || 0),
+            next_invoice_pay_day: card.next_invoice_pay_day,
+          };
+        });
 
-      const totalValue = cardsWithInvoices.reduce((acc, card) => acc + (card.invoice_value || 0), 0);
-      setCards(cardsWithInvoices);
+      const totalValue = activeCards.reduce((acc: number, card: ResumeCardSummary) => acc + card.invoice_value, 0);
+      setCards(activeCards);
+      setCurrentCardIndex((current) => {
+        if (activeCards.length === 0) return 0;
+        return Math.min(current, activeCards.length - 1);
+      });
       setTotalCardsInvoice(totalValue);
     } catch (error) {
       console.error(error);
@@ -443,13 +476,30 @@ const Resume = () => {
 
   const getObjectives = async () => {
     try {
+      setIsLoadingObjectives(true);
       const { data } = await request({
         method: "GET",
         endpoint: "objectives",
       });
-      setObjectives(data.data.objectives || []);
+      const periodEnd =
+        filters.mode === "custom" && filters.dateTo
+          ? dayjs(filters.dateTo).endOf("day")
+          : dayjs()
+            .year(filters.year)
+            .month(filters.month - 1)
+            .endOf("month");
+      const filteredObjectives = (data.data.objectives || []).filter((objective: any) => {
+        if (!objective.created_at) return true;
+
+        return !dayjs(objective.created_at).isAfter(periodEnd);
+      });
+
+      setObjectives(filteredObjectives);
     } catch (error) {
       console.error("Erro ao buscar objetivos:", error);
+      setObjectives([]);
+    } finally {
+      setIsLoadingObjectives(false);
     }
   };
 
@@ -622,14 +672,14 @@ const Resume = () => {
   useEffect(() => {
     getBalance();
     getUser();
-    getCardsData();
-    getObjectives();
   }, []);
 
   useEffect(() => {
+    getCardsData();
     getTransactionsData();
     getPeriodBudgetSummary();
     getCategorySummaries();
+    getObjectives();
   }, [filters]);
 
   useEffect(() => {
@@ -1050,43 +1100,49 @@ const Resume = () => {
                 <RocketOutlined style={{ marginRight: 6, fontSize: 12, color: "#6C5DD3" }} />
                 Objetivos
               </h3>
-              {objectives.length > 0 ? (
-                <button
-                  type="button"
-                  aria-label="Criar objetivo"
-                  style={{
-                    border: 'none',
-                    height: 40,
-                    width: 40,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    background: 'transparent',
-                    justifySelf: 'center',
-                    padding: 0,
-                  }}
-                  onMouseEnter={(event) => {
-                    event.currentTarget.style.backgroundColor = '#eaeaea';
-                    event.currentTarget.style.borderRadius = '50%';
-                  }}
-                  onMouseLeave={(event) => {
-                    event.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                  onClick={objectiveModalManager.openTypesModal}
-                >
-                  <Image src="/icons/icon-more.svg" alt="Criar objetivo" width={18} height={18} />
-                </button>
-              ) : (
-                <span />
-              )}
+              <button
+                type="button"
+                aria-label="Criar objetivo"
+                disabled={!canCreateObjectiveInFilter}
+                style={{
+                  border: 'none',
+                  height: 40,
+                  width: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: canCreateObjectiveInFilter ? 'pointer' : 'not-allowed',
+                  background: 'transparent',
+                  justifySelf: 'center',
+                  padding: 0,
+                  opacity: canCreateObjectiveInFilter ? 1 : 0.45,
+                }}
+                onMouseEnter={(event) => {
+                  if (!canCreateObjectiveInFilter) return;
+                  event.currentTarget.style.backgroundColor = '#eaeaea';
+                  event.currentTarget.style.borderRadius = '50%';
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                onClick={() => {
+                  if (!canCreateObjectiveInFilter) return;
+                  objectiveModalManager.openTypesModal();
+                }}
+              >
+                <Image src="/icons/icon-more.svg" alt="Criar objetivo" width={18} height={18} />
+              </button>
               <Button type="link" size="small" onClick={() => router.push('/objectives')} style={{ color: '#6C5DD3', padding: 0, justifySelf: 'end' }}>
                 Ver todos
               </Button>
             </div>
 
-            {objectives.length > 0 ? (
-              <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 18 }}>
+            {isLoadingObjectives ? (
+              <div style={{ minHeight: 102, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Spin />
+              </div>
+            ) : objectives.length > 0 ? (
+              <div style={{ minHeight: 102, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 18 }}>
                 {objectives.slice(0, 3).map((obj) => {
                   const percent = Math.round(obj.progress_percentage || 0);
                   const circumference = 2 * Math.PI * 32;
@@ -1153,12 +1209,13 @@ const Resume = () => {
                 })}
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '10px 0' }}>
+              <div style={{ minHeight: 102, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <p style={{ fontSize: 13, color: '#808191', marginBottom: 12 }}>Você ainda não definiu objetivos.</p>
                 <Button
                   type="dashed"
                   size="small"
                   icon={<PlusOutlined />}
+                  disabled={!canCreateObjectiveInFilter}
                   onClick={objectiveModalManager.openTypesModal}
                   style={{ borderRadius: 8, color: '#808191' }}
                 >
@@ -1171,7 +1228,7 @@ const Resume = () => {
 
         <Col xs={24} lg={8} xl={8} style={{ display: "flex", flexDirection: "column", zIndex: 2 }}>
           <div ref={refReal} className={styles.balance} style={{ flex: 1, padding: '16px 24px', position: 'relative', overflow: 'visible' }}>
-            <p className={styles.balance_description} style={{ marginBottom: 12 }}>Meus cartões (total de gastos)</p>
+            <p className={styles.balance_description} style={{ marginBottom: 12 }}>Meus cartões (fatura do período)</p>
             <p className={styles.balance_title} style={{ marginBottom: 24 }}><AnimatedNumber value={totalCardsInvoice} duration={1500} format={formatCurrency} /></p>
 
             {/* Card Slider / Stack Simulation */}
@@ -1233,7 +1290,7 @@ const Resume = () => {
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
                         <div>
-                          <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.7)', marginBottom: 2, fontWeight: 500 }}>Fatura</div>
+                          <div style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.7)', marginBottom: 2, fontWeight: 500 }}>Fatura do período</div>
                           <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>
                             <AnimatedNumber value={card.invoice} duration={1500} format={formatCurrency} />
                           </div>
@@ -1251,8 +1308,9 @@ const Resume = () => {
                           **** **** **** ****
                         </div>
                         <div style={{ fontSize: 12, color: '#fff', fontWeight: 600 }}>
-                          {String(card.expiration).padStart(2, '0')}/
-                          {String(showDate(card.expiration)).padStart(2, '0')}
+                          {card.period_invoice_pay_day
+                            ? dayjs(card.period_invoice_pay_day).format("DD/MM")
+                            : `${String(card.expiration).padStart(2, '0')}/${String(showDate(card.expiration)).padStart(2, '0')}`}
                         </div>
                       </div>
                     </motion.div>
@@ -1264,7 +1322,7 @@ const Resume = () => {
                   display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#808191',
                   zIndex: 10
                 }}>
-                  Nenhum cartão cadastrado
+                  Nenhum cartão ativo
                 </div>
               )}
             </div>
@@ -1304,7 +1362,7 @@ const Resume = () => {
               <Button
                 type="dashed"
                 block
-                disabled={!focusedCard}
+                disabled={!focusedCard || !canCreateObjectiveInFilter}
                 onClick={openFocusedCardInvoiceModal}
                 style={{ borderRadius: 12, height: 48, color: '#808191', fontWeight: 500 }}
               >

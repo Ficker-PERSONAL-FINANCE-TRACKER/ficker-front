@@ -3,7 +3,6 @@ import { InfoCircleOutlined } from "@ant-design/icons";
 import "./styles.scss";
 import { useState } from "react";
 import { ITransaction } from "@/interfaces";
-import Link from "next/link";
 import dayjs from "dayjs";
 
 interface LastTransactionsListProps {
@@ -71,6 +70,7 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
   };
 
   const displayedTransactions = transactions && transactions.length > 0 ? transactions.slice(0, 5) : [];
+  const isEmptyState = !loading && displayedTransactions.length === 0;
 
   return (
     <div className="card">
@@ -136,12 +136,8 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description="Nenhuma transação encontrada."
-            style={{ margin: "20px 0" }}
-          >
-            <Link href="/EnterTransaction">
-              <Button type="primary">Registrar transação</Button>
-            </Link>
-          </Empty>
+            style={{ margin: "51px 0 20px" }}
+          />
         )}
       </div>
 
