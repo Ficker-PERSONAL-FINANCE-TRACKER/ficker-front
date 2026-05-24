@@ -28,10 +28,11 @@
 }
 
 .category-area__description {
-    display: block;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 18px;
     font-size: medium;
     font-weight: 400;
     color: #11142D;
@@ -40,7 +41,11 @@
 .category-area__value {
     color: #11142D;
     text-align: right;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 18px;
     font-weight: 400;
     font-size: medium;
 }

@@ -137,7 +137,7 @@ export const useObjectiveModalManager = ({ onSaved }: UseObjectiveModalManagerPr
   );
 
   const yearOptions = useMemo(
-    () => Array.from({ length: 12 }, (_, index) => currentYear + index).map((year) => ({ value: year, label: String(year) })),
+    () => Array.from({ length: 31 }, (_, index) => currentYear + index).map((year) => ({ value: year, label: String(year) })),
     [currentYear]
   );
 

@@ -77,7 +77,9 @@ const MyCategoriesList = ({ categories, loading = false, onRefresh }: MyCategori
         />
       </div>
 
-      <div className="category-area__value">{formatCurrency(category.category_spending)}</div>
+      <div className="category-area__value" title={formatCurrency(category.category_spending)}>
+        {formatCurrency(category.category_spending)}
+      </div>
     </div>
   );
 
