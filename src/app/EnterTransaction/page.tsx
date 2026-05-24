@@ -33,6 +33,7 @@ const EnterTransaction = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<IncomeFilters>({
     mode: "month",
     month: now.getMonth() + 1,
@@ -45,6 +46,7 @@ const EnterTransaction = () => {
     try {
       const params = new URLSearchParams();
       if (filters.category_id) params.set("category_id", String(filters.category_id));
+      if (searchTerm.trim()) params.set("search", searchTerm.trim());
       params.set("page", String(pagination.current));
       params.set("per_page", String(pagination.pageSize));
 
@@ -82,7 +84,7 @@ const EnterTransaction = () => {
 
   useEffect(() => {
     getTransactions();
-  }, [isModalOpen, isEditModalOpen, filters, isFilterApplied, pagination.current, pagination.pageSize]);
+  }, [isModalOpen, isEditModalOpen, filters, isFilterApplied, searchTerm, pagination.current, pagination.pageSize]);
 
   const handleFilterChange = (nextFilters: IncomeFilters) => {
     setFilters(nextFilters);
@@ -127,7 +129,14 @@ const EnterTransaction = () => {
             <h2>Entradas</h2>
           </div>
           <div className={styles.buttonsArea}>
-            <SearchField style={{ width: 300, marginRight: 0, flex: "0 0 auto" }} />
+            <SearchField
+              value={searchTerm}
+              onChange={(event) => {
+                setSearchTerm(event.target.value);
+                setPagination((current) => ({ ...current, current: 1 }));
+              }}
+              style={{ width: 300, marginRight: 0, flex: "0 0 auto" }}
+            />
             <button className={styles.button} onClick={showModal} style={{ whiteSpace: "nowrap" }}>
               Nova entrada
             </button>

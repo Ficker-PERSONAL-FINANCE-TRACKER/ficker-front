@@ -33,6 +33,7 @@ const Outputs = () => {
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<OutputFilters>({
     mode: "month",
     month: now.getMonth() + 1,
@@ -51,6 +52,7 @@ const Outputs = () => {
       if (filters.category_id) params.set("category_id", String(filters.category_id));
       if (filters.payment_method_id) params.set("payment_method_id", String(filters.payment_method_id));
       if (filters.card_id) params.set("card_id", String(filters.card_id));
+      if (searchTerm.trim()) params.set("search", searchTerm.trim());
       params.set("page", String(pagination.current));
       params.set("per_page", String(pagination.pageSize));
 
@@ -102,7 +104,7 @@ const Outputs = () => {
 
   useEffect(() => {
     getTransactions();
-  }, [isModalOpen, isEditModalOpen, filters, isFilterApplied, pagination.current, pagination.pageSize]);
+  }, [isModalOpen, isEditModalOpen, filters, isFilterApplied, searchTerm, pagination.current, pagination.pageSize]);
 
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
@@ -131,7 +133,14 @@ const Outputs = () => {
             <h2>Saídas</h2>
           </div>
           <div className={styles.buttonsArea}>
-            <SearchField style={{ width: 300, marginRight: 0, flex: "0 0 auto" }} />
+            <SearchField
+              value={searchTerm}
+              onChange={(event) => {
+                setSearchTerm(event.target.value);
+                setPagination((current) => ({ ...current, current: 1 }));
+              }}
+              style={{ width: 300, marginRight: 0, flex: "0 0 auto" }}
+            />
             <button className={styles.button} onClick={showModal} style={{ whiteSpace: "nowrap" }}>
               Nova saída
             </button>

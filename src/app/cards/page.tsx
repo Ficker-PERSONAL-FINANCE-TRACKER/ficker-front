@@ -63,6 +63,7 @@ const Cards = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [filters, setFilters] = useState<CardFilters>({});
+  const [searchTerm, setSearchTerm] = useState("");
   const [actionModal, setActionModal] = useState<ActionModalState>({
     open: false,
     action: null,
@@ -419,10 +420,26 @@ const Cards = () => {
   }, [showArchived, filters, flags]);
 
   const hasAppliedFilters = appliedFiltersLabels.length > 0;
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const displayedCards = useMemo(() => {
+    if (!normalizedSearchTerm) return cards;
+
+    return cards.filter((card) =>
+      String(card.card_description || "").toLowerCase().includes(normalizedSearchTerm)
+    );
+  }, [cards, normalizedSearchTerm]);
+  const displayedArchivedCards = useMemo(() => {
+    if (!normalizedSearchTerm) return archivedCards;
+
+    return archivedCards.filter((card) =>
+      String(card.card_description || "").toLowerCase().includes(normalizedSearchTerm)
+    );
+  }, [archivedCards, normalizedSearchTerm]);
 
   const handleClearFilters = () => {
     setFilters({});
     setShowArchived(false);
+    setSearchTerm("");
   };
 
   return (
@@ -437,7 +454,10 @@ const Cards = () => {
             <h2>Meus cartões</h2>
           </div>
           <div className={styles.buttonsArea}>
-            <SearchField />
+            <SearchField
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
             <button className={styles.button} onClick={openModal}>
               Novo Cartão
             </button>
@@ -466,10 +486,10 @@ const Cards = () => {
               </button>
             </div>
             <Row gutter={[24, 24]} justify={"start"} className={styles.gridArea}>
-              {cards.length > 0 || (showArchived && archivedCards.length > 0) ? (
+              {displayedCards.length > 0 || (showArchived && displayedArchivedCards.length > 0) ? (
                 <>
-                  {cards.map((card) => renderCard(card))}
-                  {showArchived && archivedCards.map((card) => renderCard(card, true))}
+                  {displayedCards.map((card) => renderCard(card))}
+                  {showArchived && displayedArchivedCards.map((card) => renderCard(card, true))}
                 </>
               ) : (
                 <Col span={24}>

@@ -28,11 +28,12 @@ interface CardProps {
   card: Card;
   filters: CardDetailFilters;
   isFilterApplied: boolean;
+  searchTerm: string;
   appliedFiltersLabels: string[];
   onClearFilters: () => void;
 }
 
-function CardPage({ card, filters, isFilterApplied, appliedFiltersLabels, onClearFilters }: CardProps) {
+function CardPage({ card, filters, isFilterApplied, searchTerm, appliedFiltersLabels, onClearFilters }: CardProps) {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isOutputModalOpen, setIsOutputModalOpen] = useState<boolean>(false);
   const [totalValue, setTotalValue] = useState<number>(0);
@@ -57,6 +58,7 @@ function CardPage({ card, filters, isFilterApplied, appliedFiltersLabels, onClea
     try {
       const params = new URLSearchParams();
       if (filters.category_id) params.set("category_id", String(filters.category_id));
+      if (searchTerm.trim()) params.set("search", searchTerm.trim());
       params.set("page", String(pagination.current));
       params.set("per_page", String(pagination.pageSize));
 
@@ -100,11 +102,11 @@ function CardPage({ card, filters, isFilterApplied, appliedFiltersLabels, onClea
   useEffect(() => {
     getCardData();
     getCardTotalValue();
-  }, [isModalOpen, isOutputModalOpen, filters, isFilterApplied, pagination.current, pagination.pageSize]);
+  }, [isModalOpen, isOutputModalOpen, filters, isFilterApplied, searchTerm, pagination.current, pagination.pageSize]);
 
   useEffect(() => {
     setPagination((current) => ({ ...current, current: 1 }));
-  }, [filters, isFilterApplied]);
+  }, [filters, isFilterApplied, searchTerm]);
 
   return (
     <Col xl={24}>

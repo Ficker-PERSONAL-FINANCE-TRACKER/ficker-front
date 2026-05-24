@@ -6,6 +6,7 @@ import { request } from "@/service/api";
 import CardPage from "../card";
 import { CardDetailFilter, type CardDetailFilters } from "../card/detailFilter";
 import CustomMenu from "@/components/CustomMenu";
+import SearchField from "@/components/SearchField";
 import styles from "../cards.module.scss";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
@@ -30,6 +31,7 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
   const [card, setCard] = useState<Card | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFilterApplied, setIsFilterApplied] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
 
   const [filters, setFilters] = useState<CardDetailFilters>({
@@ -140,6 +142,11 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
               )}
             </h2>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <SearchField
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                style={{ marginTop: 0 }}
+              />
               <CardDetailFilter filters={filters} onChange={handleFilterChange} />
             </div>
           </div>
@@ -155,6 +162,7 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
                 card={card}
                 filters={filters}
                 isFilterApplied={isFilterApplied}
+                searchTerm={searchTerm}
                 appliedFiltersLabels={appliedFiltersLabels}
                 onClearFilters={handleClearFilters}
               />
