@@ -73,6 +73,7 @@ interface ResumeCardSummary {
 interface HoveredChartPoint {
   label: string;
   data: {
+    name?: string;
     entrada: number;
     saida: number;
     total: number;
@@ -86,12 +87,50 @@ const buildAnalysisQueryString = (filters: ResumeFilters) => {
   if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
     params.set("date_from", filters.dateFrom);
     params.set("date_to", filters.dateTo);
+  } else if (filters.months?.length && filters.years?.length) {
+    filters.months.forEach((month) => params.append("months[]", String(month)));
+    filters.years.forEach((year) => params.append("years[]", String(year)));
   } else {
-    params.set("month", String(filters.month));
-    params.set("year", String(filters.year));
+    const now = new Date();
+    const latest = getLatestMonthYearPair(filters, now);
+    params.set("month", String(latest.month));
+    params.set("year", String(latest.year));
   }
 
   return params.toString();
+};
+
+const getMonthYearPairs = (filters: ResumeFilters) => {
+  if (filters.mode !== "month") return [];
+
+  const months = filters.months?.length ? filters.months : filters.month ? [filters.month] : [];
+  const years = filters.years?.length ? filters.years : filters.year ? [filters.year] : [];
+
+  return years
+    .flatMap((year) => months.map((month) => ({ month, year })))
+    .sort((a, b) => a.year - b.year || a.month - b.month);
+};
+
+const getLatestMonthYearPair = (filters: ResumeFilters, fallback: Date) => {
+  const pairs = getMonthYearPairs(filters);
+  return pairs[pairs.length - 1] ?? { month: fallback.getMonth() + 1, year: fallback.getFullYear() };
+};
+
+const getFilterDateRanges = (filters: ResumeFilters, fallback: Date) => {
+  if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
+    return [{
+      start: dayjs(filters.dateFrom).startOf("day"),
+      end: dayjs(filters.dateTo).endOf("day"),
+    }];
+  }
+
+  const pairs = getMonthYearPairs(filters);
+  const resolvedPairs = pairs.length ? pairs : [{ month: fallback.getMonth() + 1, year: fallback.getFullYear() }];
+
+  return resolvedPairs.map(({ month, year }) => {
+    const start = dayjs().year(year).month(month - 1).startOf("month");
+    return { start, end: start.endOf("month") };
+  });
 };
 
 const Resume = () => {
@@ -175,26 +214,38 @@ const Resume = () => {
     "Dezembro",
   ];
 
-  const currentMonthLabel = monthNames[filters.month - 1] || "Período";
+  const selectedMonthYearPairs = useMemo(() => getMonthYearPairs(filters), [filters]);
+  const latestMonthYearPair = useMemo(() => getLatestMonthYearPair(filters, today), [filters, today]);
+  const hasAccumulatedMonthFilter = filters.mode === "month" && selectedMonthYearPairs.length > 1;
+  const currentMonthLabel = monthNames[(filters.month ?? latestMonthYearPair.month) - 1] || "Período";
   const filterSummary = useMemo(() => {
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
       return `${dayjs(filters.dateFrom).format("DD/MM/YYYY")} até ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`;
     }
 
-    return `${currentMonthLabel} de ${filters.year}`;
-  }, [currentMonthLabel, filters]);
-  const chartLabelPrefix = filters.mode === "month" ? "Dia" : "Data";
-  const goalCardTitle = filters.mode === "month" ? "Teto de gastos" : "Teto do período";
+    if (selectedMonthYearPairs.length > 1) {
+      const months = Array.from(new Set(selectedMonthYearPairs.map(({ month }) => month)))
+        .map((month) => monthNames[month - 1])
+        .join(", ");
+      const years = Array.from(new Set(selectedMonthYearPairs.map(({ year }) => year))).join(", ");
+      return `${months} de ${years}`;
+    }
+
+    return `${currentMonthLabel} de ${latestMonthYearPair.year}`;
+  }, [currentMonthLabel, filters, latestMonthYearPair.year, monthNames, selectedMonthYearPairs]);
+  const chartLabelPrefix = filters.mode === "month" && !hasAccumulatedMonthFilter ? "Dia" : "Data";
+  const goalCardTitle = filters.mode === "month" && !hasAccumulatedMonthFilter ? "Teto de gastos" : "Teto do período";
   const periodPlannedSpending = Number(periodBudgetSummary.planned_spending_total || 0);
   const periodRealSpending = Number(periodBudgetSummary.real_spending_total || 0);
   const spentPercentage = periodPlannedSpending > 0 ? (periodRealSpending / periodPlannedSpending) * 100 : 0;
   const isCurrentMonthFilter =
     filters.mode === "month" &&
-    filters.month === today.getMonth() + 1 &&
-    filters.year === today.getFullYear();
+    selectedMonthYearPairs.length === 1 &&
+    latestMonthYearPair.month === today.getMonth() + 1 &&
+    latestMonthYearPair.year === today.getFullYear();
   const selectedMonthStart = dayjs()
-    .year(filters.year)
-    .month(filters.month - 1)
+    .year(latestMonthYearPair.year)
+    .month(latestMonthYearPair.month - 1)
     .startOf("month");
   const canEditSpendingGoal =
     filters.mode === "month" &&
@@ -203,25 +254,30 @@ const Resume = () => {
   const canCreateObjectiveInFilter =
     filters.mode === "custom" && filters.dateFrom && filters.dateTo
       ? !dayjs().isBefore(dayjs(filters.dateFrom), "day") && !dayjs().isAfter(dayjs(filters.dateTo), "day")
-      : isCurrentMonthFilter;
+      : selectedMonthYearPairs.some(({ month, year }) => month === today.getMonth() + 1 && year === today.getFullYear());
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
 
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
       labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
+    } else if (selectedMonthYearPairs.length > 1) {
+      labels.push(`Meses: ${Array.from(new Set(selectedMonthYearPairs.map(({ month }) => monthNames[month - 1]))).join(", ")}`);
+      labels.push(`Anos: ${Array.from(new Set(selectedMonthYearPairs.map(({ year }) => year))).join(", ")}`);
     } else if (!isCurrentMonthFilter) {
       labels.push(`Mês: ${currentMonthLabel}`);
-      labels.push(`Ano: ${filters.year}`);
+      labels.push(`Ano: ${latestMonthYearPair.year}`);
     }
 
     return labels;
-  }, [currentMonthLabel, filters, isCurrentMonthFilter]);
+  }, [currentMonthLabel, filters, isCurrentMonthFilter, latestMonthYearPair.year, monthNames, selectedMonthYearPairs]);
 
   const handleClearFilters = () => {
     setFilters({
       mode: "month",
       month: today.getMonth() + 1,
+      months: undefined,
       year: today.getFullYear(),
+      years: undefined,
       dateFrom: null,
       dateTo: null,
     });
@@ -452,7 +508,6 @@ const Resume = () => {
         method: "GET",
         endpoint: `analysis/cards?${queryString}&t=${timestamp}`,
       });
-
       const cardsList = response?.data?.data?.cards || [];
       const activeCards = cardsList
         .filter((card: any) => !card.archived_at)
@@ -518,13 +573,8 @@ const Resume = () => {
         method: "GET",
         endpoint: "objectives",
       });
-      const periodEnd =
-        filters.mode === "custom" && filters.dateTo
-          ? dayjs(filters.dateTo).endOf("day")
-          : dayjs()
-            .year(filters.year)
-            .month(filters.month - 1)
-            .endOf("month");
+      const ranges = getFilterDateRanges(filters, today);
+      const periodEnd = ranges.reduce((latest, range) => range.end.isAfter(latest) ? range.end : latest, ranges[0].end);
       const filteredObjectives = (data.data.objectives || []).filter((objective: any) => {
         if (!objective.created_at) return true;
 
@@ -572,10 +622,21 @@ const Resume = () => {
   const getTransactionsData = async () => {
     try {
       setIsLoadingChart(true);
-      const response = await request({
-        endpoint: "transaction/all",
-      });
-      const txs = (response?.data?.data?.transactions || []) as ITransaction[];
+      const perPage = 100;
+      let page = 1;
+      let lastPage = 1;
+      const txs: ITransaction[] = [];
+      const timestamp = Date.now();
+
+      do {
+        const response = await request({
+          endpoint: `transaction/all?page=${page}&per_page=${perPage}&t=${timestamp}`,
+        });
+
+        txs.push(...((response?.data?.data?.transactions || []) as ITransaction[]));
+        lastPage = Number(response?.data?.meta?.last_page ?? 1);
+        page += 1;
+      } while (page <= lastPage);
 
       if (txs.length === 0) {
         setChartData([]);
@@ -585,18 +646,14 @@ const Resume = () => {
         return;
       }
 
-      // Determinar o mês de referência com base no seletor de período
-      const periodStart =
-        filters.mode === "custom" && filters.dateFrom
-          ? dayjs(filters.dateFrom).startOf("day")
-          : dayjs()
-            .year(filters.year)
-            .month(filters.month - 1)
-            .startOf("month");
-      const periodEnd =
-        filters.mode === "custom" && filters.dateTo
-          ? dayjs(filters.dateTo).endOf("day")
-          : periodStart.endOf("month");
+      const ranges = getFilterDateRanges(filters, today);
+      const periodStart = ranges.reduce((earliest, range) => range.start.isBefore(earliest) ? range.start : earliest, ranges[0].start);
+      const periodEnd = ranges.reduce((latest, range) => range.end.isAfter(latest) ? range.end : latest, ranges[0].end);
+      const isDateInSelectedRanges = (date: dayjs.Dayjs) =>
+        ranges.some((range) =>
+          (date.isAfter(range.start) || date.isSame(range.start, "day")) &&
+          (date.isBefore(range.end) || date.isSame(range.end, "day"))
+        );
 
       // Calcular o saldo acumulado ANTES do mês de referência
       const openingBalance = txs.reduce((acc: number, tx: any) => {
@@ -621,28 +678,27 @@ const Resume = () => {
 
       // Inicializar todos os dias do mês com valores zero
       const grouped: { [key: string]: { name: string, entrada: number, saida: number, total: number, sortKey: number } } = {};
-      let cursor = periodStart.clone();
-      while (cursor.isBefore(periodEnd) || cursor.isSame(periodEnd, "day")) {
-        const key = cursor.format("YYYY-MM-DD");
-        grouped[key] = {
-          name: filters.mode === "month" ? cursor.format("DD") : cursor.format("DD/MM"),
-          entrada: 0,
-          saida: 0,
-          total: 0,
-          sortKey: cursor.valueOf()
-        };
-        cursor = cursor.add(1, "day");
-      }
+      ranges.forEach((range) => {
+        let cursor = range.start.clone();
+        while (cursor.isBefore(range.end) || cursor.isSame(range.end, "day")) {
+          const key = cursor.format("YYYY-MM-DD");
+          grouped[key] = {
+            name: filters.mode === "month" && !hasAccumulatedMonthFilter ? cursor.format("DD") : cursor.format("DD/MM"),
+            entrada: 0,
+            saida: 0,
+            total: 0,
+            sortKey: cursor.valueOf()
+          };
+          cursor = cursor.add(1, "day");
+        }
+      });
 
       // Filtrar e somar transações apenas do mês selecionado
       txs.forEach((tx: any) => {
         const txDate = dayjs(tx.date);
 
         // Verifica se a transação pertence ao mês e ano de referência
-        if (
-          (txDate.isAfter(periodStart) || txDate.isSame(periodStart, "day")) &&
-          (txDate.isBefore(periodEnd) || txDate.isSame(periodEnd, "day"))
-        ) {
+        if (isDateInSelectedRanges(txDate)) {
           const dayKey = txDate.format("YYYY-MM-DD");
           const value = parseFloat(tx.transaction_value || 0);
 
@@ -664,10 +720,7 @@ const Resume = () => {
         .filter((tx: ITransaction) => {
           const txDate = dayjs(tx.date);
 
-          return (
-            (txDate.isAfter(periodStart) || txDate.isSame(periodStart, "day")) &&
-            (txDate.isBefore(periodEnd) || txDate.isSame(periodEnd, "day"))
-          );
+          return isDateInSelectedRanges(txDate);
         })
         .sort((a: ITransaction, b: ITransaction) => dayjs(b.date).valueOf() - dayjs(a.date).valueOf());
 
@@ -758,9 +811,10 @@ const Resume = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const displayLabel = data.name ?? label;
       return (
         <div style={{ background: '#fff', padding: '12px', border: '1px solid #f0f0f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-          <p style={{ fontWeight: 700, marginBottom: '8px', color: '#11142D' }}>{chartLabelPrefix} {label}</p>
+          <p style={{ fontWeight: 700, marginBottom: '8px', color: '#11142D' }}>{chartLabelPrefix} {displayLabel}</p>
           <p style={{ margin: 0, color: '#00875A', fontSize: '12px' }}>Entradas: {formatCurrency(data.entrada)}</p>
           <p style={{ margin: 0, color: '#DE350B', fontSize: '12px' }}>Saídas: {formatCurrency(data.saida)}</p>
           <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #f0f0f0' }}>
@@ -781,8 +835,9 @@ const Resume = () => {
       const payload = state.activePayload[0].payload;
 
       setHoveredChartPoint({
-        label: String(state.activeLabel ?? payload.name ?? ""),
+        label: String(payload.name ?? state.activeLabel ?? ""),
         data: {
+          name: payload.name,
           entrada: Number(payload.entrada || 0),
           saida: Number(payload.saida || 0),
           total: Number(payload.total || 0),
@@ -1122,7 +1177,7 @@ const Resume = () => {
                   <span style={{ fontSize: 11, color: '#808191' }}>
                     {periodPlannedSpending > 0
                       ? `Restam ${formatCurrency(Math.max(periodPlannedSpending - periodRealSpending, 0)).replace(",00", "")}`
-                      : filters.mode === "month"
+                      : filters.mode === "month" && !hasAccumulatedMonthFilter
                         ? "Defina um teto"
                         : "Sem teto acumulado"}
                   </span>
@@ -1286,7 +1341,7 @@ const Resume = () => {
                     {payableInvoicesCount} {payableInvoicesCount === 1 ? 'fatura acumulada' : 'faturas acumuladas'} em aberto
                   </span>
                   <span style={{ fontSize: 11, color: '#808191', fontWeight: 500 }}>
-                    {periodOpenInvoicesCount} {periodOpenInvoicesCount === 1 ? 'fatura' : 'faturas'} {filters.mode === "month" ? "do mês" : "do período"} em aberto
+                    {periodOpenInvoicesCount} {periodOpenInvoicesCount === 1 ? 'fatura' : 'faturas'} {filters.mode === "month" && !hasAccumulatedMonthFilter ? "do mês" : "do período"} em aberto
                   </span>
                 </div>
               )}
@@ -1442,7 +1497,11 @@ const Resume = () => {
         </Col>
         <Col ref={refTransacoes} xs={24} lg={12} xl={12}>
           <div>
-            <LastTransactionsList transactions={periodTransactions} loading={isLoadingChart} />
+            <LastTransactionsList
+              transactions={periodTransactions}
+              loading={isLoadingChart}
+              historyQueryString={buildAnalysisQueryString(filters)}
+            />
           </div>
         </Col>
       </Row>

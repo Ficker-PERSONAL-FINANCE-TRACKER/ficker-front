@@ -28,16 +28,18 @@ export type ResumeFilterMode = "month" | "custom";
 
 export type ResumeFilters = {
   mode: ResumeFilterMode;
-  month: number;
-  year: number;
+  month: number | null;
+  months?: number[];
+  year: number | null;
+  years?: number[];
   dateFrom: string | null;
   dateTo: string | null;
 };
 
 type FilterFormValues = {
   mode: ResumeFilterMode;
-  month?: number;
-  year?: number;
+  months?: number[];
+  years?: number[];
   range?: [Dayjs, Dayjs];
 };
 
@@ -66,6 +68,19 @@ export const ResumeTemporalFilter = ({ filters, onChange }: ResumeTemporalFilter
     [availableYears]
   );
 
+  const validateMonthYearPair = () => {
+    const months = form.getFieldValue("months");
+    const years = form.getFieldValue("years");
+    const hasMonths = Array.isArray(months) && months.length > 0;
+    const hasYears = Array.isArray(years) && years.length > 0;
+
+    if ((hasMonths && !hasYears) || (!hasMonths && hasYears)) {
+      return Promise.reject(new Error("Informe mês e ano ou deixe ambos vazios"));
+    }
+
+    return Promise.resolve();
+  };
+
   const fetchYears = async () => {
     try {
       const res = await request({ method: "GET", endpoint: "transaction/years" });
@@ -79,8 +94,8 @@ export const ResumeTemporalFilter = ({ filters, onChange }: ResumeTemporalFilter
     fetchYears();
     form.setFieldsValue({
       mode: filters.mode,
-      month: filters.month,
-      year: filters.year,
+      months: filters.months ?? (filters.month ? [filters.month] : undefined),
+      years: filters.years ?? (filters.year ? [filters.year] : undefined),
       range:
         filters.mode === "custom" && filters.dateFrom && filters.dateTo
           ? [dayjs(filters.dateFrom), dayjs(filters.dateTo)]
@@ -101,15 +116,21 @@ export const ResumeTemporalFilter = ({ filters, onChange }: ResumeTemporalFilter
       onChange({
         mode: "custom",
         month: now.getMonth() + 1,
+        months: undefined,
         year: now.getFullYear(),
+        years: undefined,
         dateFrom: values.range[0].startOf("day").format("YYYY-MM-DD"),
         dateTo: values.range[1].endOf("day").format("YYYY-MM-DD"),
       });
     } else {
+      const hasMonthYear = Boolean(values.months?.length && values.years?.length);
+
       onChange({
         mode: "month",
-        month: Number(values.month),
-        year: Number(values.year),
+        month: null,
+        months: hasMonthYear ? values.months?.map(Number) : undefined,
+        year: null,
+        years: hasMonthYear ? values.years?.map(Number) : undefined,
         dateFrom: null,
         dateTo: null,
       });
@@ -173,11 +194,11 @@ export const ResumeTemporalFilter = ({ filters, onChange }: ResumeTemporalFilter
             </Form.Item>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-              <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
-                <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
+              <Form.Item name="months" label="Mês" dependencies={["years"]} rules={[{ validator: validateMonthYearPair }]}>
+                <Select mode="multiple" allowClear options={MONTH_OPTIONS} placeholder="Todos os meses" style={{ minHeight: 45 }} />
               </Form.Item>
-              <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
-                <Select options={yearOptions} placeholder="Ano" style={{ height: 45 }} />
+              <Form.Item name="years" label="Ano" dependencies={["months"]} rules={[{ validator: validateMonthYearPair }]}>
+                <Select mode="multiple" allowClear options={yearOptions} placeholder="Todos os anos" style={{ minHeight: 45 }} />
               </Form.Item>
             </div>
           )}

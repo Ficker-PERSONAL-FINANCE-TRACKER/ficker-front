@@ -64,8 +64,10 @@ type FilterMode = "month" | "custom";
 
 type CategoryFilters = {
   mode: FilterMode;
-  month: number;
-  year: number;
+  month: number | null;
+  year: number | null;
+  months: number[];
+  years: number[];
   customMonthStart: number | null;
   customYearStart: number | null;
   customMonthEnd: number | null;
@@ -76,6 +78,8 @@ type FilterFormValues = {
   mode: FilterMode;
   month?: number;
   year?: number;
+  months?: number[];
+  years?: number[];
   custom_month_start?: number;
   custom_year_start?: number;
   custom_month_end?: number;
@@ -83,12 +87,21 @@ type FilterFormValues = {
 };
 
 const getCoveredMonths = (filters: CategoryFilters) => {
+  if (filters.mode === "month") {
+    const selectedMonths = filters.months.length > 0 ? filters.months : filters.month ? [filters.month] : [];
+    const selectedYears = filters.years.length > 0 ? filters.years : filters.year ? [filters.year] : [];
+
+    return selectedYears
+      .flatMap((year) => selectedMonths.map((month) => ({ month, year })))
+      .sort((a, b) => (a.year * 100 + a.month) - (b.year * 100 + b.month));
+  }
+
   const start = filters.mode === "custom" && filters.customMonthStart && filters.customYearStart
     ? dayjs().year(filters.customYearStart).month(filters.customMonthStart - 1).startOf("month")
-    : dayjs().year(filters.year).month(filters.month - 1).startOf("month");
+    : dayjs().year(filters.year ?? dayjs().year()).month((filters.month ?? dayjs().month() + 1) - 1).startOf("month");
   const end = filters.mode === "custom" && filters.customMonthEnd && filters.customYearEnd
     ? dayjs().year(filters.customYearEnd).month(filters.customMonthEnd - 1).startOf("month")
-    : dayjs().year(filters.year).month(filters.month - 1).startOf("month");
+    : dayjs().year(filters.year ?? dayjs().year()).month((filters.month ?? dayjs().month() + 1) - 1).startOf("month");
   const months: Array<{ month: number; year: number }> = [];
 
   let cursor = start.clone();
@@ -98,6 +111,26 @@ const getCoveredMonths = (filters: CategoryFilters) => {
   }
 
   return months;
+};
+
+const buildCategoriesQueryString = (filters: CategoryFilters) => {
+  const params = new URLSearchParams();
+  const coveredMonths = getCoveredMonths(filters);
+
+  if (filters.mode === "custom") {
+    coveredMonths.forEach(({ month, year }) => {
+      params.append("periods[]", `${year}-${String(month).padStart(2, "0")}`);
+    });
+  } else {
+    const selectedMonths = filters.months.length > 0 ? filters.months : filters.month ? [filters.month] : [];
+    const selectedYears = filters.years.length > 0 ? filters.years : filters.year ? [filters.year] : [];
+
+    selectedMonths.forEach((month) => params.append("months[]", String(month)));
+    selectedYears.forEach((year) => params.append("years[]", String(year)));
+  }
+
+  params.append("t", String(Date.now()));
+  return params.toString();
 };
 
 const CategoriesPage = () => {
@@ -112,6 +145,8 @@ const CategoriesPage = () => {
     mode: "month",
     month: now.getMonth() + 1,
     year: now.getFullYear(),
+    months: [now.getMonth() + 1],
+    years: [now.getFullYear()],
     customMonthStart: null,
     customYearStart: null,
     customMonthEnd: null,
@@ -126,7 +161,21 @@ const CategoriesPage = () => {
     [transactionYears]
   );
 
-  const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "Período";
+  const selectedPeriods = useMemo(() => getCoveredMonths(filters), [filters]);
+  const selectedMonthNames = useMemo(() => {
+    const uniqueMonths = Array.from(new Set(selectedPeriods.map((period) => period.month)));
+    return uniqueMonths
+      .map((month) => MONTH_OPTIONS.find((option) => option.value === month)?.label)
+      .filter(Boolean)
+      .join(", ");
+  }, [selectedPeriods]);
+  const selectedYearsLabel = useMemo(() => {
+    const uniqueYears = Array.from(new Set(selectedPeriods.map((period) => period.year)));
+    return uniqueYears.join(", ");
+  }, [selectedPeriods]);
+  const currentMonthLabel = selectedPeriods.length === 1
+    ? MONTH_OPTIONS.find((option) => option.value === selectedPeriods[0].month)?.label ?? "Período"
+    : "Período";
   const filterSummary = useMemo(() => {
     if (
       filters.mode === "custom" &&
@@ -141,12 +190,19 @@ const CategoriesPage = () => {
       return `${startLabel} de ${filters.customYearStart} até ${endLabel} de ${filters.customYearEnd}`;
     }
 
-    return `${currentMonthLabel} de ${filters.year}`;
-  }, [currentMonthLabel, filters]);
+    if (selectedPeriods.length === 1) {
+      return `${currentMonthLabel} de ${selectedPeriods[0].year}`;
+    }
+
+    return `${selectedMonthNames || "Meses"} de ${selectedYearsLabel || "Anos"}`;
+  }, [currentMonthLabel, filters, selectedMonthNames, selectedPeriods, selectedYearsLabel]);
 
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
-    const isDefaultMonth = filters.mode === "month" && filters.month === (now.getMonth() + 1) && filters.year === now.getFullYear();
+    const isDefaultMonth = filters.mode === "month"
+      && selectedPeriods.length === 1
+      && selectedPeriods[0].month === (now.getMonth() + 1)
+      && selectedPeriods[0].year === now.getFullYear();
 
     if (
       filters.mode === "custom" &&
@@ -159,14 +215,14 @@ const CategoriesPage = () => {
       const endLabel = MONTH_OPTIONS.find((option) => option.value === filters.customMonthEnd)?.label ?? "Fim";
       labels.push(`Período: ${startLabel} de ${filters.customYearStart} - ${endLabel} de ${filters.customYearEnd}`);
     } else if (!isDefaultMonth) {
-      labels.push(`Mês: ${currentMonthLabel}`);
-      labels.push(`Ano: ${filters.year}`);
+      labels.push(`Meses: ${selectedMonthNames || currentMonthLabel}`);
+      labels.push(`Anos: ${selectedYearsLabel}`);
     }
 
     return labels;
-  }, [currentMonthLabel, filters, now]);
+  }, [currentMonthLabel, filters, now, selectedMonthNames, selectedPeriods, selectedYearsLabel]);
 
-  const isMonthMode = filters.mode === "month";
+  const canEditLimit = filters.mode === "month" && selectedPeriods.length === 1;
   const paginatedCategories = useMemo(() => {
     const start = (currentPage - 1) * CATEGORIES_PER_PAGE;
     return categories.slice(start, start + CATEGORIES_PER_PAGE);
@@ -214,49 +270,16 @@ const CategoriesPage = () => {
     setLoading(true);
 
     try {
-      const coveredMonths = getCoveredMonths(filters);
-      const timestamp = Date.now();
-      
-      const monthlyCategoriesResults = await Promise.allSettled(
-        coveredMonths.map(({ month, year }) => 
-          request({ method: "GET", endpoint: `categories?month=${month}&year=${year}&t=${timestamp}` })
-        )
-      );
+      const response = await request({ method: "GET", endpoint: `categories?${buildCategoriesQueryString(filters)}` });
+      const responseCategories = (response.data?.data?.categories ?? []) as CategoryMonthData[];
 
-      const aggregatedData: Record<number, { 
-        id: number; 
-        category_description: string; 
-        limit: number; 
-        spending: number;
-        type_id?: number;
-      }> = {};
-
-      monthlyCategoriesResults.forEach((result) => {
-        if (result.status !== "fulfilled") return;
-        const monthCategories = (result.value.data?.data?.categories ?? []) as CategoryMonthData[];
-
-        monthCategories.forEach((cat) => {
-          if (!aggregatedData[cat.id]) {
-            aggregatedData[cat.id] = {
-              id: cat.id,
-              category_description: cat.category_description,
-              limit: 0,
-              spending: 0,
-              type_id: cat.type_id
-            };
-          }
-          aggregatedData[cat.id].limit += Number(cat.category_limit || 0);
-          aggregatedData[cat.id].spending += Number(cat.category_spending || cat.category_real_spending || 0);
-        });
-      });
-
-      const mergedCategories = Object.values(aggregatedData)
+      const mergedCategories = responseCategories
         .filter((cat) => Number(cat.type_id) === 2)
         .map((cat) => ({
           id: cat.id,
           category_description: cat.category_description,
-          category_limit: cat.limit,
-          category_total_spending: cat.spending,
+          category_limit: Number(cat.category_limit || 0),
+          category_total_spending: Number(cat.category_spending || cat.category_real_spending || 0),
         }))
         .sort((a, b) => b.category_total_spending - a.category_total_spending || a.category_description.localeCompare(b.category_description, "pt-BR"));
 
@@ -284,8 +307,8 @@ const CategoriesPage = () => {
   }, [categories.length, currentPage]);
 
   const handleEditLimit = (category: CategoryView) => {
-    if (!isMonthMode) {
-      message.info("A edição de teto fica disponível no filtro por mês.");
+    if (!canEditLimit) {
+      message.info("A edição de teto fica disponível ao selecionar um único mês.");
       return;
     }
 
@@ -312,8 +335,8 @@ const CategoriesPage = () => {
         data: {
           category_limit: Number(values.category_limit || 0),
           keep_future: Boolean(values.keep_future),
-          month: filters.month,
-          year: filters.year,
+          month: selectedPeriods[0].month,
+          year: selectedPeriods[0].year,
         },
       });
 
@@ -340,8 +363,10 @@ const CategoriesPage = () => {
     fetchTransactionYears();
     filterForm.setFieldsValue({
       mode: filters.mode,
-      month: filters.month,
-      year: filters.year,
+      month: selectedPeriods[0]?.month ?? now.getMonth() + 1,
+      year: selectedPeriods[0]?.year ?? now.getFullYear(),
+      months: filters.months.length > 0 ? filters.months : [selectedPeriods[0]?.month ?? now.getMonth() + 1],
+      years: filters.years.length > 0 ? filters.years : [selectedPeriods[0]?.year ?? now.getFullYear()],
       custom_month_start: filters.customMonthStart ?? undefined,
       custom_year_start: filters.customYearStart ?? undefined,
       custom_month_end: filters.customMonthEnd ?? undefined,
@@ -364,8 +389,10 @@ const CategoriesPage = () => {
 
       setFilters({
         mode: "custom",
-        month: now.getMonth() + 1,
-        year: now.getFullYear(),
+        month: null,
+        year: null,
+        months: [],
+        years: [],
         customMonthStart: Number(values.custom_month_start),
         customYearStart: Number(values.custom_year_start),
         customMonthEnd: Number(values.custom_month_end),
@@ -374,8 +401,10 @@ const CategoriesPage = () => {
     } else {
       setFilters({
         mode: "month",
-        month: Number(values.month),
-        year: Number(values.year),
+        month: null,
+        year: null,
+        months: values.months?.map(Number) ?? [now.getMonth() + 1],
+        years: values.years?.map(Number) ?? [now.getFullYear()],
         customMonthStart: null,
         customYearStart: null,
         customMonthEnd: null,
@@ -392,6 +421,8 @@ const CategoriesPage = () => {
       mode: "month" as const,
       month: now.getMonth() + 1,
       year: now.getFullYear(),
+      months: [now.getMonth() + 1],
+      years: [now.getFullYear()],
       customMonthStart: null,
       customYearStart: null,
       customMonthEnd: null,
@@ -404,6 +435,8 @@ const CategoriesPage = () => {
       mode: defaultFilters.mode,
       month: defaultFilters.month,
       year: defaultFilters.year,
+      months: defaultFilters.months,
+      years: defaultFilters.years,
       custom_month_start: undefined,
       custom_year_start: undefined,
       custom_month_end: undefined,
@@ -421,6 +454,21 @@ const CategoriesPage = () => {
   };
 
   const selectedMode = Form.useWatch("mode", filterForm) ?? filters.mode;
+  const validateMonthYearPair = (_: unknown, value: unknown) => {
+    const values = filterForm.getFieldsValue();
+    const months = values.months ?? [];
+    const years = values.years ?? [];
+
+    if ((months.length === 0 && years.length > 0) || (years.length === 0 && months.length > 0)) {
+      return Promise.reject(new Error("Selecione ao menos um mês e um ano."));
+    }
+
+    if (value === undefined || (Array.isArray(value) && value.length === 0)) {
+      return Promise.reject(new Error("Selecione ao menos uma opção."));
+    }
+
+    return Promise.resolve();
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "row", minHeight: "100vh", background: "#F8FAFC" }}>
@@ -434,9 +482,9 @@ const CategoriesPage = () => {
             </p>
           </div>
           <div className={styles.headerActions}>
-            {!isMonthMode ? (
+            {!canEditLimit ? (
               <span className={styles.helperText}>
-                Edição de tetos disponível apenas no filtro por mês.
+                Edição de tetos disponível apenas com um único mês selecionado.
               </span>
             ) : null}
             <span className={styles.filterSummary}>{filterSummary}</span>
@@ -493,7 +541,7 @@ const CategoriesPage = () => {
                           type="text"
                           icon={<EditOutlined />}
                           onClick={() => handleEditLimit(category)}
-                          disabled={!isMonthMode}
+                          disabled={!canEditLimit}
                           style={{ color: "#808191" }}
                         />
                       </div>
@@ -546,7 +594,7 @@ const CategoriesPage = () => {
         >
           <div style={{ marginBottom: 20 }}>
             <p style={{ color: "#808191", fontSize: 13 }}>
-              Defina o valor máximo que você planeja gastar com <strong>{selectedCategory?.category_description}</strong> em {currentMonthLabel.toLowerCase()} de {filters.year}.
+              Defina o valor máximo que você planeja gastar com <strong>{selectedCategory?.category_description}</strong> em {currentMonthLabel.toLowerCase()} de {selectedPeriods[0]?.year}.
             </p>
           </div>
           <Form form={form} layout="vertical">
@@ -582,7 +630,7 @@ const CategoriesPage = () => {
             <Form.Item name="mode" label="Modo de filtro" rules={[{ required: true, message: "Selecione um modo" }]}>
               <Select
                 options={[
-                  { value: "month", label: "Mês específico" },
+                  { value: "month", label: "Meses e anos" },
                   { value: "custom", label: "Intervalo personalizado" },
                 ]}
               />
@@ -609,11 +657,23 @@ const CategoriesPage = () => {
               </>
             ) : (
               <div className={styles.filterFieldsRow}>
-                <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
-                  <Select options={MONTH_OPTIONS} />
+                <Form.Item name="months" label="Meses" rules={[{ validator: validateMonthYearPair }]}>
+                  <Select
+                    mode="multiple"
+                    allowClear
+                    maxTagCount="responsive"
+                    options={MONTH_OPTIONS}
+                    placeholder="Selecione os meses"
+                  />
                 </Form.Item>
-                <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
-                  <Select options={yearOptions} />
+                <Form.Item name="years" label="Anos" rules={[{ validator: validateMonthYearPair }]}>
+                  <Select
+                    mode="multiple"
+                    allowClear
+                    maxTagCount="responsive"
+                    options={yearOptions}
+                    placeholder="Selecione os anos"
+                  />
                 </Form.Item>
               </div>
             )}

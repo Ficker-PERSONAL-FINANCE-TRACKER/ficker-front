@@ -1,20 +1,25 @@
-import { Image, Empty, Button, Modal, Tooltip } from "antd";
+import { Image, Empty, Button, Modal, Tooltip, Pagination, Spin } from "antd";
 import { InfoCircleOutlined } from "@ant-design/icons";
 import "./styles.scss";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ITransaction } from "@/interfaces";
 import dayjs from "dayjs";
+import { request } from "@/service/api";
 
 interface LastTransactionsListProps {
   transactions: ITransaction[];
   loading?: boolean;
+  historyQueryString?: string;
 }
 
 type SortKey = "transaction_description" | "type_id" | "category_description" | "date" | "transaction_value";
 type SortDirection = "asc" | "desc";
 
-const LastTransactionsList = ({ transactions, loading = false }: LastTransactionsListProps) => {
+const LastTransactionsList = ({ transactions, loading = false, historyQueryString }: LastTransactionsListProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [historyTransactions, setHistoryTransactions] = useState<ITransaction[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyPagination, setHistoryPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({
     key: "date",
     direction: "desc",
@@ -78,10 +83,14 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
 
   const displayedTransactions = transactions && transactions.length > 0 ? transactions.slice(0, 5) : [];
   const isEmptyState = !loading && displayedTransactions.length === 0;
+  const modalTransactions = historyQueryString ? historyTransactions : transactions;
+  const usesBackendHistorySort = Boolean(historyQueryString && sortConfig.key !== "type_id");
   const sortedTransactions = useMemo(() => {
+    if (usesBackendHistorySort) return modalTransactions;
+
     const normalize = (value: unknown) => String(value ?? "").toLowerCase();
 
-    return [...transactions].sort((a, b) => {
+    return [...modalTransactions].sort((a, b) => {
       let aValue: string | number = "";
       let bValue: string | number = "";
 
@@ -103,13 +112,62 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
       if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
-  }, [transactions, sortConfig]);
+  }, [modalTransactions, sortConfig, usesBackendHistorySort]);
+
+  const fetchHistoryTransactions = async () => {
+    if (!historyQueryString) return;
+
+    try {
+      setHistoryLoading(true);
+      const params = new URLSearchParams(historyQueryString);
+      params.set("page", String(historyPagination.current));
+      params.set("per_page", String(historyPagination.pageSize));
+      if (sortConfig.key !== "type_id") {
+        params.set("sort_by", sortConfig.key);
+        params.set("sort_direction", sortConfig.direction);
+      }
+
+      const response = await request({
+        method: "GET",
+        endpoint: `transaction/all?${params.toString()}`,
+      });
+
+      setHistoryTransactions(response?.data?.data?.transactions ?? []);
+      setHistoryPagination((current) => ({
+        ...current,
+        total: Number(response?.data?.meta?.total ?? response?.data?.total ?? 0),
+      }));
+    } catch (error) {
+      setHistoryTransactions([]);
+      setHistoryPagination((current) => ({ ...current, total: 0 }));
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    fetchHistoryTransactions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModalOpen, historyQueryString, historyPagination.current, historyPagination.pageSize, sortConfig]);
+
+  useEffect(() => {
+    setHistoryPagination((current) => ({ ...current, current: 1 }));
+  }, [historyQueryString]);
 
   const handleSort = (key: SortKey) => {
-    setSortConfig((current) => ({
-      key,
-      direction: current.key === key && current.direction === "asc" ? "desc" : "asc",
-    }));
+    setSortConfig((current) => {
+      const nextConfig = {
+        key,
+        direction: (current.key === key && current.direction === "asc" ? "desc" : "asc") as SortDirection,
+      };
+
+      return nextConfig;
+    });
+
+    if (historyQueryString && key !== "type_id") {
+      setHistoryPagination((currentPagination) => ({ ...currentPagination, current: 1 }));
+    }
   };
 
   const renderSortIndicator = (key: SortKey) => {
@@ -224,6 +282,11 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
         centered
       >
         <div>
+          {historyLoading ? (
+            <div style={{ minHeight: 260, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Spin />
+            </div>
+          ) : (
           <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse' }}>
             <colgroup>
               <col style={{ width: "34%" }} />
@@ -301,6 +364,17 @@ const LastTransactionsList = ({ transactions, loading = false }: LastTransaction
               })}
             </tbody>
           </table>
+          )}
+          {historyQueryString && historyPagination.total > historyPagination.pageSize && (
+            <Pagination
+              current={historyPagination.current}
+              pageSize={historyPagination.pageSize}
+              total={historyPagination.total}
+              showSizeChanger={false}
+              onChange={(page) => setHistoryPagination((current) => ({ ...current, current: page }))}
+              style={{ marginTop: 20, textAlign: "right" }}
+            />
+          )}
         </div>
       </Modal>
     </div>
