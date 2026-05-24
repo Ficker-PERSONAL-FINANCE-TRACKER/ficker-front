@@ -194,8 +194,10 @@ type AnalysisFilterMode = "month" | "custom";
 
 type AnalysisFilters = {
   mode: AnalysisFilterMode;
-  month: number;
-  year: number;
+  month: number | null;
+  year: number | null;
+  months: number[];
+  years: number[];
   dateFrom: string | null;
   dateTo: string | null;
 };
@@ -204,6 +206,8 @@ type FilterFormValues = {
   mode: AnalysisFilterMode;
   month?: number;
   year?: number;
+  months?: number[];
+  years?: number[];
   range?: [Dayjs, Dayjs];
 };
 
@@ -225,11 +229,23 @@ const buildQueryString = (filters: AnalysisFilters) => {
     params.set("date_from", filters.dateFrom);
     params.set("date_to", filters.dateTo);
   } else {
-    params.set("month", String(filters.month));
-    params.set("year", String(filters.year));
+    const selectedMonths = filters.months.length > 0 ? filters.months : filters.month ? [filters.month] : [];
+    const selectedYears = filters.years.length > 0 ? filters.years : filters.year ? [filters.year] : [];
+
+    selectedMonths.forEach((month) => params.append("months[]", String(month)));
+    selectedYears.forEach((year) => params.append("years[]", String(year)));
   }
 
   return params.toString();
+};
+
+const getSelectedMonthPeriods = (filters: AnalysisFilters) => {
+  const selectedMonths = filters.months.length > 0 ? filters.months : filters.month ? [filters.month] : [];
+  const selectedYears = filters.years.length > 0 ? filters.years : filters.year ? [filters.year] : [];
+
+  return selectedYears
+    .flatMap((year) => selectedMonths.map((month) => ({ month, year })))
+    .sort((a, b) => (a.year * 100 + a.month) - (b.year * 100 + b.month));
 };
 
 const getTimelineGroupBy = (filters: AnalysisFilters) => {
@@ -304,6 +320,8 @@ const Analysis = () => {
     mode: "month",
     month: now.getMonth() + 1,
     year: now.getFullYear(),
+    months: [now.getMonth() + 1],
+    years: [now.getFullYear()],
     dateFrom: null,
     dateTo: null,
   });
@@ -325,9 +343,12 @@ const Analysis = () => {
       return dayjs(filters.dateFrom).startOf("day");
     }
 
+    const periods = getSelectedMonthPeriods(filters);
+    const firstPeriod = periods[0] ?? { month: now.getMonth() + 1, year: now.getFullYear() };
+
     return dayjs()
-      .year(filters.year)
-      .month(filters.month - 1)
+      .year(firstPeriod.year)
+      .month(firstPeriod.month - 1)
       .startOf("month");
   }, [filters]);
 
@@ -495,11 +516,26 @@ const Analysis = () => {
   const invoiceSettlementPercentageInPeriod = Number(cardMetrics.invoicesDueTotalInPeriod || 0) > 0
     ? (Number(cardMetrics.invoicesSettledTotalInPeriod || 0) / Number(cardMetrics.invoicesDueTotalInPeriod || 0)) * 100
     : 0;
-  const currentMonthLabel = MONTH_OPTIONS.find((option) => option.value === filters.month)?.label ?? "período";
   const yearOptions = useMemo(
     () => availableYears.map((year) => ({ value: year, label: String(year) })),
     [availableYears]
   );
+  const selectedMonthPeriods = useMemo(() => getSelectedMonthPeriods(filters), [filters]);
+  const selectedMonthNames = useMemo(() => {
+    const uniqueMonths = Array.from(new Set(selectedMonthPeriods.map((period) => period.month)));
+
+    return uniqueMonths
+      .map((month) => MONTH_OPTIONS.find((option) => option.value === month)?.label)
+      .filter(Boolean)
+      .join(", ");
+  }, [selectedMonthPeriods]);
+  const selectedYearsLabel = useMemo(() => {
+    const uniqueYears = Array.from(new Set(selectedMonthPeriods.map((period) => period.year)));
+    return uniqueYears.join(", ");
+  }, [selectedMonthPeriods]);
+  const currentMonthLabel = selectedMonthPeriods.length === 1
+    ? MONTH_OPTIONS.find((option) => option.value === selectedMonthPeriods[0].month)?.label ?? "período"
+    : "período";
 
   const disabledDate = useCallback(
     (current: Dayjs) => {
@@ -514,21 +550,28 @@ const Analysis = () => {
       return `${dayjs(filters.dateFrom).format("DD/MM/YYYY")} até ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`;
     }
 
-    return `${currentMonthLabel} de ${filters.year}`;
-  }, [currentMonthLabel, filters]);
+    if (selectedMonthPeriods.length === 1) {
+      return `${currentMonthLabel} de ${selectedMonthPeriods[0].year}`;
+    }
+
+    return `${selectedMonthNames || "Meses"} de ${selectedYearsLabel || "Anos"}`;
+  }, [currentMonthLabel, filters, selectedMonthNames, selectedMonthPeriods, selectedYearsLabel]);
 
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
-    const isDefaultMonth = filters.mode === "month" && filters.month === (now.getMonth() + 1) && filters.year === now.getFullYear();
+    const isDefaultMonth = filters.mode === "month"
+      && selectedMonthPeriods.length === 1
+      && selectedMonthPeriods[0].month === (now.getMonth() + 1)
+      && selectedMonthPeriods[0].year === now.getFullYear();
 
     if (filters.mode === "custom" && filters.dateFrom && filters.dateTo) {
       labels.push(`Período: ${dayjs(filters.dateFrom).format("DD/MM/YYYY")} - ${dayjs(filters.dateTo).format("DD/MM/YYYY")}`);
     } else if (!isDefaultMonth) {
-      labels.push(`Mês: ${currentMonthLabel}`);
-      labels.push(`Ano: ${filters.year}`);
+      labels.push(`Meses: ${selectedMonthNames || currentMonthLabel}`);
+      labels.push(`Anos: ${selectedYearsLabel}`);
     }
     return labels;
-  }, [currentMonthLabel, filters, now]);
+  }, [currentMonthLabel, filters, now, selectedMonthNames, selectedMonthPeriods, selectedYearsLabel]);
 
   const getCardStatusLabel = (status: string) => {
     return CARD_STATUS_LABELS[status] ?? "Sem fatura aberta";
@@ -567,8 +610,10 @@ const Analysis = () => {
       .catch(() => setAvailableYears([]));
     form.setFieldsValue({
       mode: filters.mode,
-      month: filters.month,
-      year: filters.year,
+      month: selectedMonthPeriods[0]?.month ?? now.getMonth() + 1,
+      year: selectedMonthPeriods[0]?.year ?? now.getFullYear(),
+      months: filters.months.length > 0 ? filters.months : [selectedMonthPeriods[0]?.month ?? now.getMonth() + 1],
+      years: filters.years.length > 0 ? filters.years : [selectedMonthPeriods[0]?.year ?? now.getFullYear()],
       range: filters.dateFrom && filters.dateTo ? [dayjs(filters.dateFrom), dayjs(filters.dateTo)] : undefined,
     });
     setIsFilterModalOpen(true);
@@ -581,16 +626,20 @@ const Analysis = () => {
       const range = values.range;
       setFilters({
         mode: "custom",
-        month: now.getMonth() + 1,
-        year: now.getFullYear(),
+        month: null,
+        year: null,
+        months: [],
+        years: [],
         dateFrom: range?.[0]?.format("YYYY-MM-DD") ?? null,
         dateTo: range?.[1]?.format("YYYY-MM-DD") ?? null,
       });
     } else {
       setFilters({
         mode: "month",
-        month: Number(values.month),
-        year: Number(values.year),
+        month: null,
+        year: null,
+        months: values.months?.map(Number) ?? [now.getMonth() + 1],
+        years: values.years?.map(Number) ?? [now.getFullYear()],
         dateFrom: null,
         dateTo: null,
       });
@@ -604,6 +653,8 @@ const Analysis = () => {
       mode: "month" as const,
       month: now.getMonth() + 1,
       year: now.getFullYear(),
+      months: [now.getMonth() + 1],
+      years: [now.getFullYear()],
       dateFrom: null,
       dateTo: null,
     };
@@ -613,11 +664,28 @@ const Analysis = () => {
       mode: defaultFilters.mode,
       month: defaultFilters.month,
       year: defaultFilters.year,
+      months: defaultFilters.months,
+      years: defaultFilters.years,
       range: undefined,
     });
   };
 
   const selectedMode = Form.useWatch("mode", form) ?? filters.mode;
+  const validateMonthYearPair = (_: unknown, value: unknown) => {
+    const values = form.getFieldsValue();
+    const months = values.months ?? [];
+    const years = values.years ?? [];
+
+    if ((months.length === 0 && years.length > 0) || (years.length === 0 && months.length > 0)) {
+      return Promise.reject(new Error("Selecione ao menos um mês e um ano."));
+    }
+
+    if (value === undefined || (Array.isArray(value) && value.length === 0)) {
+      return Promise.reject(new Error("Selecione ao menos uma opção."));
+    }
+
+    return Promise.resolve();
+  };
   
   const renderIndicator = (
     label: string,
@@ -929,7 +997,7 @@ const Analysis = () => {
                 value={selectedMode}
                 onChange={(value) => form.setFieldValue("mode", value)}
                 options={[
-                  { value: "month", label: "Mês" },
+                  { value: "month", label: "Meses" },
                   { value: "custom", label: "Período" },
                 ]}
                 style={{ background: "#F8FAFC", borderRadius: 10, padding: 4 }}
@@ -954,11 +1022,25 @@ const Analysis = () => {
               </Form.Item>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-                <Form.Item name="month" label="Mês" rules={[{ required: true, message: "Selecione um mês" }]}>
-                  <Select options={MONTH_OPTIONS} placeholder="Mês" style={{ height: 45 }} />
+                <Form.Item name="months" label="Meses" rules={[{ validator: validateMonthYearPair }]}>
+                  <Select
+                    mode="multiple"
+                    allowClear
+                    maxTagCount="responsive"
+                    options={MONTH_OPTIONS}
+                    placeholder="Meses"
+                    style={{ minHeight: 45 }}
+                  />
                 </Form.Item>
-                <Form.Item name="year" label="Ano" rules={[{ required: true, message: "Selecione um ano" }]}>
-                  <Select options={yearOptions} placeholder="Ano" style={{ height: 45 }} />
+                <Form.Item name="years" label="Anos" rules={[{ validator: validateMonthYearPair }]}>
+                  <Select
+                    mode="multiple"
+                    allowClear
+                    maxTagCount="responsive"
+                    options={yearOptions}
+                    placeholder="Anos"
+                    style={{ minHeight: 45 }}
+                  />
                 </Form.Item>
               </div>
             )}
