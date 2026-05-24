@@ -1,6 +1,6 @@
 "use client";
 import { CardInformation } from "@/components/CardInformation";
-import { TransactionTab } from "@/components/TransactionTab";
+import { TransactionTab, type TransactionSortConfig } from "@/components/TransactionTab";
 import { request } from "@/service/api";
 import { Alert, Col, Pagination, Row } from "antd";
 import { useEffect, useState } from "react";
@@ -29,11 +29,13 @@ interface CardProps {
   filters: CardDetailFilters;
   isFilterApplied: boolean;
   searchTerm: string;
+  sortConfig: TransactionSortConfig;
+  onSortChange: (config: TransactionSortConfig) => void;
   appliedFiltersLabels: string[];
   onClearFilters: () => void;
 }
 
-function CardPage({ card, filters, isFilterApplied, searchTerm, appliedFiltersLabels, onClearFilters }: CardProps) {
+function CardPage({ card, filters, isFilterApplied, searchTerm, sortConfig, onSortChange, appliedFiltersLabels, onClearFilters }: CardProps) {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isOutputModalOpen, setIsOutputModalOpen] = useState<boolean>(false);
   const [totalValue, setTotalValue] = useState<number>(0);
@@ -57,8 +59,11 @@ function CardPage({ card, filters, isFilterApplied, searchTerm, appliedFiltersLa
   const getCardData = async () => {
     try {
       const params = new URLSearchParams();
-      if (filters.category_id) params.set("category_id", String(filters.category_id));
+      filters.category_ids?.forEach((categoryId) => params.append("category_ids[]", String(categoryId)));
+      if (!filters.category_ids?.length && filters.category_id) params.set("category_id", String(filters.category_id));
       if (searchTerm.trim()) params.set("search", searchTerm.trim());
+      params.set("sort_by", sortConfig.sortBy);
+      params.set("sort_direction", sortConfig.direction);
       params.set("page", String(pagination.current));
       params.set("per_page", String(pagination.pageSize));
 
@@ -69,6 +74,9 @@ function CardPage({ card, filters, isFilterApplied, searchTerm, appliedFiltersLa
         } else if (filters.month && filters.year) {
           params.set("month", String(filters.month));
           params.set("year", String(filters.year));
+        } else if (filters.months?.length && filters.years?.length) {
+          filters.months.forEach((month) => params.append("months[]", String(month)));
+          filters.years.forEach((year) => params.append("years[]", String(year)));
         }
       }
       
@@ -102,11 +110,16 @@ function CardPage({ card, filters, isFilterApplied, searchTerm, appliedFiltersLa
   useEffect(() => {
     getCardData();
     getCardTotalValue();
-  }, [isModalOpen, isOutputModalOpen, filters, isFilterApplied, searchTerm, pagination.current, pagination.pageSize]);
+  }, [isModalOpen, isOutputModalOpen, filters, isFilterApplied, searchTerm, sortConfig, pagination.current, pagination.pageSize]);
 
   useEffect(() => {
     setPagination((current) => ({ ...current, current: 1 }));
-  }, [filters, isFilterApplied, searchTerm]);
+  }, [filters, isFilterApplied, searchTerm, sortConfig]);
+
+  const handleSortChange = (nextSortConfig: TransactionSortConfig) => {
+    onSortChange(nextSortConfig);
+    setPagination((current) => ({ ...current, current: 1 }));
+  };
 
   return (
     <Col xl={24}>
@@ -141,6 +154,9 @@ function CardPage({ card, filters, isFilterApplied, searchTerm, appliedFiltersLa
             typeId={3}
             editModal={isEditModalOpen}
             setEditModal={setIsEditModalOpen}
+            sortConfig={sortConfig}
+            onSortChange={handleSortChange}
+            sortableColumns={["transaction_description", "date", "category_description", "transaction_value"]}
           />
           <Pagination
             current={pagination.current}

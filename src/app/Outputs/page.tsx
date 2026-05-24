@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pagination } from "antd";
 import { OutputModal } from "./modal";
 import { request } from "@/service/api";
-import { TransactionTab } from "@/components/TransactionTab";
+import { TransactionTab, type TransactionSortConfig } from "@/components/TransactionTab";
 import SearchField from "@/components/SearchField";
 import { ITransaction } from "@/interfaces";
 import CustomMenu from "@/components/CustomMenu";
@@ -34,6 +34,7 @@ const Outputs = () => {
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState<TransactionSortConfig>({ sortBy: "date", direction: "desc" });
   const [filters, setFilters] = useState<OutputFilters>({
     mode: "month",
     month: now.getMonth() + 1,
@@ -49,10 +50,15 @@ const Outputs = () => {
   const getTransactions = async () => {
     try {
       const params = new URLSearchParams();
-      if (filters.category_id) params.set("category_id", String(filters.category_id));
-      if (filters.payment_method_id) params.set("payment_method_id", String(filters.payment_method_id));
-      if (filters.card_id) params.set("card_id", String(filters.card_id));
+      filters.category_ids?.forEach((categoryId) => params.append("category_ids[]", String(categoryId)));
+      if (!filters.category_ids?.length && filters.category_id) params.set("category_id", String(filters.category_id));
+      filters.payment_method_ids?.forEach((paymentMethodId) => params.append("payment_method_ids[]", String(paymentMethodId)));
+      if (!filters.payment_method_ids?.length && filters.payment_method_id) params.set("payment_method_id", String(filters.payment_method_id));
+      filters.card_ids?.forEach((cardId) => params.append("card_ids[]", String(cardId)));
+      if (!filters.card_ids?.length && filters.card_id) params.set("card_id", String(filters.card_id));
       if (searchTerm.trim()) params.set("search", searchTerm.trim());
+      params.set("sort_by", sortConfig.sortBy);
+      params.set("sort_direction", sortConfig.direction);
       params.set("page", String(pagination.current));
       params.set("per_page", String(pagination.pageSize));
 
@@ -63,6 +69,9 @@ const Outputs = () => {
         } else if (filters.month && filters.year) {
           params.set("month", String(filters.month));
           params.set("year", String(filters.year));
+        } else if (filters.months?.length && filters.years?.length) {
+          filters.months.forEach((month) => params.append("months[]", String(month)));
+          filters.years.forEach((year) => params.append("years[]", String(year)));
         }
       }
 
@@ -94,7 +103,9 @@ const Outputs = () => {
     setFilters({
       mode: "month",
       month: now.getMonth() + 1,
+      months: undefined,
       year: now.getFullYear(),
+      years: undefined,
       dateFrom: null,
       dateTo: null,
     });
@@ -104,7 +115,12 @@ const Outputs = () => {
 
   useEffect(() => {
     getTransactions();
-  }, [isModalOpen, isEditModalOpen, filters, isFilterApplied, searchTerm, pagination.current, pagination.pageSize]);
+  }, [isModalOpen, isEditModalOpen, filters, isFilterApplied, searchTerm, sortConfig, pagination.current, pagination.pageSize]);
+
+  const handleSortChange = (nextSortConfig: TransactionSortConfig) => {
+    setSortConfig(nextSortConfig);
+    setPagination((current) => ({ ...current, current: 1 }));
+  };
 
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
@@ -114,11 +130,17 @@ const Outputs = () => {
     } else if (isFilterApplied && filters.month && filters.year) {
       labels.push(`Mês: ${monthNames[filters.month - 1]}`);
       labels.push(`Ano: ${filters.year}`);
+    } else if (isFilterApplied && filters.months?.length && filters.years?.length) {
+      labels.push(`Meses: ${filters.months.map((month) => monthNames[month - 1]).join(", ")}`);
+      labels.push(`Anos: ${filters.years.join(", ")}`);
     }
 
     if (filters.category_id && filters.category_name) labels.push(`Categoria: ${filters.category_name}`);
+    if (filters.category_names?.length) labels.push(`Categorias: ${filters.category_names.join(", ")}`);
     if (filters.payment_method_id && filters.payment_method_name) labels.push(`Forma de pagamento: ${filters.payment_method_name}`);
+    if (filters.payment_method_names?.length) labels.push(`Formas de pagamento: ${filters.payment_method_names.join(", ")}`);
     if (filters.card_id && filters.card_name) labels.push(`Cartão: ${filters.card_name}`);
+    if (filters.card_names?.length) labels.push(`Cartões: ${filters.card_names.join(", ")}`);
 
     return labels;
   }, [filters, isFilterApplied, monthNames]);
@@ -160,6 +182,9 @@ const Outputs = () => {
             typeId={2}
             editModal={isEditModalOpen}
             setEditModal={setIsEditModalOpen}
+            sortConfig={sortConfig}
+            onSortChange={handleSortChange}
+            sortableColumns={["transaction_description", "date", "category_description", "transaction_value", "payment_method_description"]}
           />
           <Pagination
             current={pagination.current}

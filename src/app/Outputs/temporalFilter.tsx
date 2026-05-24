@@ -30,25 +30,33 @@ export type OutputFilterMode = "month" | "custom";
 export type OutputFilters = {
   mode: OutputFilterMode;
   month: number | null;
+  months?: number[];
   year: number | null;
+  years?: number[];
   dateFrom: string | null;
   dateTo: string | null;
   category_id?: number;
   category_name?: string;
+  category_ids?: number[];
+  category_names?: string[];
   payment_method_id?: number;
   payment_method_name?: string;
+  payment_method_ids?: number[];
+  payment_method_names?: string[];
   card_id?: number;
   card_name?: string;
+  card_ids?: number[];
+  card_names?: string[];
 };
 
 type FilterFormValues = {
   mode: OutputFilterMode;
-  month?: number;
-  year?: number;
+  months?: number[];
+  years?: number[];
   range?: [Dayjs, Dayjs];
-  category?: { value: number; label: string };
-  payment_method?: { value: number; label: string };
-  card?: { value: number; label: string };
+  categories?: { value: number; label: string }[];
+  payment_methods?: { value: number; label: string }[];
+  cards?: { value: number; label: string }[];
 };
 
 interface OutputTemporalFilterProps {
@@ -78,10 +86,12 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
   );
 
   const validateMonthYearPair = () => {
-    const month = form.getFieldValue("month");
-    const year = form.getFieldValue("year");
+    const months = form.getFieldValue("months");
+    const years = form.getFieldValue("years");
+    const hasMonths = Array.isArray(months) && months.length > 0;
+    const hasYears = Array.isArray(years) && years.length > 0;
 
-    if ((month && !year) || (!month && year)) {
+    if ((hasMonths && !hasYears) || (!hasMonths && hasYears)) {
       return Promise.reject(new Error("Informe mês e ano ou deixe ambos vazios"));
     }
 
@@ -112,20 +122,26 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
     fetchFilterData();
     form.setFieldsValue({
       mode: filters.mode,
-      month: filters.month ?? undefined,
-      year: filters.year ?? undefined,
-      category:
-        filters.category_id && filters.category_name
-          ? { value: filters.category_id, label: filters.category_name }
-          : undefined,
-      payment_method:
-        filters.payment_method_id && filters.payment_method_name
-          ? { value: filters.payment_method_id, label: filters.payment_method_name }
-          : undefined,
-      card:
-        filters.card_id && filters.card_name
-          ? { value: filters.card_id, label: filters.card_name }
-          : undefined,
+      months: filters.months ?? (filters.month ? [filters.month] : undefined),
+      years: filters.years ?? (filters.year ? [filters.year] : undefined),
+      categories:
+        filters.category_ids && filters.category_names
+          ? filters.category_ids.map((id, index) => ({ value: id, label: filters.category_names?.[index] ?? String(id) }))
+          : filters.category_id && filters.category_name
+            ? [{ value: filters.category_id, label: filters.category_name }]
+            : undefined,
+      payment_methods:
+        filters.payment_method_ids && filters.payment_method_names
+          ? filters.payment_method_ids.map((id, index) => ({ value: id, label: filters.payment_method_names?.[index] ?? String(id) }))
+          : filters.payment_method_id && filters.payment_method_name
+            ? [{ value: filters.payment_method_id, label: filters.payment_method_name }]
+            : undefined,
+      cards:
+        filters.card_ids && filters.card_names
+          ? filters.card_ids.map((id, index) => ({ value: id, label: filters.card_names?.[index] ?? String(id) }))
+          : filters.card_id && filters.card_name
+            ? [{ value: filters.card_id, label: filters.card_name }]
+            : undefined,
       range:
         filters.mode === "custom" && filters.dateFrom && filters.dateTo
           ? [dayjs(filters.dateFrom), dayjs(filters.dateTo)]
@@ -138,12 +154,12 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
     const values = await form.validateFields();
 
     const commonFilters = {
-      category_id: values.category?.value,
-      category_name: values.category?.label,
-      payment_method_id: values.payment_method?.value,
-      payment_method_name: values.payment_method?.label,
-      card_id: values.card?.value,
-      card_name: values.card?.label,
+      category_ids: values.categories?.map((category) => category.value),
+      category_names: values.categories?.map((category) => category.label),
+      payment_method_ids: values.payment_methods?.map((paymentMethod) => paymentMethod.value),
+      payment_method_names: values.payment_methods?.map((paymentMethod) => paymentMethod.label),
+      card_ids: values.cards?.map((card) => card.value),
+      card_names: values.cards?.map((card) => card.label),
     };
 
     if (values.mode === "custom" && values.range) {
@@ -156,12 +172,14 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
         ...commonFilters,
       });
     } else {
-      const hasMonthYear = Boolean(values.month && values.year);
+      const hasMonthYear = Boolean(values.months?.length && values.years?.length);
 
       onChange({
         mode: "month",
-        month: hasMonthYear ? Number(values.month) : null,
-        year: hasMonthYear ? Number(values.year) : null,
+        month: null,
+        months: hasMonthYear ? values.months?.map(Number) : undefined,
+        year: null,
+        years: hasMonthYear ? values.years?.map(Number) : undefined,
         dateFrom: null,
         dateTo: null,
         ...commonFilters,
@@ -234,19 +252,20 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
               </Form.Item>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-                <Form.Item name="month" label="Mês" dependencies={["year"]} rules={[{ validator: validateMonthYearPair }]}>
-                  <Select allowClear options={MONTH_OPTIONS} placeholder="Todos os meses" style={{ height: 45 }} />
+                <Form.Item name="months" label="Mês" dependencies={["years"]} rules={[{ validator: validateMonthYearPair }]}>
+                  <Select mode="multiple" allowClear options={MONTH_OPTIONS} placeholder="Todos os meses" style={{ minHeight: 45 }} />
                 </Form.Item>
-                <Form.Item name="year" label="Ano" dependencies={["month"]} rules={[{ validator: validateMonthYearPair }]}>
-                  <Select allowClear options={availableYears} placeholder="Todos os anos" style={{ height: 45 }} />
+                <Form.Item name="years" label="Ano" dependencies={["months"]} rules={[{ validator: validateMonthYearPair }]}>
+                  <Select mode="multiple" allowClear options={availableYears} placeholder="Todos os anos" style={{ minHeight: 45 }} />
                 </Form.Item>
               </div>
             )}
 
             <div style={{ marginTop: 24, borderTop: "1px solid #F1F5F9", paddingTop: 24 }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-                <Form.Item name="category" label="Categoria">
+                <Form.Item name="categories" label="Categoria">
                   <Select
+                    mode="multiple"
                     labelInValue
                     placeholder="Todas as categorias"
                     allowClear
@@ -259,8 +278,9 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
                   />
                 </Form.Item>
 
-                <Form.Item name="payment_method" label="Forma de pagamento">
+                <Form.Item name="payment_methods" label="Forma de pagamento">
                   <Select
+                    mode="multiple"
                     labelInValue
                     placeholder="Todas as formas"
                     allowClear
@@ -273,8 +293,9 @@ export const OutputTemporalFilter = ({ filters, onChange }: OutputTemporalFilter
                   />
                 </Form.Item>
 
-                <Form.Item name="card" label="Cartão" style={{ gridColumn: "1 / -1" }}>
+                <Form.Item name="cards" label="Cartão" style={{ gridColumn: "1 / -1" }}>
                   <Select
+                    mode="multiple"
                     labelInValue
                     placeholder="Todos os cartões"
                     allowClear

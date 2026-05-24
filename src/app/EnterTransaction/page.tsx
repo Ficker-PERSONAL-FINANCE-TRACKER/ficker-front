@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pagination } from "antd";
 import { EnterTransactionModal } from "./modal";
 import { request } from "@/service/api";
-import { TransactionTab } from "@/components/TransactionTab";
+import { TransactionTab, type TransactionSortConfig } from "@/components/TransactionTab";
 import SearchField from "@/components/SearchField";
 import { ITransaction } from "@/interfaces";
 import dayjs from "dayjs";
@@ -34,6 +34,7 @@ const EnterTransaction = () => {
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState<TransactionSortConfig>({ sortBy: "date", direction: "desc" });
   const [filters, setFilters] = useState<IncomeFilters>({
     mode: "month",
     month: now.getMonth() + 1,
@@ -45,8 +46,11 @@ const EnterTransaction = () => {
   const getTransactions = async () => {
     try {
       const params = new URLSearchParams();
-      if (filters.category_id) params.set("category_id", String(filters.category_id));
+      filters.category_ids?.forEach((categoryId) => params.append("category_ids[]", String(categoryId)));
+      if (!filters.category_ids?.length && filters.category_id) params.set("category_id", String(filters.category_id));
       if (searchTerm.trim()) params.set("search", searchTerm.trim());
+      params.set("sort_by", sortConfig.sortBy);
+      params.set("sort_direction", sortConfig.direction);
       params.set("page", String(pagination.current));
       params.set("per_page", String(pagination.pageSize));
 
@@ -57,6 +61,9 @@ const EnterTransaction = () => {
         } else if (filters.month && filters.year) {
           params.set("month", String(filters.month));
           params.set("year", String(filters.year));
+        } else if (filters.months?.length && filters.years?.length) {
+          filters.months.forEach((month) => params.append("months[]", String(month)));
+          filters.years.forEach((year) => params.append("years[]", String(year)));
         }
       }
 
@@ -84,7 +91,7 @@ const EnterTransaction = () => {
 
   useEffect(() => {
     getTransactions();
-  }, [isModalOpen, isEditModalOpen, filters, isFilterApplied, searchTerm, pagination.current, pagination.pageSize]);
+  }, [isModalOpen, isEditModalOpen, filters, isFilterApplied, searchTerm, sortConfig, pagination.current, pagination.pageSize]);
 
   const handleFilterChange = (nextFilters: IncomeFilters) => {
     setFilters(nextFilters);
@@ -96,11 +103,18 @@ const EnterTransaction = () => {
     setFilters({
       mode: "month",
       month: now.getMonth() + 1,
+      months: undefined,
       year: now.getFullYear(),
+      years: undefined,
       dateFrom: null,
       dateTo: null,
     });
     setIsFilterApplied(false);
+    setPagination((current) => ({ ...current, current: 1 }));
+  };
+
+  const handleSortChange = (nextSortConfig: TransactionSortConfig) => {
+    setSortConfig(nextSortConfig);
     setPagination((current) => ({ ...current, current: 1 }));
   };
 
@@ -112,9 +126,13 @@ const EnterTransaction = () => {
     } else if (isFilterApplied && filters.month && filters.year) {
       labels.push(`Mês: ${monthNames[filters.month - 1]}`);
       labels.push(`Ano: ${filters.year}`);
+    } else if (isFilterApplied && filters.months?.length && filters.years?.length) {
+      labels.push(`Meses: ${filters.months.map((month) => monthNames[month - 1]).join(", ")}`);
+      labels.push(`Anos: ${filters.years.join(", ")}`);
     }
 
     if (filters.category_id && filters.category_name) labels.push(`Categoria: ${filters.category_name}`);
+    if (filters.category_names?.length) labels.push(`Categorias: ${filters.category_names.join(", ")}`);
 
     return labels;
   }, [filters, isFilterApplied, monthNames]);
@@ -156,6 +174,9 @@ const EnterTransaction = () => {
             typeId={1}
             editModal={isEditModalOpen}
             setEditModal={setIsEditModalOpen}
+            sortConfig={sortConfig}
+            onSortChange={handleSortChange}
+            sortableColumns={["transaction_description", "date", "category_description", "transaction_value"]}
           />
           <Pagination
             current={pagination.current}

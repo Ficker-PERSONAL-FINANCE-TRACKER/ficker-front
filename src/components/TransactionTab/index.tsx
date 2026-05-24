@@ -26,14 +26,31 @@ import {
   InfoCircleOutlined,
 } from "@ant-design/icons";
 
+export type TransactionSortBy =
+  | "transaction_description"
+  | "date"
+  | "category_description"
+  | "transaction_value"
+  | "payment_method_description";
+
+export type TransactionSortDirection = "asc" | "desc";
+
+export interface TransactionSortConfig {
+  sortBy: TransactionSortBy;
+  direction: TransactionSortDirection;
+}
+
 interface TransactionTabProps {
   data: ITransaction[];
   typeId: number;
   editModal: boolean;
   setEditModal: (value: boolean) => void;
+  sortConfig?: TransactionSortConfig;
+  onSortChange?: (config: TransactionSortConfig) => void;
+  sortableColumns?: TransactionSortBy[];
 }
 
-export const TransactionTab = ({ data, typeId, editModal, setEditModal }: TransactionTabProps) => {
+export const TransactionTab = ({ data, typeId, editModal, setEditModal, sortConfig, onSortChange, sortableColumns = [] }: TransactionTabProps) => {
   const [selectedTransaction, setSelectedTransaction] = useState<ITransaction>({} as ITransaction);
   const [loading, setLoading] = useState<boolean>(false);
   const [isInstallmentsModalOpen, setIsInstallmentsModalOpen] = useState(false);
@@ -154,6 +171,57 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
   };
 
   const isCardDetailTable = typeId === 3;
+  const canSort = Boolean(sortConfig && onSortChange);
+
+  const handleSort = (sortBy: TransactionSortBy) => {
+    if (!sortConfig || !onSortChange || !sortableColumns.includes(sortBy)) return;
+
+    onSortChange({
+      sortBy,
+      direction: sortConfig.sortBy === sortBy && sortConfig.direction === "asc" ? "desc" : "asc",
+    });
+  };
+
+  const renderSortIndicator = (sortBy: TransactionSortBy) => {
+    const isActive = sortConfig?.sortBy === sortBy;
+
+    return (
+      <span
+        style={{
+          marginLeft: 6,
+          color: isActive ? "#11142D" : "#C7CAD1",
+          fontWeight: isActive ? 800 : 500,
+        }}
+      >
+        {isActive && sortConfig?.direction === "desc" ? "↓" : "↑"}
+      </span>
+    );
+  };
+
+  const renderHeader = (label: string, sortBy?: TransactionSortBy) => {
+    const isSortable = Boolean(sortBy && canSort && sortableColumns.includes(sortBy));
+    const isActive = Boolean(sortBy && sortConfig?.sortBy === sortBy);
+
+    return (
+      <th
+        onClick={() => sortBy && handleSort(sortBy)}
+        style={
+          isSortable
+            ? {
+                cursor: "pointer",
+                userSelect: "none",
+                color: isActive ? "#11142D" : undefined,
+                fontWeight: isActive ? 800 : undefined,
+                whiteSpace: "nowrap",
+              }
+            : undefined
+        }
+      >
+        {label}
+        {sortBy && isSortable && renderSortIndicator(sortBy)}
+      </th>
+    );
+  };
 
   if (loading) return <div>Carregando...</div>;
 
@@ -181,11 +249,11 @@ export const TransactionTab = ({ data, typeId, editModal, setEditModal }: Transa
           <thead className={styles.thead}>
             <tr>
               <th>Editar</th>
-              <th>Descrição</th>
-              <th>Data</th>
-              <th>Categoria</th>
-              <th>Valor</th>
-              {typeId === 2 && <th>Pagamento</th>}
+              {renderHeader("Descrição", "transaction_description")}
+              {renderHeader("Data", "date")}
+              {renderHeader("Categoria", "category_description")}
+              {renderHeader("Valor", "transaction_value")}
+              {typeId === 2 && renderHeader("Pagamento", "payment_method_description")}
               {typeId === 3 && <th>Parcelas</th>}
             </tr>
           </thead>

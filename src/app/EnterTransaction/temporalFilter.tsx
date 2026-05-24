@@ -30,19 +30,23 @@ export type IncomeFilterMode = "month" | "custom";
 export type IncomeFilters = {
   mode: IncomeFilterMode;
   month: number | null;
+  months?: number[];
   year: number | null;
+  years?: number[];
   dateFrom: string | null;
   dateTo: string | null;
   category_id?: number;
   category_name?: string;
+  category_ids?: number[];
+  category_names?: string[];
 };
 
 type FilterFormValues = {
   mode: IncomeFilterMode;
-  month?: number;
-  year?: number;
+  months?: number[];
+  years?: number[];
   range?: [Dayjs, Dayjs];
-  category?: { value: number; label: string };
+  categories?: { value: number; label: string }[];
 };
 
 interface EnterTemporalFilterProps {
@@ -70,10 +74,12 @@ export const EnterTemporalFilter = ({ filters, onChange }: EnterTemporalFilterPr
   );
 
   const validateMonthYearPair = () => {
-    const month = form.getFieldValue("month");
-    const year = form.getFieldValue("year");
+    const months = form.getFieldValue("months");
+    const years = form.getFieldValue("years");
+    const hasMonths = Array.isArray(months) && months.length > 0;
+    const hasYears = Array.isArray(years) && years.length > 0;
 
-    if ((month && !year) || (!month && year)) {
+    if ((hasMonths && !hasYears) || (!hasMonths && hasYears)) {
       return Promise.reject(new Error("Informe mês e ano ou deixe ambos vazios"));
     }
 
@@ -100,12 +106,14 @@ export const EnterTemporalFilter = ({ filters, onChange }: EnterTemporalFilterPr
     fetchFilterData();
     form.setFieldsValue({
       mode: filters.mode,
-      month: filters.month ?? undefined,
-      year: filters.year ?? undefined,
-      category:
-        filters.category_id && filters.category_name
-          ? { value: filters.category_id, label: filters.category_name }
-          : undefined,
+      months: filters.months ?? (filters.month ? [filters.month] : undefined),
+      years: filters.years ?? (filters.year ? [filters.year] : undefined),
+      categories:
+        filters.category_ids && filters.category_names
+          ? filters.category_ids.map((id, index) => ({ value: id, label: filters.category_names?.[index] ?? String(id) }))
+          : filters.category_id && filters.category_name
+            ? [{ value: filters.category_id, label: filters.category_name }]
+            : undefined,
       range:
         filters.mode === "custom" && filters.dateFrom && filters.dateTo
           ? [dayjs(filters.dateFrom), dayjs(filters.dateTo)]
@@ -118,8 +126,8 @@ export const EnterTemporalFilter = ({ filters, onChange }: EnterTemporalFilterPr
     const values = await form.validateFields();
 
     const commonFilters = {
-      category_id: values.category?.value,
-      category_name: values.category?.label,
+      category_ids: values.categories?.map((category) => category.value),
+      category_names: values.categories?.map((category) => category.label),
     };
 
     if (values.mode === "custom" && values.range) {
@@ -132,12 +140,14 @@ export const EnterTemporalFilter = ({ filters, onChange }: EnterTemporalFilterPr
         ...commonFilters,
       });
     } else {
-      const hasMonthYear = Boolean(values.month && values.year);
+      const hasMonthYear = Boolean(values.months?.length && values.years?.length);
 
       onChange({
         mode: "month",
-        month: hasMonthYear ? Number(values.month) : null,
-        year: hasMonthYear ? Number(values.year) : null,
+        month: null,
+        months: hasMonthYear ? values.months?.map(Number) : undefined,
+        year: null,
+        years: hasMonthYear ? values.years?.map(Number) : undefined,
         dateFrom: null,
         dateTo: null,
         ...commonFilters,
@@ -210,18 +220,19 @@ export const EnterTemporalFilter = ({ filters, onChange }: EnterTemporalFilterPr
               </Form.Item>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
-                <Form.Item name="month" label="Mês" dependencies={["year"]} rules={[{ validator: validateMonthYearPair }]}>
-                  <Select allowClear options={MONTH_OPTIONS} placeholder="Todos os meses" style={{ height: 45 }} />
+                <Form.Item name="months" label="Mês" dependencies={["years"]} rules={[{ validator: validateMonthYearPair }]}>
+                  <Select mode="multiple" allowClear options={MONTH_OPTIONS} placeholder="Todos os meses" style={{ minHeight: 45 }} />
                 </Form.Item>
-                <Form.Item name="year" label="Ano" dependencies={["month"]} rules={[{ validator: validateMonthYearPair }]}>
-                  <Select allowClear options={availableYears} placeholder="Todos os anos" style={{ height: 45 }} />
+                <Form.Item name="years" label="Ano" dependencies={["months"]} rules={[{ validator: validateMonthYearPair }]}>
+                  <Select mode="multiple" allowClear options={availableYears} placeholder="Todos os anos" style={{ minHeight: 45 }} />
                 </Form.Item>
               </div>
             )}
 
             <div style={{ marginTop: 24, borderTop: "1px solid #F1F5F9", paddingTop: 24 }}>
-              <Form.Item name="category" label="Categoria">
+              <Form.Item name="categories" label="Categoria">
                 <Select
+                  mode="multiple"
                   labelInValue
                   placeholder="Todas as categorias"
                   allowClear

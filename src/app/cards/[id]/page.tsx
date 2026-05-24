@@ -7,6 +7,7 @@ import CardPage from "../card";
 import { CardDetailFilter, type CardDetailFilters } from "../card/detailFilter";
 import CustomMenu from "@/components/CustomMenu";
 import SearchField from "@/components/SearchField";
+import type { TransactionSortConfig } from "@/components/TransactionTab";
 import styles from "../cards.module.scss";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
@@ -32,6 +33,7 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState<TransactionSortConfig>({ sortBy: "date", direction: "desc" });
   const router = useRouter();
 
   const [filters, setFilters] = useState<CardDetailFilters>({
@@ -51,10 +53,19 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
       const monthName = dayjs().month(filters.month - 1).format("MMMM");
       labels.push(`Mês: ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`);
       labels.push(`Ano: ${filters.year}`);
+    } else if (isFilterApplied && filters.months?.length && filters.years?.length) {
+      labels.push(`Meses: ${filters.months.map((month) => {
+        const monthName = dayjs().month(month - 1).format("MMMM");
+        return monthName.charAt(0).toUpperCase() + monthName.slice(1);
+      }).join(", ")}`);
+      labels.push(`Anos: ${filters.years.join(", ")}`);
     }
 
     if (filters.category_id && filters.category_name) {
       labels.push(`Categoria: ${filters.category_name}`);
+    }
+    if (filters.category_names?.length) {
+      labels.push(`Categorias: ${filters.category_names.join(", ")}`);
     }
 
     return labels;
@@ -69,7 +80,9 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
     setFilters({
       mode: "month",
       month: now.getMonth() + 1,
+      months: undefined,
       year: now.getFullYear(),
+      years: undefined,
       dateFrom: null,
       dateTo: null,
     });
@@ -163,6 +176,8 @@ export default function CardDetailsPage({ params }: { params: { id: string } }) 
                 filters={filters}
                 isFilterApplied={isFilterApplied}
                 searchTerm={searchTerm}
+                sortConfig={sortConfig}
+                onSortChange={setSortConfig}
                 appliedFiltersLabels={appliedFiltersLabels}
                 onClearFilters={handleClearFilters}
               />
