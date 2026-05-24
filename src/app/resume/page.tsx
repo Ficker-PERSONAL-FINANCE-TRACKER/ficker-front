@@ -247,14 +247,18 @@ const Resume = () => {
     .year(latestMonthYearPair.year)
     .month(latestMonthYearPair.month - 1)
     .startOf("month");
+  const hasSingleMonthFilter = filters.mode === "month" && selectedMonthYearPairs.length === 1;
+  const selectedMonthIsNotFuture = !selectedMonthStart.isAfter(dayjs().startOf("month"));
   const canEditSpendingGoal =
+    hasSingleMonthFilter &&
+    selectedMonthIsNotFuture;
+  const canPayInvoiceInFilter =
     filters.mode === "month" &&
-    !selectedMonthStart.isAfter(dayjs().startOf("month"));
-  const canPayInvoiceInFilter = canEditSpendingGoal;
+    selectedMonthIsNotFuture;
   const canCreateObjectiveInFilter =
     filters.mode === "custom" && filters.dateFrom && filters.dateTo
       ? !dayjs().isBefore(dayjs(filters.dateFrom), "day") && !dayjs().isAfter(dayjs(filters.dateTo), "day")
-      : selectedMonthYearPairs.some(({ month, year }) => month === today.getMonth() + 1 && year === today.getFullYear());
+      : hasSingleMonthFilter && selectedMonthYearPairs.some(({ month, year }) => month === today.getMonth() + 1 && year === today.getFullYear());
   const appliedFiltersLabels = useMemo(() => {
     const labels: string[] = [];
 
@@ -482,6 +486,11 @@ const Resume = () => {
   }, [periodPlannedSpending, spentPercentage]);
 
   const handleClickEditGastoPlanejado = () => {
+    if (!canEditSpendingGoal) {
+      message.info("A edição do teto fica disponível ao selecionar um único mês.");
+      return;
+    }
+
     setIsEditMode(true);
   };
 
