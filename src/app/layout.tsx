@@ -7,6 +7,7 @@ import ptBR from "antd/locale/pt_BR";
 import StyledComponentsRegistry from "./lib/AntdRegistry";
 import theme from "./theme/themeConfig";
 import { MainProvider } from "@/context";
+import ThirdPartyScripts from "@/components/ThirdPartyScripts";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 
@@ -44,6 +45,7 @@ export const metadata: Metadata = {
 const RootLayout = ({ children }: { children: React.ReactNode }) => (
   <html lang="pt-BR">
     <body className={manrope.className}>
+      <ThirdPartyScripts />
       <MainProvider>
         <ConfigProvider theme={theme} locale={ptBR}>
           <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
