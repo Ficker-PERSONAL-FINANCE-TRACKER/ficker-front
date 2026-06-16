@@ -138,7 +138,7 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
                 </Button>
               ) : (
                 <Button
-                  type="primary"
+                  type="default"
                   loading={actions.loading}
                   onClick={actions.handleSaveObjective}
                   className={`${styles.primaryButton} accessibility-submit-btn`}
