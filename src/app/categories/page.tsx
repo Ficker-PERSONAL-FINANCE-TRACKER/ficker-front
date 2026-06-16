@@ -5,6 +5,7 @@ import { Row, Col, Progress, Button, Modal, Form, InputNumber, message, Card, Em
 import CustomMenu from "@/components/CustomMenu";
 import { AppliedFiltersBar } from "@/components/AppliedFiltersBar";
 import { getApiErrorMessage, request } from "@/service/api";
+import { currencyFormatter, currencyParser } from "@/utils/currencyFormatter";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import {
@@ -603,10 +604,13 @@ const CategoriesPage = () => {
               label="Valor do teto para este mês"
               rules={[{ required: true, message: "Por favor, insira um valor" }]}
             >
-              <InputNumber
+              <InputNumber<number>
                 style={{ width: "100%" }}
-                formatter={(value) => `R$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
-                parser={(value) => value!.replace(/R\$\s?|\./g, "").replace(",", ".")}
+                min={0.01}
+                precision={2}
+                decimalSeparator=","
+                formatter={currencyFormatter}
+                parser={currencyParser}
                 placeholder="R$ 0,00"
               />
             </Form.Item>

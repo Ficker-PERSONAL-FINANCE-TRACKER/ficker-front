@@ -3,7 +3,9 @@ import { Form, InputNumber, Input, Typography, DatePicker, Select, Space, Checkb
 import ptBR from "antd/locale/pt_BR";
 import dayjs from "dayjs";
 import { PlusOutlined, WalletOutlined, DollarOutlined, HomeOutlined, CarOutlined, MedicineBoxOutlined, RocketOutlined, ShoppingOutlined, CoffeeOutlined, StarOutlined, ThunderboltOutlined, WifiOutlined, ReadOutlined, RestOutlined, TagsOutlined } from "@ant-design/icons";
+import { currencyFormatter, currencyParser } from "@/utils/currencyFormatter";
 import styles from "../styles.module.scss";
+import { GlobalErrorList } from "./GlobalErrorList";
 
 const { Title } = Typography;
 
@@ -69,6 +71,7 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
         <Form 
           form={form} 
           layout="vertical"
+          className={styles.hideFieldErrors}
           onValuesChange={(changedValues) => {
             if (Object.prototype.hasOwnProperty.call(changedValues, "category_id")) {
               const nextValue = changedValues.category_id;
@@ -186,12 +189,15 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
             label="Valor"
             rules={[{ required: true, message: "Informe o valor" }]}
           >
-            <InputNumber
-              className={`${styles.inputField} ${styles.numberField}`}
+            <InputNumber<number>
+              className={styles.inputField}
               style={{ width: "100%" }}
               placeholder="R$"
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              parser={(value: any) => value?.replace(/\$\s?|(,*)/g, "") as any}
+              min={0.01}
+              precision={2}
+              decimalSeparator=","
+              formatter={currencyFormatter}
+              parser={currencyParser}
             />
           </Form.Item>
 
@@ -202,6 +208,8 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
           >
             <Checkbox>Entrada recorrente (mensal)</Checkbox>
           </Form.Item>
+
+          <GlobalErrorList form={form} />
         </Form>
       </ConfigProvider>
     </div>

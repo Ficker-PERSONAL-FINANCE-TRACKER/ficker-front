@@ -54,6 +54,9 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.topBar}>
+        <div className={styles.logoWrapper}>
+          <img src="/logo.png" alt="Logo" />
+        </div>
         <Button 
           type="text" 
           icon={<LogoutOutlined />} 
@@ -64,13 +67,11 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
         </Button>
       </div>
       <div className={styles.contentWrapper}>
-        <div className={styles.logoWrapper}>
-          <img src="/logo.png" alt="Logo" />
-        </div>
         <div className={styles.formCard}>
           <div className={styles.titleArea}>
-            <Title level={3}>Configure sua conta</Title>
-            <Text type="secondary">Precisamos de algumas informações para personalizar sua experiência.</Text>
+            <div className={styles.welcomeEmoji}>🎉</div>
+            <Title level={2} className={styles.mainTitle}>Olá! Chegou o momento de configurar sua conta</Title>
+            <Text type="secondary">Precisamos de algumas informações para personalizar sua experiência e deixar o Ficker do seu jeito.</Text>
           </div>
 
           <div className={styles.customSteps}>

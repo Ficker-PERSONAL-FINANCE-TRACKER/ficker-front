@@ -1,6 +1,8 @@
 import React from "react";
 import { Form, Input, InputNumber, Typography, Select } from "antd";
+import { currencyFormatter, currencyParser } from "@/utils/currencyFormatter";
 import styles from "../styles.module.scss";
+import { GlobalErrorList } from "./GlobalErrorList";
 
 const { Title } = Typography;
 
@@ -32,7 +34,7 @@ export const ObjectiveStep: React.FC<ObjectiveStepProps> = ({ form, onSkip }) =>
   return (
     <div className={styles.stepContent}>
       <Title level={4} className={styles.stepTitle}>Defina seu objetivo</Title>
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" className={styles.hideFieldErrors}>
         <Form.Item
           name="name"
           label="Nome do objetivo"
@@ -47,12 +49,15 @@ export const ObjectiveStep: React.FC<ObjectiveStepProps> = ({ form, onSkip }) =>
             style={{ flex: 1 }}
             rules={[{ required: true, message: "Informe o valor total" }]}
           >
-            <InputNumber
-              className={`${styles.inputField} ${styles.numberField}`}
+            <InputNumber<number>
+              className={styles.inputField}
               style={{ width: "100%" }}
               placeholder="Ex: 20000"
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              parser={(value: any) => value?.replace(/\$\s?|(,*)/g, "") as any}
+              min={0.01}
+              precision={2}
+              decimalSeparator=","
+              formatter={currencyFormatter}
+              parser={currencyParser}
             />
           </Form.Item>
           <Form.Item
@@ -60,12 +65,15 @@ export const ObjectiveStep: React.FC<ObjectiveStepProps> = ({ form, onSkip }) =>
             label="Valor já guardado"
             style={{ flex: 1 }}
           >
-            <InputNumber
-              className={`${styles.inputField} ${styles.numberField}`}
+            <InputNumber<number>
+              className={styles.inputField}
               style={{ width: "100%" }}
               placeholder="Ex: 10000"
-              formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              parser={(value: any) => value?.replace(/\$\s?|(,*)/g, "") as any}
+              min={0}
+              precision={2}
+              decimalSeparator=","
+              formatter={currencyFormatter}
+              parser={currencyParser}
             />
           </Form.Item>
         </div>
@@ -87,6 +95,7 @@ export const ObjectiveStep: React.FC<ObjectiveStepProps> = ({ form, onSkip }) =>
             <Select options={YEAR_OPTIONS} placeholder="Selecione o ano" className={styles.inputField} />
           </Form.Item>
         </div>
+        <GlobalErrorList form={form} />
       </Form>
     </div>
   );

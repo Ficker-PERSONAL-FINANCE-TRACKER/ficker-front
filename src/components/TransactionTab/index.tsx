@@ -31,7 +31,8 @@ export type TransactionSortBy =
   | "date"
   | "category_description"
   | "transaction_value"
-  | "payment_method_description";
+  | "payment_method_description"
+  | "created_at";
 
 export type TransactionSortDirection = "asc" | "desc";
 

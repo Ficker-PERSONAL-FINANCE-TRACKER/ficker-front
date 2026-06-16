@@ -67,9 +67,9 @@ const SidebarAlert: React.FC<SidebarAlertProps> = ({ balance, visible }) => {
           className={styles.sidebarAlert}
           style={{ background: `${color}0D`, border: `1px solid ${color}26` }}
         >
-          <div className={styles.illustrationWrapper}>
+          {/* <div className={styles.illustrationWrapper}>
             <Image src={img} alt={titleText} width={100} height={100} className={styles.illustration} />
-          </div>
+          </div> */}
           <div className={styles.content}>
             <div className={styles.header} style={{ color }}>
               {status === 'success' ? <ShoppingOutlined /> : <WarningOutlined />}

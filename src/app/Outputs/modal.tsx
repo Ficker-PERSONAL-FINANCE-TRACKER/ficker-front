@@ -1,7 +1,8 @@
 "use client";
 import { getApiErrorMessage, request } from "@/service/api";
+import { currencyFormatter, currencyParser } from "@/utils/currencyFormatter";
 import styles from "../EnterTransaction/entertransaction.module.scss";
-import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space, ConfigProvider } from "antd";
+import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, InputNumber, message, Space, ConfigProvider } from "antd";
 import ptBR from "antd/locale/pt_BR";
 import { useEffect, useState, useMemo } from "react";
 import dayjs from "dayjs";
@@ -431,7 +432,17 @@ export const OutputModal = ({ isModalOpen, setIsModalOpen, initialValues, onSucc
               name="transaction_value"
               rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
             >
-              <Input className={styles.input} placeholder="R$" data-testid="value" />
+              <InputNumber<number>
+                className={styles.input}
+                style={{ width: "100%" }}
+                placeholder="R$"
+                data-testid="value"
+                min={0.01}
+                precision={2}
+                decimalSeparator=","
+                formatter={currencyFormatter}
+                parser={currencyParser}
+              />
             </Form.Item>
           </Col>
         </Form>

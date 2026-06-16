@@ -18,6 +18,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { request } from "@/service/api";
+import { currencyFormatter, currencyParser } from "@/utils/currencyFormatter";
 
 interface PayInvoiceModalProps {
   isModalOpen: boolean;
@@ -350,39 +351,15 @@ export const PayInvoiceModal = ({
                 },
               ]}
             >
-              <InputNumber
+              <InputNumber<number>
                 style={{ width: "100%" }}
                 min={0.01}
                 max={selectedInvoice ? Number(selectedInvoice.open_total) : undefined}
                 precision={2}
                 disabled={!selectedInvoice || !canPayInvoice(selectedInvoice)}
-                formatter={(value) => {
-                  if (value === undefined || value === null) {
-                    return "";
-                  }
-
-                  const numericValue = Number(String(value).replace(/\./g, "").replace(/,/g, "."));
-                  if (Number.isNaN(numericValue)) {
-                    return "";
-                  }
-
-                  return numericValue.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  });
-                }}
-                parser={(value) => {
-                  if (!value) {
-                    return 0;
-                  }
-
-                  const normalized = value
-                    .replace(/R\$\s?/g, "")
-                    .replace(/\./g, "")
-                    .replace(/,/g, ".");
-
-                  return Number(normalized);
-                }}
+                decimalSeparator=","
+                formatter={currencyFormatter}
+                parser={currencyParser}
                 placeholder="Informe o valor"
               />
             </Form.Item>

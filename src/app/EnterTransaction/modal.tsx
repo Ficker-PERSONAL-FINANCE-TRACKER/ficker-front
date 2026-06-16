@@ -1,5 +1,6 @@
 "use client";
 import { getApiErrorMessage, request } from "@/service/api";
+import { currencyFormatter, currencyParser } from "@/utils/currencyFormatter";
 import styles from "../EnterTransaction/entertransaction.module.scss";
 import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, InputNumber, Space, Switch, ConfigProvider } from "antd";
 import ptBR from "antd/locale/pt_BR";
@@ -208,7 +209,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
           name="basic"
           onFinish={handleFinish}
           initialValues={{
-            transaction_value: "",
+            transaction_value: undefined,
           }}
           onFinishFailed={(errorInfo) => console.log(errorInfo)}
           onValuesChange={(changedValues) => {
@@ -228,11 +229,6 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
               if (!shouldShowDescription && nextValue !== 0) {
                 form.setFieldValue("category_description", undefined);
               }
-            }
-
-            if (changedValues.transaction_value) {
-              const result = changedValues.transaction_value.replace(/[^0-9]/g, "");
-              form.setFieldsValue({ transaction_value: result });
             }
           }}
         >
@@ -325,7 +321,16 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
               name="transaction_value"
               rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
             >
-              <Input className={styles.input} placeholder="R$" />
+              <InputNumber<number>
+                className={styles.input}
+                style={{ width: "100%" }}
+                placeholder="R$"
+                min={0.01}
+                precision={2}
+                decimalSeparator=","
+                formatter={currencyFormatter}
+                parser={currencyParser}
+              />
             </Form.Item>
           </Col>
 

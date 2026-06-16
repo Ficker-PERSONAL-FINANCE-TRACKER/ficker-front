@@ -972,7 +972,7 @@ const Resume = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "row", minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
-      <CustomMenu />
+      <CustomMenu balance={balance} user={user || undefined} />
       <div style={{ flex: 1, overflowX: "hidden" }}>
         <div className={styles.header} style={{ padding: "20px 30px", marginBottom: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

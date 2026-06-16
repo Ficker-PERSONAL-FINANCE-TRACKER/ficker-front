@@ -247,40 +247,104 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     }));
   };
 
+  const handleApiFormErrors = (error: any, form: any, fieldMapping?: Record<string, string>) => {
+    const apiErrors = error?.response?.data?.errors;
+    const formErrors: { name: string, errors: string[] }[] = [];
+
+    if (apiErrors && typeof apiErrors === "object") {
+      Object.keys(apiErrors).forEach((key) => {
+        const fieldName = fieldMapping && fieldMapping[key] ? fieldMapping[key] : key;
+        formErrors.push({
+          name: fieldName,
+          errors: Array.isArray(apiErrors[key]) ? apiErrors[key] : [apiErrors[key]]
+        });
+      });
+    }
+
+    // Tratar erros gerais de regras de negócio que a API não mapeia para um campo específico
+    const generalMessage = getApiErrorMessage(error);
+    const lowerMessage = generalMessage.toLowerCase();
+
+    if (lowerMessage.includes("vencimento") || lowerMessage.includes("fechamento")) {
+      if (!formErrors.some(e => e.name === "expiration")) {
+        formErrors.push({ name: "expiration", errors: [generalMessage] });
+      }
+      if (!formErrors.some(e => e.name === "closure")) {
+        formErrors.push({ name: "closure", errors: [generalMessage] });
+      }
+    }
+
+    if (formErrors.length > 0) {
+      setTimeout(() => {
+        form.setFields(formErrors);
+      }, 100);
+    }
+  };
+
   const submitOnboarding = async (objectiveValues: Record<string, any> | null) => {
     let salaryData = salaryDraft;
 
     if (shouldSubmitSalary) {
       salaryData = salaryData ?? buildSalaryPayload(await formSalary.validateFields());
-      await submitIfNeeded("salary", "transaction/store", salaryData.payload);
+      try {
+        await submitIfNeeded("salary", "transaction/store", salaryData.payload);
+      } catch (error) {
+        setCurrentStep(0);
+        handleApiFormErrors(error, formSalary, { transaction_description: "description" });
+        throw error;
+      }
     }
 
     if (shouldSubmitGoal) {
       const referenceDate = salaryData?.referenceDate ?? new Date().toISOString().split("T")[0];
       const goalData = goalDraft ?? buildGoalPayload(await formGoal.validateFields(), referenceDate);
-      await submitIfNeeded("goal", "spending/store", goalData);
+      try {
+        await submitIfNeeded("goal", "spending/store", goalData);
+      } catch (error) {
+        setCurrentStep(1);
+        handleApiFormErrors(error, formGoal);
+        throw error;
+      }
     }
 
     if (shouldSubmitCard) {
       const cardData = cardDraft ?? buildCardPayload(await formCard.validateFields());
-      await submitIfNeeded("card", "card", cardData);
+      try {
+        await submitIfNeeded("card", "card", cardData);
+      } catch (error) {
+        setCurrentStep(2);
+        handleApiFormErrors(error, formCard);
+        throw error;
+      }
     }
 
     if (objectiveValues?.name && objectiveValues?.total_value) {
-      await submitIfNeeded("objective", "objectives", {
-        type: "item",
-        name: objectiveValues.name,
-        current_saved: Number(objectiveValues.current_saved || 0),
-        total_value: Number(objectiveValues.total_value || 0),
-        target_year: Number(objectiveValues.target_year),
-        target_month: Number(objectiveValues.target_month),
-      });
+      try {
+        await submitIfNeeded("objective", "objectives", {
+          type: "item",
+          name: objectiveValues.name,
+          current_saved: Number(objectiveValues.current_saved || 0),
+          total_value: Number(objectiveValues.total_value || 0),
+          target_year: Number(objectiveValues.target_year),
+          target_month: Number(objectiveValues.target_month),
+        });
+      } catch (error) {
+        setCurrentStep(3);
+        handleApiFormErrors(error, formObjective);
+        throw error;
+      }
     }
 
-    await request({
-      method: "POST",
-      endpoint: "onboarding/complete",
-    });
+    try {
+      await request({
+        method: "POST",
+        endpoint: "onboarding/complete",
+      });
+    } catch (error) {
+      setCurrentStep(3);
+      throw error;
+    }
+    
     message.success("Configuração inicial concluída!");
     onComplete();
   };

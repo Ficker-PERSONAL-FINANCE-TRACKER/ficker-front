@@ -1,6 +1,7 @@
 "use client";
 import { getApiErrorMessage, request } from "@/service/api";
-import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, message, Space } from "antd";
+import { currencyFormatter, currencyParser } from "@/utils/currencyFormatter";
+import { Modal, Col, DatePicker, Row, Select, Form, Button, Input, InputNumber, message, Space } from "antd";
 import type { DatePickerProps } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
@@ -119,7 +120,7 @@ export const EditTransactionModal = ({
       date: dayjs(transaction.date),
       category_id: transaction.category_id,
       installments: transaction.installments,
-      transaction_value: transaction.transaction_value,
+      transaction_value: Number(transaction.transaction_value),
       category_description: transaction.category_id === 0 ? transaction.category_description : undefined,
     });
     setShowDescriptionCategory(transaction.category_id === 0);
@@ -243,7 +244,17 @@ export const EditTransactionModal = ({
             name="transaction_value"
             rules={[{ required: true, message: "Este campo precisa ser preenchido!" }]}
           >
-            <Input className={styles.input} placeholder="R$" data-testid="value" />
+            <InputNumber<number>
+              className={styles.input}
+              style={{ width: "100%" }}
+              placeholder="R$"
+              data-testid="value"
+              min={0.01}
+              precision={2}
+              decimalSeparator=","
+              formatter={currencyFormatter}
+              parser={currencyParser}
+            />
           </Form.Item>
         </div>
         <Row

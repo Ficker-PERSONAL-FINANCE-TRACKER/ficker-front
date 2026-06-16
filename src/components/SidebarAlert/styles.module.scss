@@ -1,7 +1,7 @@
 .sidebarAlert {
-  margin: 16px;
-  padding: 16px;
-  border-radius: 20px;
+  margin: 10px 12px;
+  padding: 8px 8px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,6 +9,7 @@
   position: relative;
   overflow: visible;
   margin-top: 40px;
+  box-sizing: border-box;
 
   .illustrationWrapper {
     margin-top: -50px;

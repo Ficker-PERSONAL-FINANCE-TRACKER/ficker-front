@@ -276,7 +276,7 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
               </Link>
             </div>
             <Menu
-              style={{ width: 250, border: "none" }}
+              style={{ width: "100%", border: "none" }}
               selectedKeys={[selectedKey]}
               mode="inline"
               items={items}

@@ -1,18 +1,18 @@
 .ant-menu {
   background: #fff !important;
   border-inline-end: none !important;
-  padding-top: 20px;
+  padding-top: 10px;
 }
 
 .ant-menu-item {
-  height: 50px !important;
-  line-height: 50px !important;
-  margin-block: 8px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  margin: 4px 16px !important;
   border-radius: 12px !important;
-  width: 90% !important;
-  margin-inline: auto !important;
+  width: calc(100% - 32px) !important;
   color: #808191 !important;
   font-weight: 500 !important;
+  font-size: 14px !important;
 
   &:not(.ant-menu-item-selected):hover {
     color: #6C5DD3 !important;
@@ -55,16 +55,19 @@
 }
 
 .logo-sidebar {
-  padding: 24px 32px;
+  padding: 24px 20px;
   display: flex;
   align-items: center;
+  justify-content: center;
   img {
-    max-width: 130px;
+    width: 110px;
+    height: auto;
+    object-fit: contain;
   }
 }
 
 .menu-sidebar {
-  width: 280px;
+  width: 240px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -77,6 +80,7 @@
   background: #fff !important;
   z-index: 100;
   overflow-y: auto;
+  overflow-x: hidden;
   
   .sidebar-footer {
     padding: 0 16px 8px 16px;
@@ -112,7 +116,7 @@
         .user-name {
           font-weight: 700;
           color: #11142D;
-          font-size: 14px;
+          font-size: 13px;
         }
       }
     }

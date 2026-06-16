@@ -1,6 +1,7 @@
 import React from "react";
 import { Form, Input, Typography, Select } from "antd";
 import styles from "../styles.module.scss";
+import { GlobalErrorList } from "./GlobalErrorList";
 
 const { Title } = Typography;
 
@@ -17,7 +18,7 @@ export const CardStep: React.FC<CardStepProps> = ({ form, flags = [] }) => {
   return (
     <div className={styles.stepContent}>
       <Title level={4} className={styles.stepTitle}>Qual é o seu cartão de crédito?</Title>
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" className={styles.hideFieldErrors}>
         <Form.Item
           name="flag_id"
           label="Bandeira"
@@ -56,6 +57,7 @@ export const CardStep: React.FC<CardStepProps> = ({ form, flags = [] }) => {
             <Select placeholder="Dia" className={styles.inputField} options={DAY_OPTIONS} />
           </Form.Item>
         </div>
+        <GlobalErrorList form={form} />
       </Form>
     </div>
   );

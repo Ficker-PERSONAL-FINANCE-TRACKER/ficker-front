@@ -23,6 +23,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { request } from "@/service/api";
+import { currencyFormatter, currencyParser } from "@/utils/currencyFormatter";
 import styles from "@/app/objectives/objectives.module.scss";
 
 export type ObjectiveTypeId =
@@ -103,15 +104,7 @@ export const objectiveTypes: ObjectiveType[] = [
   { id: "other", title: "Outros", icon: <EllipsisOutlined /> },
 ];
 
-const currencyFormatter = (value?: string | number | null) => {
-  if (value === undefined || value === null || value === "") return "";
-  return `R$ ${String(value)}`.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-};
 
-const currencyParser = (value?: string) => {
-  if (!value) return "";
-  return value.replace(/R\$\s?|\./g, "").replace(",", ".");
-};
 
 const getApiErrorMessage = (error: any, fallback: string) =>
   error?.response?.data?.message ?? error?.response?.data?.data?.message ?? fallback;
@@ -292,19 +285,21 @@ export const ObjectiveModalManager = ({ manager }: { manager: ObjectiveModalMana
         {manager.selectedType?.isRetirement ? (
           <>
             <Form.Item name="monthly_income" label="Com que renda mensal quero viver?" rules={[{ required: true, message: "Informe a renda mensal desejada" }]}>
-              <InputNumber
+              <InputNumber<number>
                 style={{ width: "100%" }}
                 placeholder="Exemplo: 20.000,00"
                 className={styles.input}
+                decimalSeparator=","
                 formatter={currencyFormatter}
                 parser={currencyParser}
               />
             </Form.Item>
             <Form.Item name="current_saved" label="Valor que você já guardou">
-              <InputNumber
+              <InputNumber<number>
                 style={{ width: "100%" }}
                 placeholder="Exemplo: 10.000,00"
                 className={styles.input}
+                decimalSeparator=","
                 formatter={currencyFormatter}
                 parser={currencyParser}
               />
@@ -313,25 +308,27 @@ export const ObjectiveModalManager = ({ manager }: { manager: ObjectiveModalMana
               <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" placeholder="Exemplo: 20/09/1992" className={styles.input} />
             </Form.Item>
             <Form.Item name="retirement_age" label="Idade que deseja se aposentar" rules={[{ required: true, message: "Informe a idade desejada" }]}>
-              <InputNumber style={{ width: "100%" }} placeholder="Exemplo: 60" className={styles.input} />
+              <InputNumber<number> style={{ width: "100%" }} placeholder="Exemplo: 60" className={styles.input} />
             </Form.Item>
           </>
         ) : (
           <>
             <Form.Item name="total_value" label="Valor total do objetivo" rules={[{ required: true, message: "Informe o valor total do objetivo" }]}>
-              <InputNumber
+              <InputNumber<number>
                 style={{ width: "100%" }}
                 placeholder="Exemplo: 20.000,00"
                 className={styles.input}
+                decimalSeparator=","
                 formatter={currencyFormatter}
                 parser={currencyParser}
               />
             </Form.Item>
             <Form.Item name="current_saved" label="Valor que você já guardou">
-              <InputNumber
+              <InputNumber<number>
                 style={{ width: "100%" }}
                 placeholder="Exemplo: 10.000,00"
                 className={styles.input}
+                decimalSeparator=","
                 formatter={currencyFormatter}
                 parser={currencyParser}
               />
