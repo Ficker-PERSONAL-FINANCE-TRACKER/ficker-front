@@ -47,6 +47,7 @@ export default function Home() {
 
   const handleOnboardingComplete = () => {
     sessionStorage.setItem("showFirstAccessTour", "true");
+    window.history.replaceState(null, '', '/');
     setShowOnboarding(false);
   };
 

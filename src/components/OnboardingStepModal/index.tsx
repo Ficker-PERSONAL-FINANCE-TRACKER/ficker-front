@@ -68,85 +68,108 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
       </div>
       <div className={styles.contentWrapper}>
         <div className={styles.formCard}>
-          <div className={styles.titleArea}>
-            <div className={styles.welcomeEmoji}>🎉</div>
-            <Title level={2} className={styles.mainTitle}>Olá! Chegou o momento de configurar sua conta</Title>
-            <Text type="secondary">Precisamos de algumas informações para personalizar sua experiência e deixar o Ficker do seu jeito.</Text>
-          </div>
-
-          <div className={styles.customSteps}>
-            {stepsConfig.map((step, index) => (
-              <React.Fragment key={step.title}>
-                <div className={`${styles.stepItem} ${index <= actions.currentStep ? styles.active : ''}`}>
-                  <div className={styles.stepDot} />
-                  <span className={styles.stepLabel}>{step.title}</span>
-                </div>
-                {index < stepsConfig.length - 1 && (
-                  <div className={`${styles.stepLine} ${index < actions.currentStep ? styles.active : ''}`} />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-
-          <div className={styles.stepContentWrapper}>
-            {renderStepContent()}
-          </div>
-
-          <div className={styles.footerActions}>
-            <div>
-              {actions.currentStep > 0 && (
-                <Button onClick={actions.handleBack} className={styles.secondaryButton}>
-                  Voltar
-                </Button>
-              )}
+          {actions.currentStep === 4 ? (
+            <div style={{ textAlign: "center", padding: "40px 20px" }}>
+              <div style={{ fontSize: 72, marginBottom: 24 }}>🚀</div>
+              <Title level={2} style={{ marginBottom: 16 }}>Tudo pronto!</Title>
+              <Text type="secondary" style={{ fontSize: 16 }}>Sua conta Ficker foi configurada com sucesso. Você já pode começar a controlar suas finanças!</Text>
             </div>
-            <Space>
-              {actions.currentStep === 0 && (
-                <Button onClick={actions.handleSkipSalary} type="text" className={styles.secondaryButton}>
-                  Pular
-                </Button>
-              )}
-              {actions.currentStep === 1 && (
-                <Button onClick={actions.handleSkipGoal} type="text" className={styles.secondaryButton}>
-                  Pular
-                </Button>
-              )}
-              {actions.currentStep === 2 && (
-                <Button onClick={actions.handleSkipCard} type="text" className={styles.secondaryButton}>
-                  Pular
-                </Button>
-              )}
-              {actions.currentStep === 3 && (
-                <Button onClick={actions.handleSkipObjective} type="text" className={styles.secondaryButton}>
-                  Pular
-                </Button>
-              )}
-              {actions.currentStep < 3 ? (
-                <Button
-                  type="primary"
-                  loading={actions.loading}
-                  onClick={
-                    actions.currentStep === 0
-                      ? actions.handleSaveSalary
-                      : actions.currentStep === 1
-                        ? actions.handleSaveGoal
-                        : actions.handleSaveCard
-                  }
-                  className={styles.primaryButton}
-                >
-                  Continuar
-                </Button>
-              ) : (
-                <Button
-                  type="default"
-                  loading={actions.loading}
-                  onClick={actions.handleSaveObjective}
-                  className={`${styles.primaryButton} accessibility-submit-btn`}
-                >
-                  Finalizar
-                </Button>
-              )}
-            </Space>
+          ) : (
+            <>
+              <div className={styles.titleArea}>
+                <div className={styles.welcomeEmoji}>🎉</div>
+                <Title level={2} className={styles.mainTitle}>Olá! Chegou o momento de configurar sua conta</Title>
+                <Text type="secondary">Precisamos de algumas informações para personalizar sua experiência e deixar o Ficker do seu jeito.</Text>
+              </div>
+
+              <div className={styles.customSteps}>
+                {stepsConfig.map((step, index) => (
+                  <React.Fragment key={step.title}>
+                    <div className={`${styles.stepItem} ${index <= actions.currentStep ? styles.active : ''}`}>
+                      <div className={styles.stepDot} />
+                      <span className={styles.stepLabel}>{step.title}</span>
+                    </div>
+                    {index < stepsConfig.length - 1 && (
+                      <div className={`${styles.stepLine} ${index < actions.currentStep ? styles.active : ''}`} />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
+              <div className={styles.stepContentWrapper}>
+                {renderStepContent()}
+              </div>
+            </>
+          )}
+
+          <div className={styles.footerActions} style={actions.currentStep === 4 ? { justifyContent: "center" } : undefined}>
+            {actions.currentStep === 4 ? (
+              <Button
+                type="primary"
+                onClick={actions.handleFinalComplete}
+                className={styles.primaryButton}
+                style={{ width: "100%", maxWidth: 300, height: 48, fontSize: 16 }}
+              >
+                Ir para o Dashboard
+              </Button>
+            ) : (
+              <>
+                <div>
+                  {actions.currentStep > 0 && (
+                    <Button onClick={actions.handleBack} className={styles.secondaryButton}>
+                      Voltar
+                    </Button>
+                  )}
+                </div>
+                <Space>
+                  {actions.currentStep === 0 && (
+                    <Button onClick={actions.handleSkipSalary} type="text" className={styles.secondaryButton}>
+                      Pular
+                    </Button>
+                  )}
+                  {actions.currentStep === 1 && (
+                    <Button onClick={actions.handleSkipGoal} type="text" className={styles.secondaryButton}>
+                      Pular
+                    </Button>
+                  )}
+                  {actions.currentStep === 2 && (
+                    <Button onClick={actions.handleSkipCard} type="text" className={styles.secondaryButton}>
+                      Pular
+                    </Button>
+                  )}
+                  {actions.currentStep === 3 && (
+                    <Button onClick={actions.handleSkipObjective} type="text" className={styles.secondaryButton}>
+                      Pular
+                    </Button>
+                  )}
+                  {actions.currentStep < 3 ? (
+                    <Button
+                      type="primary"
+                      loading={actions.loading}
+                      onClick={
+                        actions.currentStep === 0
+                          ? actions.handleSaveSalary
+                          : actions.currentStep === 1
+                            ? actions.handleSaveGoal
+                            : actions.handleSaveCard
+                      }
+                      className={styles.primaryButton}
+                    >
+                      Continuar
+                    </Button>
+                  ) : (
+                    <Button
+                      type="default"
+                      loading={actions.loading}
+                      onClick={actions.handleSaveObjective}
+                      className={`${styles.primaryButton} accessibility-submit-btn`}
+                    >
+                      Finalizar
+                    </Button>
+                  )}
+                </Space>
+              </>
+            )}
           </div>
         </div>
       </div>

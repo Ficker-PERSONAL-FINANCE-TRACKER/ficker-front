@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { message, Form } from "antd";
 import { getApiErrorMessage, request } from "@/service/api";
 import { Cookies } from "react-cookie";
+import { useRouter } from "next/navigation";
 
 const normalizeCategoryName = (value: string) =>
   (value || "")
@@ -53,6 +54,13 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
       loadInitialData();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      const stepUrl = currentStep === 4 ? "completed" : String(currentStep + 1);
+      window.history.pushState(null, "", `/?onboarding_step=${stepUrl}`);
+    }
+  }, [currentStep, open]);
 
   const loadInitialData = async () => {
     try {
@@ -345,6 +353,10 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
       throw error;
     }
     
+    setCurrentStep(4);
+  };
+
+  const handleFinalComplete = () => {
     message.success("Configuração inicial concluída!");
     onComplete();
   };
@@ -411,5 +423,6 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     handleSkipCard,
     handleBack,
     handleLogout,
+    handleFinalComplete,
   };
 };
