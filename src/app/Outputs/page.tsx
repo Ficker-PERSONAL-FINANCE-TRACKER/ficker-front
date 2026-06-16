@@ -34,7 +34,7 @@ const Outputs = () => {
   const [isFilterApplied, setIsFilterApplied] = useState(false);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState<TransactionSortConfig>({ sortBy: "created_at", direction: "desc" });
+  const [sortConfig, setSortConfig] = useState<TransactionSortConfig>({ sortBy: "date", direction: "desc" });
   const [filters, setFilters] = useState<OutputFilters>({
     mode: "month",
     month: now.getMonth() + 1,
