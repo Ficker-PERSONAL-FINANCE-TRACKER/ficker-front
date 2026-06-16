@@ -5,6 +5,24 @@
   background: #F8FAFC;
 }
 
+.topBar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 24px 40px 0;
+  width: 100%;
+}
+
+.logoutButton {
+  color: #6F767E;
+  font-weight: 500;
+  border-radius: 8px;
+  
+  &:hover {
+    color: #FF6A55 !important;
+    background: rgba(255, 106, 85, 0.1) !important;
+  }
+}
+
 .contentWrapper {
   flex: 1;
   display: flex;

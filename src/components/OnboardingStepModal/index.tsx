@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Steps, Button, Space, Typography } from "antd";
-import { UserOutlined, DollarOutlined, CreditCardOutlined, RocketOutlined } from "@ant-design/icons";
+import { UserOutlined, DollarOutlined, CreditCardOutlined, RocketOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useOnboardingActions } from "./useOnboardingActions";
 import { SalaryStep } from "./steps/SalaryStep";
 import { GoalStep } from "./steps/GoalStep";
@@ -53,6 +53,16 @@ const OnboardingStepModal: React.FC<OnboardingStepModalProps> = ({ open, onCompl
 
   return (
     <div className={styles.pageWrapper}>
+      <div className={styles.topBar}>
+        <Button 
+          type="text" 
+          icon={<LogoutOutlined />} 
+          onClick={actions.handleLogout} 
+          className={styles.logoutButton}
+        >
+          Sair
+        </Button>
+      </div>
       <div className={styles.contentWrapper}>
         <div className={styles.logoWrapper}>
           <img src="/logo.png" alt="Logo" />

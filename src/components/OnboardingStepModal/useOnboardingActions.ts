@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { message, Form } from "antd";
 import { getApiErrorMessage, request } from "@/service/api";
+import { Cookies } from "react-cookie";
 
 const normalizeCategoryName = (value: string) =>
   (value || "")
@@ -308,6 +309,21 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     }
   };
 
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      await request({ method: "POST", endpoint: "logout" });
+    } catch (error) {
+      console.error("Logout falhou:", error);
+    } finally {
+      const cookie = new Cookies();
+      cookie.remove("menu");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_data");
+      window.location.replace("/login");
+    }
+  };
+
   return {
     currentStep,
     loading,
@@ -330,5 +346,6 @@ export const useOnboardingActions = (open: boolean, onComplete: () => void) => {
     handleSkipObjective,
     handleSkipCard,
     handleBack,
+    handleLogout,
   };
 };

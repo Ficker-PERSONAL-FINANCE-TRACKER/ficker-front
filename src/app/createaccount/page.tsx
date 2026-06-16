@@ -20,7 +20,7 @@ const CreateAccountPage = () => {
       return setErrors({ password_confirmation: ["As senhas precisam ser iguais"] });
     }
     try {
-      const response = await request({
+      await request({
         method: "POST",
         endpoint: "register",
         data: {
@@ -30,9 +30,8 @@ const CreateAccountPage = () => {
           password_confirmation: confirmPassword,
         },
       });
-      localStorage.setItem("token", response!.data.data.token);
-      msg.success("Cadastro realizado com sucesso!");
-      return (window.location.href = "/");
+      msg.success("Cadastro realizado com sucesso! Faça login para continuar.");
+      return (window.location.href = "/login");
     } catch (error) {
       if (error instanceof AxiosError) {
         const apiErrors = error.response?.data?.errors;
