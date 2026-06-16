@@ -45,6 +45,11 @@ const ThirdPartyScripts = () => (
       strategy="afterInteractive"
       dangerouslySetInnerHTML={{ __html: UXTWEAK_SNIPPET }}
     />
+    <Script
+      id="useberry-script"
+      strategy="afterInteractive"
+      src="https://api.useberry.com/integrations/liveUrl/scripts/useberryScript.js"
+    />
   </>
 );
 
