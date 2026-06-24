@@ -119,7 +119,7 @@ export const SalaryStep: React.FC<SalaryStepProps> = ({ form, categories, showDe
               ]}
             >
               <DatePicker 
-                format="DD/MM/YYYY" 
+                format={["DD/MM/YYYY", "DDMMYYYY", "DD-MM-YYYY"]} 
                 className={styles.inputField}
                 style={{ width: "100%" }}
                 placeholder="dd/mm/aaaa"

@@ -309,7 +309,7 @@ export const PayInvoiceModal = ({
               rules={[{ required: true, message: "Informe a data do pagamento." }]}
             >
               <DatePicker
-                format="DD/MM/YYYY"
+                format={["DD/MM/YYYY", "DDMMYYYY", "DD-MM-YYYY"]}
                 style={{ width: "100%" }}
                 disabled={!selectedInvoice || !canPayInvoice(selectedInvoice)}
                 disabledDate={(current) => {

@@ -170,7 +170,7 @@ export const EditTransactionModal = ({
               onChange={onChange}
               className={styles.input}
               placeholder="dd/mm/aaaa"
-              format={"DD/MM/YYYY"}
+              format={["DD/MM/YYYY", "DDMMYYYY", "DD-MM-YYYY"]}
               defaultValue={dayjs(transaction.date)}
               disabledDate={(current) => {
                 return current && current > dayjs().endOf("day");

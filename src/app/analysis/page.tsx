@@ -1015,7 +1015,7 @@ const Analysis = () => {
                 rules={[{ required: true, message: "Selecione um intervalo" }]}
               >
                 <RangePicker
-                  format="DD/MM/YYYY"
+                  format={["DD/MM/YYYY", "DDMMYYYY", "DD-MM-YYYY"]}
                   style={{ width: "100%", height: 45 }}
                   disabledDate={disabledDate}
                 />

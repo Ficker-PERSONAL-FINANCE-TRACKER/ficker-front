@@ -248,7 +248,7 @@ export const EnterTransactionModal = ({ isModalOpen, setIsModalOpen, onSuccess }
                 onChange={onChange}
                 className={styles.input}
                 placeholder="dd/mm/aaaa"
-                format={"DD/MM/YYYY"}
+                format={["DD/MM/YYYY", "DDMMYYYY", "DD-MM-YYYY"]}
                 disabledDate={(current) => {
                   return current && current > dayjs().endOf("day");
                 }}

@@ -305,7 +305,7 @@ export const ObjectiveModalManager = ({ manager }: { manager: ObjectiveModalMana
               />
             </Form.Item>
             <Form.Item name="birth_date" label="Data de nascimento" rules={[{ required: true, message: "Informe a data de nascimento" }]}>
-              <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" placeholder="Exemplo: 20/09/1992" className={styles.input} />
+              <DatePicker style={{ width: "100%" }} format={["DD/MM/YYYY", "DDMMYYYY", "DD-MM-YYYY"]} placeholder="Exemplo: 20/09/1992" className={styles.input} />
             </Form.Item>
             <Form.Item name="retirement_age" label="Idade que deseja se aposentar" rules={[{ required: true, message: "Informe a idade desejada" }]}>
               <InputNumber<number> style={{ width: "100%" }} placeholder="Exemplo: 60" className={styles.input} />
