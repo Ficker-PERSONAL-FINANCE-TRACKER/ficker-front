@@ -1,7 +1,7 @@
 "use client";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import type { MenuProps } from "antd";
-import { Drawer, Menu } from "antd";
+import { Drawer, Menu, Dropdown, Modal, message } from "antd";
 import Image from "next/image";
 import "./styles.scss";
 import { usePathname, useRouter } from "next/navigation";
@@ -9,6 +9,8 @@ import { Cookies } from "react-cookie";
 import { 
   ApiOutlined,
   TagOutlined,
+  MoreOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import useMediaQuery from "use-media-antd-query";
 import SidebarAlert from "../SidebarAlert";
@@ -131,6 +133,71 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
     }
   };
 
+  const handleExportData = () => {
+    Modal.confirm({
+      title: 'Exportar Dados',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Deseja exportar todos os seus dados (transações, cartões, objetivos, etc.)?',
+      okText: 'Exportar',
+      cancelText: 'Cancelar',
+      onOk: async () => {
+        try {
+          const response = await request({ method: "GET", endpoint: "user/export" });
+          const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' });
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.setAttribute('download', `ficker_export_${new Date().toISOString().split('T')[0]}.json`);
+          document.body.appendChild(link);
+          link.click();
+          link.parentNode?.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          message.success("Dados exportados com sucesso!");
+        } catch (error) {
+          console.error("Erro ao exportar dados:", error);
+          message.error("Erro ao exportar dados.");
+        }
+      }
+    });
+  };
+
+  const showDeleteConfirm = () => {
+    Modal.confirm({
+      title: 'Excluir Conta',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita e todos os seus dados serão perdidos.',
+      okText: 'Sim, excluir',
+      okType: 'danger',
+      cancelText: 'Cancelar',
+      onOk: async () => {
+        try {
+          await request({ method: "DELETE", endpoint: "user" });
+          localStorage.removeItem("token");
+          localStorage.removeItem("user_data");
+          cookie.remove("menu");
+          window.location.replace("/login");
+        } catch (error) {
+          console.error("Erro ao excluir conta:", error);
+          message.error("Erro ao excluir conta.");
+        }
+      }
+    });
+  };
+
+  const userMenuItems: MenuProps['items'] = [
+    {
+      key: 'export',
+      label: 'Exportar Dados',
+      onClick: () => handleExportData()
+    },
+    {
+      key: 'delete',
+      label: 'Excluir conta',
+      danger: true,
+      onClick: () => showDeleteConfirm()
+    }
+  ];
+
   useEffect(() => {
     if (!isMobile) {
       setMobileDrawerVisible(false);
@@ -236,13 +303,18 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
           {balanceData && (
             <SidebarAlert balance={balanceData} visible={showAlert && pathname === "/"} />
           )}
-          <div className="user-profile">
-            <div className="avatar-circle">{userData?.name?.[0]?.toUpperCase() || "U"}</div>
-            <div className="user-info">
-              <span className="user-name">
-                {userData?.name ? userData.name.split(" ").slice(0, 2).join(" ") : "User"}
-              </span>
+          <div className="user-profile" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div className="avatar-circle">{userData?.name?.[0]?.toUpperCase() || "U"}</div>
+              <div className="user-info">
+                <span className="user-name">
+                  {userData?.name ? userData.name.split(" ").slice(0, 2).join(" ") : "User"}
+                </span>
+              </div>
             </div>
+            <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="topRight">
+              <MoreOutlined style={{ fontSize: 20, cursor: 'pointer', color: '#666' }} />
+            </Dropdown>
           </div>
         </div>
       </div>
@@ -306,13 +378,18 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
             {balanceData && (
               <SidebarAlert balance={balanceData} visible={showAlert && pathname === "/"} />
             )}
-            <div className="user-profile">
-              <div className="avatar-circle">{userData?.name?.[0]?.toUpperCase() || "U"}</div>
-              <div className="user-info">
-                <span className="user-name">
-                  {userData?.name ? userData.name.split(" ").slice(0, 2).join(" ") : "User"}
-                </span>
+            <div className="user-profile" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div className="avatar-circle">{userData?.name?.[0]?.toUpperCase() || "U"}</div>
+                <div className="user-info">
+                  <span className="user-name">
+                    {userData?.name ? userData.name.split(" ").slice(0, 2).join(" ") : "User"}
+                  </span>
+                </div>
               </div>
+              <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="topRight">
+                <MoreOutlined style={{ fontSize: 20, cursor: 'pointer', color: '#666' }} />
+              </Dropdown>
             </div>
           </div>
         </div>

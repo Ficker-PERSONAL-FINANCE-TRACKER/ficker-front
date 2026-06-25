@@ -12,12 +12,16 @@ const CreateAccountPage = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
   const handleSubmit = async () => {
     setErrors({});
     if (password !== confirmPassword) {
       return setErrors({ password_confirmation: ["As senhas precisam ser iguais"] });
+    }
+    if (!termsAccepted) {
+      return setErrors({ terms: ["Você deve aceitar os termos de uso."] });
     }
     try {
       await request({
@@ -28,6 +32,7 @@ const CreateAccountPage = () => {
           email: email,
           password: password,
           password_confirmation: confirmPassword,
+          terms_accepted_at: new Date().toISOString(),
         },
       });
       msg.success("Cadastro realizado com sucesso! Faça login para continuar.");
@@ -186,6 +191,32 @@ const CreateAccountPage = () => {
           {errors.password_confirmation && errors.password_confirmation.length > 0 && (
             <div style={{ color: "#ee4848", fontSize: "12px", marginTop: "-15px", marginBottom: "15px" }}>
               {errors.password_confirmation.map((err, idx) => (
+                <span key={idx} style={{ display: "block" }}>
+                  {err}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 15, marginTop: 10 }}>
+            <input
+              type="checkbox"
+              id="terms"
+              required
+              checked={termsAccepted}
+              onChange={(e) => {
+                 setTermsAccepted(e.target.checked);
+                 setErrors((prev) => ({ ...prev, terms: [] }));
+              }}
+              style={{ marginRight: 8, ...getErrorStyle("terms") }}
+            />
+            <label htmlFor="terms" style={{ fontSize: 14 }}>
+              Eu concordo com os <Link href="/termos-de-uso" style={{ color: "#1890ff", textDecoration: "none" }} target="_blank">Termos de Uso</Link> e <Link href="/politica-de-privacidade" style={{ color: "#1890ff", textDecoration: "none" }} target="_blank">Política de Privacidade</Link>.
+            </label>
+          </div>
+          {errors.terms && errors.terms.length > 0 && (
+            <div style={{ color: "#ee4848", fontSize: "12px", marginTop: "-10px", marginBottom: "15px" }}>
+              {errors.terms.map((err, idx) => (
                 <span key={idx} style={{ display: "block" }}>
                   {err}
                 </span>
