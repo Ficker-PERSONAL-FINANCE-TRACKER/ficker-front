@@ -303,17 +303,17 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
           {balanceData && (
             <SidebarAlert balance={balanceData} visible={showAlert && pathname === "/"} />
           )}
-          <div className="user-profile" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <div className="avatar-circle">{userData?.name?.[0]?.toUpperCase() || "U"}</div>
-              <div className="user-info">
-                <span className="user-name">
+          <div className="user-profile" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+              <div className="avatar-circle" style={{ flexShrink: 0 }}>{userData?.name?.[0]?.toUpperCase() || "U"}</div>
+              <div className="user-info" style={{ overflow: 'hidden' }}>
+                <span className="user-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
                   {userData?.name ? userData.name.split(" ").slice(0, 2).join(" ") : "User"}
                 </span>
               </div>
             </div>
             <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="topRight">
-              <MoreOutlined style={{ fontSize: 20, cursor: 'pointer', color: '#666' }} />
+              <MoreOutlined style={{ fontSize: 20, cursor: 'pointer', color: '#666', flexShrink: 0 }} />
             </Dropdown>
           </div>
         </div>
@@ -378,17 +378,17 @@ const CustomMenu: React.FC<CustomMenuProps> = ({ balance, user, showAlert = true
             {balanceData && (
               <SidebarAlert balance={balanceData} visible={showAlert && pathname === "/"} />
             )}
-            <div className="user-profile" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <div className="avatar-circle">{userData?.name?.[0]?.toUpperCase() || "U"}</div>
-                <div className="user-info">
-                  <span className="user-name">
+            <div className="user-profile" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                <div className="avatar-circle" style={{ flexShrink: 0 }}>{userData?.name?.[0]?.toUpperCase() || "U"}</div>
+                <div className="user-info" style={{ overflow: 'hidden' }}>
+                  <span className="user-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
                     {userData?.name ? userData.name.split(" ").slice(0, 2).join(" ") : "User"}
                   </span>
                 </div>
               </div>
               <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="topRight">
-                <MoreOutlined style={{ fontSize: 20, cursor: 'pointer', color: '#666' }} />
+                <MoreOutlined style={{ fontSize: 20, cursor: 'pointer', color: '#666', flexShrink: 0 }} />
               </Dropdown>
             </div>
           </div>
