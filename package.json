@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest"
+    "test": "jest",
+    "video:studio": "remotion studio remotion/src/index.ts",
+    "video:render": "remotion render remotion/src/index.ts FickerPromo out/ficker-promo.mp4",
+    "video:still": "remotion still remotion/src/index.ts"
   },
   "dependencies": {
     "@ant-design/cssinjs": "^1.16.2",
@@ -30,14 +33,21 @@
   "devDependencies": {
     "@babel/preset-env": "^7.22.9",
     "@babel/preset-react": "^7.22.5",
+    "@remotion/cli": "4.0.484",
+    "@remotion/enable-scss": "4.0.484",
+    "@remotion/google-fonts": "4.0.484",
+    "@remotion/shapes": "4.0.484",
+    "@remotion/transitions": "4.0.484",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.0.0",
     "autoprefixer": "^10.4.14",
     "babel-jest": "^29.6.1",
+    "copy-webpack-plugin": "^11.0.0",
     "jest": "^29.6.1",
     "jest-environment-jsdom": "^29.6.1",
     "jest-junit": "^16.0.0",
     "react-test-renderer": "^18.2.0",
+    "remotion": "4.0.484",
     "sass": "^1.64.0"
   }
 }
